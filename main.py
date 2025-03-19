@@ -7,9 +7,8 @@ import time
 
 
 data = {
-    "URL": "https://recreation.utoronto.ca/program/getprogramdetails?courseid=5904837f-6aa4-4707-bcfb-2ece4049bae0&semesterid=be7544c3-d05c-443f-844b-8ce87874f958",
-    'utroid': '',
-    'password' : '',
+    # "URL": "https://recreation.utoronto.ca/program/getprogramdetails?courseid=5904837f-6aa4-4707-bcfb-2ece4049bae0&semesterid=be7544c3-d05c-443f-844b-8ce87874f958",
+    'URL' : 'https://recreation.utoronto.ca/Program/GetProgramDetails?courseId=dcd5a035-731e-416b-a546-5f808404a3dc',
 }
 
 class BasePage:
@@ -45,22 +44,21 @@ class HomePage(BasePage):
         self.login_btn = (By.ID,'loginLinkBtn')
         self.uoft_login_btn_pu = (By.CLASS_NAME, "btn-sso-shibboleth")
     
+    def wait_for_url_to_start(self):
+        try:
+            WebDriverWait(self.dr, 60).until(
+                lambda driver: driver.current_url.startswith("https://recreation.utoronto.ca/")
+            )
+        except:
+            print("Took too long to login")
+            self.quit()
+
     def login(self):
         self.click(self.login_btn)
         self.click(self.uoft_login_btn_pu)
 
         # Allow 60 timeout for manual login
-        def is_element_present(locator):
-            try:
-                self.dr.find_element(By.XPATH, "//h1[contains(text(), 'Drop in Golf Driving Range')]") # Checks if page content is loaded
-                return True
-            except:
-                return False
-        
-        start_time = time.time()
-        while time.time() - start_time < 60:
-            if is_element_present((By.ID, "logoutForm")): 
-                return
+        self.wait_for_url_to_start()
 
 
 class SelectTimePage(BasePage):
@@ -83,13 +81,11 @@ class SelectTimePage(BasePage):
             time_element = card.find_element(By.CSS_SELECTOR, '.instance-time-header')
             time_text = time_element.text.strip() 
 
-            if time_text == "11:00 AM - 11:55 AM":
+            if time_text == "1:00 PM - 1:55 PM": #"11:00 AM - 11:55 AM"
                 btn = card.find_element(By.CSS_SELECTOR, '.btn.btn-outline-primary.program-select-btn')
                 btn.click()
 
     
-    def trust_browser(self):
-        self.click(self.trust_btn)
 
 class CheckoutPage(BasePage):
     pass
@@ -107,11 +103,8 @@ def main():
     home_page = HomePage(dr)
     home_page.login()
     
-    # Wait until Manual login
-        # time.sleep(1)
-    # WebDriverWait(dr, 1000000).until(
-    #     EC.visibility_of_element_located(dr.find_element(By.ID, "logoutForm"))
-    # )
+    # select_time_page = SelectTimePage(dr)
+    # select_time_page.select()
 
     
     print("done")
