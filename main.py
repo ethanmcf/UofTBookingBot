@@ -2,7 +2,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, NoSuchWindowException
+from datetime import datetime, timedelta
 import time
 
 
@@ -62,28 +63,25 @@ class HomePage(BasePage):
 
 
 class SelectTimePage(BasePage):
-    def __init__(self, driver):
+    def __init__(self, driver, timing):
         super().__init__(driver)
-        self.time_slot_cards = (By.CLASS_NAME, '.program-instance-card')
-        self.select_btn = (By.CLASS_NAME, '.btn btn-outline-primary program-select-btn w-100 mb-2')
-    
-    def wait_for_all(self, locator):
-        try: 
-            obj = self.wait.until(EC.visibility_of_all_elements_located(locator))
-            return obj
-        except TimeoutException:
-            print("Timeout")
-            self.quit()
+        # exaclty two days from now 
+        wanted_date = (datetime.now() + timedelta(days=2)).strftime("%A, %B %d, %Y")
+        self.time_slot_card = (By.XPATH, f"//div[@class='card mb-4 d-flex' and @data-instance-dates='{wanted_date}' and @data-instance-times='{timing}']")
+        self.registration_btn = (By.ID, 'registerBtn')
 
     def select(self):
-        cards = self.wait_for_all(self.time_slot_cards)
-        for card in cards:
-            time_element = card.find_element(By.CSS_SELECTOR, '.instance-time-header')
-            time_text = time_element.text.strip() 
+        card = self.wait_for(self.time_slot_card)
+        btn = card.find_element(By.CLASS_NAME, 'btn.btn-outline-primary.program-select-btn')
+        btn.click()
 
-            if time_text == "1:00 PM - 1:55 PM": #"11:00 AM - 11:55 AM"
-                btn = card.find_element(By.CSS_SELECTOR, '.btn.btn-outline-primary.program-select-btn')
-                btn.click()
+        # Handle possible cookie message
+        cookie_message = self.dr.find_element(By.ID, "gdpr-cookie-message")
+        cookie_close_btn = cookie_message.find_element(By.XPATH, ".//button")
+        cookie_close_btn.click()
+
+        # click registration
+        self.click(self.registration_btn)
 
     
 
@@ -103,9 +101,9 @@ def main():
     home_page = HomePage(dr)
     home_page.login()
     
-    # select_time_page = SelectTimePage(dr)
-    # select_time_page.select()
-
+    select_time_page = SelectTimePage(dr, "1:00 PM - 1:55 PM") # 
+    select_time_page.select()
+    time.sleep(15)
     
     print("done")
     dr.quit()
