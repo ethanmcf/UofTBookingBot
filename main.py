@@ -23,20 +23,20 @@ class BasePage:
     def quit(self):
         self.dr.quit()
 
-    def wait_for(self, locator):
+    def click(self, locator):
         try: 
-            obj = self.wait.until(EC.visibility_of_element_located(locator))
-            return obj
+            btn = self.wait.until(EC.element_to_be_clickable(locator))
         except TimeoutException:
             print("Timeout")
             self.quit()
-
-    def click(self, locator):
-        btn = self.wait_for(locator)
         btn.click()
     
     def send_keys(self, locator, text):
-        field = self.wait_for(locator)
+        try: 
+            field = self.wait.until(EC.visibility_of_element_located(locator))
+        except TimeoutException:
+            print("Timeout")
+            self.quit()
         field.send_keys(text)
 
 class HomePage(BasePage):
@@ -68,11 +68,23 @@ class SelectTimePage(BasePage):
         # exaclty two days from now 
         wanted_date = (datetime.now() + timedelta(days=2)).strftime("%A, %B %d, %Y")
         self.time_slot_card = (By.XPATH, f"//div[@class='card mb-4 d-flex' and @data-instance-dates='{wanted_date}' and @data-instance-times='{timing}']")
+        self.select_btn = (By.XPATH, "//button[contains(@class, 'program-select-btn') and contains(text(), 'Select')]")
         self.registration_btn = (By.ID, 'registerBtn')
 
     def select(self):
-        card = self.wait_for(self.time_slot_card)
-        btn = card.find_element(By.CLASS_NAME, 'btn.btn-outline-primary.program-select-btn')
+        card = None
+        try: 
+            card = self.wait.until(EC.visibility_of_element_located(self.time_slot_card))
+        except TimeoutException:
+            print("Timeout")
+            self.quit()
+        
+        if not card:
+            print("Error getting card")
+            self.quit()
+
+        by, info = self.select_btn
+        btn = card.find_element(by, info)
         btn.click()
 
         # Handle possible cookie message
@@ -85,10 +97,22 @@ class SelectTimePage(BasePage):
 
     
 
-class CheckoutPage(BasePage):
-    pass
+class PaymentPage(BasePage):
+    def __init__(self, driver):
+        super().__init__(driver)
+        self.next_btn = (By.CLASS_NAME, "btn-NextRegistrationStep")
+        self.expand_waiver_btn = (By.XPATH, "//button[@data-target='#regWaiver-collapse-1']")
+        self.accept_btn = (By.CLASS_NAME, "btn-success.btnAccept")
+        self.checkout_btn = (By.XPATH, "//div[contains(@class, 'stepActionButtons desktop')]//button[contains(@class, 'btn-NextRegistrationStep')]")
 
-def create_driver(headless):
+    def purchase(self):
+        self.click(self.next_btn)
+        self.click(self.expand_waiver_btn)
+        self.click(self.accept_btn)
+        self.click(self.checkout_btn)
+
+
+def create_driver(headless = False):
     option = webdriver.ChromeOptions()
     if headless: option.add_argument('headless')
     dr = webdriver.Chrome(options=option)
@@ -96,16 +120,20 @@ def create_driver(headless):
 
 
 def main():
-    dr = create_driver(False)
+    dr = create_driver() 
     dr.get(data["URL"])
     home_page = HomePage(dr)
     home_page.login()
     
     select_time_page = SelectTimePage(dr, "1:00 PM - 1:55 PM") # 
     select_time_page.select()
-    time.sleep(15)
-    
+
+    payment_page = PaymentPage(dr)
+    payment_page.purchase()
+
     print("done")
+    time.sleep(20)
+    
     dr.quit()
 
 
