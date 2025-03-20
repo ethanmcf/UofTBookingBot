@@ -8,24 +8,23 @@ class BasePage:
         self.dr = driver
         self.wait = WebDriverWait(self.dr, 10)
     
-    def run_driver(self):
-        self.dr.get(self.url)
-    
     def quit(self):
         self.dr.quit()
 
     def click(self, locator):
         try: 
             btn = self.wait.until(EC.element_to_be_clickable(locator))
+            btn.click()
         except TimeoutException:
             print("Timeout")
             self.quit()
-        btn.click()
+        
     
     def send_keys(self, locator, text):
         try: 
-            field = self.wait.until(EC.visibility_of_element_located(locator))
+            field = self.wait.until(EC.presence_of_element_located(locator))
+            field.send_keys(text)
         except TimeoutException:
             print("Timeout")
             self.quit()
-        field.send_keys(text)
+        

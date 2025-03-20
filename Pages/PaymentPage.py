@@ -1,5 +1,5 @@
 from selenium.webdriver.common.by import By
-import BasePage
+from Pages.BasePage import BasePage
 
 class PaymentPage(BasePage):
     def __init__(self, driver):

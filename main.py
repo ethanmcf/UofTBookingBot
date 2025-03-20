@@ -1,5 +1,8 @@
 from selenium import webdriver
-from Pages import CheckoutPage, PaymentPage, HomePage, SelectPage 
+from Pages.CheckoutPage import CheckoutPage
+from Pages.PaymentPage import PaymentPage
+from Pages.HomePage import HomePage
+from Pages.SelectPage import SelectPage
 import time
 
 BASE_URL = "https://recreation.utoronto.ca/Program/GetProgramDetails?courseId="
