@@ -111,6 +111,15 @@ class PaymentPage(BasePage):
         self.click(self.accept_btn)
         self.click(self.checkout_btn)
 
+class CheckoutPage(BasePage):
+    def __init__(self, driver):
+        super().__init__(driver)
+        self.checkout_btn = (By.ID, "checkoutButton")
+        self.checkout_modal_btn = (By.ID, "btnCheckoutCart")
+
+    def checkout(self):
+        self.click(self.checkout_btn)
+        self.click(self.checkout_modal_btn)
 
 def create_driver(headless = False):
     option = webdriver.ChromeOptions()
@@ -125,14 +134,17 @@ def main():
     home_page = HomePage(dr)
     home_page.login()
     
-    select_time_page = SelectTimePage(dr, "1:00 PM - 1:55 PM") # 
+    select_time_page = SelectTimePage(dr, "1:00 PM - 1:55 PM") # Set time wanted needs to be exact
     select_time_page.select()
 
     payment_page = PaymentPage(dr)
     payment_page.purchase()
 
+    check_out_page = CheckoutPage(dr)
+    check_out_page.checkout()
+
     print("done")
-    time.sleep(20)
+    time.sleep(5)
     
     dr.quit()
 
