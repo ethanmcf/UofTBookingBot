@@ -5,10 +5,9 @@ from Pages.HomePage import HomePage
 from Pages.SelectPage import SelectPage
 import time
 
-BASE_URL = "https://recreation.utoronto.ca/Program/GetProgramDetails?courseId="
 URLS = {
-    "golf" : "5904837f-6aa4-4707-bcfb-2ece4049bae0&semesterid=be7544c3-d05c-443f-844b-8ce87874f958",
-    "hockey" : "dcd5a035-731e-416b-a546-5f808404a3dc",
+    "golf" : "https://recreation.utoronto.ca/Program/GetProgramDetails?courseId=5904837f-6aa4-4707-bcfb-2ece4049bae0&semesterid=be7544c3-d05c-443f-844b-8ce87874f958",
+    "hockey" : "https://recreation.utoronto.ca/Program/GetProgramDetails?courseId=dcd5a035-731e-416b-a546-5f808404a3dc",
 }
 TIME = "1:00 PM - 1:55 PM"
 
@@ -21,9 +20,9 @@ def create_driver(headless = False):
 
 
 def main():
-    # Create driver with url
+    # Create and run driver with url
     dr = create_driver() 
-    dr.get(BASE_URL + URLS["hockey"])
+    dr.get(URLS["hockey"])
 
 
     home_page = HomePage(dr)
