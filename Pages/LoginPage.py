@@ -12,9 +12,9 @@ class LoginPage(BasePage):
 
     def login(self):
         self.click(self.utorid_input)
-        self.send_keys(self.utorid_input, "mcfar135")
+        self.send_keys(self.utorid_input, "")
         time.sleep(1)
         self.click(self.password_input)
-        self.send_keys(self.password_input, "Hellsatins7&")
+        self.send_keys(self.password_input, "")
         time.sleep(1)
         self.click(self.login_btn)
