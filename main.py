@@ -3,6 +3,8 @@ from Pages.CheckoutPage import CheckoutPage
 from Pages.PaymentPage import PaymentPage
 from Pages.HomePage import HomePage
 from Pages.SelectPage import SelectPage
+from Pages.LoginPage import LoginPage
+from datetime import datetime, timedelta
 import time
 
 URLS = {
@@ -28,7 +30,12 @@ def main():
     home_page = HomePage(dr)
     home_page.login()
     
-    select_time_page = SelectPage(dr, TIME)
+    login_page = LoginPage(dr)
+    login_page.login()
+
+    time.sleep(5)
+    wanted_date = (datetime.now() + timedelta(days=2)).strftime("%A, %B %d, %Y")
+    select_time_page = SelectPage(dr, TIME, wanted_date)
     select_time_page.select()
 
     payment_page = PaymentPage(dr)
