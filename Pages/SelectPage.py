@@ -7,17 +7,15 @@ from datetime import datetime, timedelta
 import time
 
 class SelectPage(BasePage):
-    def __init__(self, driver, timing):
+    def __init__(self, driver, timing, wanted_date):
         super().__init__(driver)
-        # exaclty two days from now 
-        wanted_date = (datetime.now() + timedelta(days=2)).strftime("%A, %B %d, %Y")
         self.time_slot_card = (By.XPATH, f"//div[@class='card mb-4 d-flex' and @data-instance-dates='{wanted_date}' and @data-instance-times='{timing}']")
         self.select_btn = (By.XPATH, "//button[contains(@class, 'program-select-btn') and contains(text(), 'Select')]")
         self.registration_btn = (By.ID, 'registerBtn')
 
     def wait_for_time_slot(self):
         # Set the timeout duration to 5 minutes
-        timeout = timedelta(minutes=5)
+        timeout = timedelta(seconds=2)
         end_time = datetime.now() + timeout
         card = None
         while datetime.now() < end_time:
