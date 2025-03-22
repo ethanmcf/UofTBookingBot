@@ -11,10 +11,14 @@ class LoginPage(BasePage):
         self.trust_device_btn = (By.ID, "")
 
     def login(self):
+        with open('login.txt', 'r') as file:
+            username = file.readline().strip() 
+            password = file.readline().strip()  
+
         self.click(self.utorid_input)
-        self.send_keys(self.utorid_input, "")
+        self.send_keys(self.utorid_input, username)
         time.sleep(1)
         self.click(self.password_input)
-        self.send_keys(self.password_input, "")
+        self.send_keys(self.password_input, password)
         time.sleep(1)
         self.click(self.login_btn)
