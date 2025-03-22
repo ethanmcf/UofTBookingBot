@@ -11,7 +11,11 @@ URLS = {
     "golf" : "https://recreation.utoronto.ca/Program/GetProgramDetails?courseId=5904837f-6aa4-4707-bcfb-2ece4049bae0&semesterid=be7544c3-d05c-443f-844b-8ce87874f958",
     "hockey" : "https://recreation.utoronto.ca/Program/GetProgramDetails?courseId=dcd5a035-731e-416b-a546-5f808404a3dc",
 }
-TIME = "1:00 PM - 1:55 PM"
+TIMES = {
+    "10AM" : ["10:00:00", "10:00 AM - 10:55 AM"],
+    "11AM" : ["11:00:00", "11:00 AM - 11:55 AM"],
+    "1PM" : ["13:00:00", "1:00 PM - 1:55 PM"]
+}
 
 
 def create_driver(headless = False):
@@ -35,7 +39,8 @@ def main():
 
     time.sleep(5)
     wanted_date = (datetime.now() + timedelta(days=2)).strftime("%A, %B %d, %Y")
-    select_time_page = SelectPage(dr, TIME, wanted_date)
+    hour, times = TIMES["10AM"]
+    select_time_page = SelectPage(dr, hour, times, wanted_date)
     select_time_page.select()
 
     payment_page = PaymentPage(dr)

@@ -7,18 +7,24 @@ from datetime import datetime, timedelta
 import time
 
 class SelectPage(BasePage):
-    def __init__(self, driver, timing, wanted_date):
+    def __init__(self, driver, hour, times, wanted_date):
         super().__init__(driver)
-        self.time_slot_card = (By.XPATH, f"//div[@class='card mb-4 d-flex' and @data-instance-dates='{wanted_date}' and @data-instance-times='{timing}']")
+        self.time_slot_card = (By.XPATH, f"//div[@class='card mb-4 d-flex' and @data-instance-dates='{wanted_date}' and @data-instance-times='{times}']")
         self.select_btn = (By.XPATH, "//button[contains(@class, 'program-select-btn') and contains(text(), 'Select')]")
         self.registration_btn = (By.ID, 'registerBtn')
+        self.date = wanted_date
+        self.hour = hour
 
     def wait_for_time_slot(self):
-        # Set the timeout duration to 5 minutes
-        timeout = timedelta(seconds=2)
-        end_time = datetime.now() + timeout
+        target_datetime = datetime.strptime(f"{self.date} {self.hour}", "%A, %B %d, %Y %H:%M:%S")
+        current_datetime = datetime.now() + timedelta(days=2) 
+        dif_time = target_datetime - current_datetime - timedelta(seconds=10) 
+        sleep_seconds = dif_time.total_seconds() 
+        print(sleep_seconds)
+        time.sleep(sleep_seconds if sleep_seconds > 0 else 0)
+
         card = None
-        while datetime.now() < end_time:
+        while True:
             try:
                 # Refresh the page
                 self.dr.refresh()

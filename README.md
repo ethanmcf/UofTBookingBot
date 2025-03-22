@@ -4,9 +4,10 @@ A bot that automates the sign-up process for UofT drop-in activities.
 
 ## Prerequisites
 
-Before you begin, ensure you have Python 3.6+ and pip installed. If you don't have them, follow the instructions on the [official Python website](https://www.python.org/downloads/). 
+Before you begin, ensure you have Python 3.6+ and pip installed. If you don't have them, follow the instructions on the [official Python website](https://www.python.org/downloads/).
 
 ## Setup Instructions 🚀
+
 Make sure you clone this repo first.
 
 ### 1. Create a Virtual Environment
@@ -33,12 +34,22 @@ To install selenium, run the following command:
 pip3 install -U selenium
 ```
 
+### 4. Create login info
+
+Create a file to store your username and password (in gitignore so info is not saved). Username must be on first line and password second line:
+
+```bash
+touch login.txt
+echo your_username >> login.txt
+echo your_password >> login.txt
+```
+
 ## Usage
-Once the dependencies are installed, you can run the bot to automatically sign up for UofT drop-in activities. You will have 60 seconds to mannualy log in with your UTORid and complete the two factor authentication and then the bot will continue.
-You also need to set the url at the top of the file with the drop in sport of your choice as well as the exact time you want your drop in sport.
+
+Once the dependencies are installed, you can run the bot to automatically sign up for UofT drop-in activities. You need to select the url and time of your choice using the provided dictionaries.
 
 Once this is completed you can run the following command:
+
 ```bash
 python3 main.py
 ```
-
