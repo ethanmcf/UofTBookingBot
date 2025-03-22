@@ -1,8 +1,8 @@
 class LoginManager():
-    def __init__(self, BYPASS_CODES_URL, login_file_path, code_file_path):
+    def __init__(self, login_file_path, code_file_path, codes_page):
         self.login_file_path = login_file_path
         self.code_file_path = code_file_path
-        self.BYPASS_CODES_URL = BYPASS_CODES_URL
+        self.codes_page = codes_page
 
     def get_credentials(self):
         try:
@@ -27,18 +27,22 @@ class LoginManager():
                 
                 # No more codes - reload them
                 if file.readline().strip() == "":
-                    self._retreive_codes()
-                
+                    self._reload_codes()
                 return code
         except:
             print("Error with bypass code file")
             self.quit()
 
-    def _retreive_codes(self):
+    def _reload_codes(self):
+        codes = self.codes_page.generate_codes()
+        self._write_codes(codes)
+
+
+    def _write_codes(self, codes):        
         try:
             with open(self.code_file_path, 'w') as file:
-                file.write("")
+                for code in codes:
+                    file.write(code + '\n')
         except:
             print("Error writing to bypass code file")
             self.quit()
-        

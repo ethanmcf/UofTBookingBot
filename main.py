@@ -4,6 +4,8 @@ from Pages.PaymentPage import PaymentPage
 from Pages.HomePage import HomePage
 from Pages.SelectPage import SelectPage
 from Pages.LoginPage import LoginPage
+from Pages.CodesPage import CodesPage
+
 from login_manager import LoginManager
 from datetime import datetime, timedelta
 import time
@@ -30,16 +32,22 @@ def create_driver(headless = False):
 
 
 def main():
-    # Create and run driver with url
-    dr = create_driver(True) 
-    dr.get(SPORT_URLS["golf"])
+    # Get code and reload codes if needed
+    code_dr = create_driver(False)
+    code_dr.get(BYPASS_CODES_URL)
+    codes_page = CodesPage(code_dr)
+    login_manager = LoginManager("login.txt", "bypass_codes.txt", codes_page)
+    code = login_manager.get_code()
+    code_dr.quit()
 
+    # Create and run driver with url
+    dr = create_driver(False) 
+    dr.get(SPORT_URLS["golf"])
 
     home_page = HomePage(dr)
     home_page.login()
     
-    login_manager = LoginManager(BYPASS_CODES_URL, "login.txt", "bypass_codes.txt")
-    login_page = LoginPage(dr, login_manager)
+    login_page = LoginPage(dr, code)
     login_page.login()
     
     wanted_date = (datetime.now() + timedelta(days=2)).strftime("%A, %B %d, %Y")
