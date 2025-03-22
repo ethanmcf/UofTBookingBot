@@ -4,6 +4,7 @@ from Pages.PaymentPage import PaymentPage
 from Pages.HomePage import HomePage
 from Pages.SelectPage import SelectPage
 from Pages.LoginPage import LoginPage
+from login_manager import LoginManager
 from datetime import datetime, timedelta
 import time
 
@@ -11,7 +12,9 @@ SPORT_URLS = {
     "golf" : "https://recreation.utoronto.ca/Program/GetProgramDetails?courseId=5904837f-6aa4-4707-bcfb-2ece4049bae0&semesterid=be7544c3-d05c-443f-844b-8ce87874f958",
     "hockey" : "https://recreation.utoronto.ca/Program/GetProgramDetails?courseId=dcd5a035-731e-416b-a546-5f808404a3dc",
 }
-TOKEN_URL = "https://bypass.utormfa.utoronto.ca/index.php" 
+
+BYPASS_CODES_URL = "https://bypass.utormfa.utoronto.ca/index.php"
+
 TIMES = {
     "10AM" : ["10:00:00", "10:00 AM - 10:55 AM"],
     "11AM" : ["11:00:00", "11:00 AM - 11:55 AM"],
@@ -35,7 +38,8 @@ def main():
     home_page = HomePage(dr)
     home_page.login()
     
-    login_page = LoginPage(dr)
+    login_manager = LoginManager(BYPASS_CODES_URL, "login.txt", "bypass_codes.txt")
+    login_page = LoginPage(dr, login_manager)
     login_page.login()
     
     wanted_date = (datetime.now() + timedelta(days=2)).strftime("%A, %B %d, %Y")
