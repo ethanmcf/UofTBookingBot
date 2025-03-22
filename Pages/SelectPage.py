@@ -38,8 +38,9 @@ class SelectPage(BasePage):
         card = None
         while True:
             try:
+                # only refresh page if on the correct url page (elminates refreshing when loging in)
                 if self.dr.current_url.startswith("https://recreation.utoronto.ca/"):
-                # Refresh the page
+                    # Refresh the page
                     self.dr.refresh()
                     
                     card = self.dr.find_element(self.time_slot_card)

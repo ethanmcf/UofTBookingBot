@@ -4,6 +4,9 @@ from Pages.PaymentPage import PaymentPage
 from Pages.HomePage import HomePage
 from Pages.SelectPage import SelectPage
 from Pages.LoginPage import LoginPage
+from Pages.CodesPage import CodesPage
+
+from login_manager import LoginManager
 from datetime import datetime, timedelta
 import time
 
@@ -11,7 +14,9 @@ SPORT_URLS = {
     "golf" : "https://recreation.utoronto.ca/Program/GetProgramDetails?courseId=5904837f-6aa4-4707-bcfb-2ece4049bae0&semesterid=be7544c3-d05c-443f-844b-8ce87874f958",
     "hockey" : "https://recreation.utoronto.ca/Program/GetProgramDetails?courseId=dcd5a035-731e-416b-a546-5f808404a3dc",
 }
-TOKEN_URL = "https://bypass.utormfa.utoronto.ca/index.php" 
+
+BYPASS_CODES_URL = "https://bypass.utormfa.utoronto.ca/index.php"
+
 TIMES = {
     "10AM" : ["10:00:00", "10:00 AM - 10:55 AM"],
     "11AM" : ["11:00:00", "11:00 AM - 11:55 AM"],
@@ -27,15 +32,22 @@ def create_driver(headless = False):
 
 
 def main():
-    # Create and run driver with url
-    dr = create_driver(True) 
-    dr.get(SPORT_URLS["golf"])
+    # Get code and reload codes if needed
+    code_dr = create_driver(False)
+    code_dr.get(BYPASS_CODES_URL)
+    codes_page = CodesPage(code_dr)
+    login_manager = LoginManager("login.txt", "bypass_codes.txt", codes_page)
+    code = login_manager.get_code()
+    code_dr.quit()
 
+    # Create and run driver with url
+    dr = create_driver(False) 
+    dr.get(SPORT_URLS["golf"])
 
     home_page = HomePage(dr)
     home_page.login()
     
-    login_page = LoginPage(dr)
+    login_page = LoginPage(dr, code)
     login_page.login()
     
     wanted_date = (datetime.now() + timedelta(days=2)).strftime("%A, %B %d, %Y")
