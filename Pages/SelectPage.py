@@ -15,30 +15,41 @@ class SelectPage(BasePage):
         self.date = wanted_date
         self.hour = hour
 
+    def wait_for_url_to_start(self):
+        try:
+            WebDriverWait(self.dr, 60).until(
+                lambda driver: driver.current_url.startswith("https://recreation.utoronto.ca/")
+            )
+        except:
+            print("Took too long to login")
+            self.quit()
+
     def wait_for_time_slot(self):
+        # Wait for url
+        self.wait_for_url_to_start()
+
         target_datetime = datetime.strptime(f"{self.date} {self.hour}", "%A, %B %d, %Y %H:%M:%S")
         current_datetime = datetime.now() + timedelta(days=2) 
         dif_time = target_datetime - current_datetime - timedelta(seconds=10) 
         sleep_seconds = dif_time.total_seconds() 
-        print(sleep_seconds)
+        print(sleep_seconds if sleep_seconds > 0 else 0)
         time.sleep(sleep_seconds if sleep_seconds > 0 else 0)
 
         card = None
         while True:
             try:
+                if self.dr.current_url.startswith("https://recreation.utoronto.ca/"):
                 # Refresh the page
-                self.dr.refresh()
-                
-                card = self.dr.find_element(self.time_slot_card)
-                by, info = self.select_btn
-                btn = card.find_element(by, info)
-                btn.click()
-                return True  
+                    self.dr.refresh()
+                    
+                    card = self.dr.find_element(self.time_slot_card)
+                    by, info = self.select_btn
+                    btn = card.find_element(by, info)
+                    btn.click()
+                    return 
                 
             except Exception as e:
                 pass # no element found this iterations
-    
-        return False  # Return False if the timeout is reached
     
     def select(self):
         if not self.wait_for_time_slot():

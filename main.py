@@ -27,8 +27,8 @@ def create_driver(headless = False):
 
 def main():
     # Create and run driver with url
-    dr = create_driver() 
-    dr.get(URLS["hockey"])
+    dr = create_driver(True) 
+    dr.get(URLS["golf"])
 
 
     home_page = HomePage(dr)
@@ -36,10 +36,9 @@ def main():
     
     login_page = LoginPage(dr)
     login_page.login()
-
-    time.sleep(5)
+    
     wanted_date = (datetime.now() + timedelta(days=2)).strftime("%A, %B %d, %Y")
-    hour, times = TIMES["10AM"]
+    hour, times = TIMES["11AM"]
     select_time_page = SelectPage(dr, hour, times, wanted_date)
     select_time_page.select()
 

@@ -1,4 +1,5 @@
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
 from Pages.BasePage import BasePage
 import time
 
@@ -8,7 +9,7 @@ class LoginPage(BasePage):
         self.utorid_input = (By.ID, "username")
         self.password_input = (By.ID, "password")
         self.login_btn = (By.ID, "login-btn")
-        self.trust_device_btn = (By.ID, "")
+        self.trust_device_btn = (By.ID, "trust-browser-button")
 
     def login(self):
         with open('login.txt', 'r') as file:
@@ -22,3 +23,5 @@ class LoginPage(BasePage):
         self.send_keys(self.password_input, password)
         time.sleep(1)
         self.click(self.login_btn)
+        time.sleep(2)
+        self.wait.until(EC.visibility_of_element_located(self.trust_device_btn)).click()
