@@ -7,10 +7,11 @@ from Pages.LoginPage import LoginPage
 from datetime import datetime, timedelta
 import time
 
-URLS = {
+SPORT_URLS = {
     "golf" : "https://recreation.utoronto.ca/Program/GetProgramDetails?courseId=5904837f-6aa4-4707-bcfb-2ece4049bae0&semesterid=be7544c3-d05c-443f-844b-8ce87874f958",
     "hockey" : "https://recreation.utoronto.ca/Program/GetProgramDetails?courseId=dcd5a035-731e-416b-a546-5f808404a3dc",
 }
+TOKEN_URL = "https://bypass.utormfa.utoronto.ca/index.php" 
 TIMES = {
     "10AM" : ["10:00:00", "10:00 AM - 10:55 AM"],
     "11AM" : ["11:00:00", "11:00 AM - 11:55 AM"],
@@ -28,7 +29,7 @@ def create_driver(headless = False):
 def main():
     # Create and run driver with url
     dr = create_driver(True) 
-    dr.get(URLS["golf"])
+    dr.get(SPORT_URLS["golf"])
 
 
     home_page = HomePage(dr)
