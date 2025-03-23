@@ -84,25 +84,27 @@ def run_bot(headless, login_manager, hour, time_slot, url):
 
     print("Successfully finished registration.")
     
-    
-
 def main():
     # Create login manager for credential handling
     login_manager = LoginManager("login.txt", "bypass_codes.txt")
 
-    # Fetch new codes if falling below threshold
-    if login_manager.num_codes_left() <= CODE_THRESHOLD:
-        run_fetch_bypass_codes(HEADLESS, login_manager)
-    
-    # Run bot
-    url = SPORT_URLS["golf"]
-    hour, time_slot = TIMES["11AM"]
-    run_bot(HEADLESS, login_manager, hour, time_slot, url)
+    try:
+        # Fetch new codes if falling below threshold
+        if login_manager.num_codes_left() <= CODE_THRESHOLD:
+            run_fetch_bypass_codes(HEADLESS, login_manager)
+        
+        # Run bot
+        url = SPORT_URLS["golf"]
+        hour, time_slot = TIMES["11AM"]
+        run_bot(HEADLESS, login_manager, hour, time_slot, url)
+
+        # Cleanup resources used by login manager
+        login_manager.cleanup()
+    except Exception as e:
+        print(e)
+        exit(1)
+    finally:
+        login_manager.cleanup()
    
-
-
 if __name__ == '__main__':
     main()
-
-
-
