@@ -1,6 +1,5 @@
 from selenium.webdriver.common.by import By
 from Pages.BasePage import BasePage
-import time
 
 class DuoPage(BasePage):
     def __init__(self, driver, login_manager):
@@ -21,4 +20,3 @@ class DuoPage(BasePage):
         self.send_keys(self.code_input, code)
         self.click(self.code_submit_btn)
         self.click(self.trust_device_btn)
-        time.sleep(5)
