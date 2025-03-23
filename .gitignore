@@ -2,4 +2,5 @@
 .DS_Store
 __pycache__/
 login.txt
-bypass_codes.txt
+LoginResources/*.txt
+Tests/TestResources/*.txt

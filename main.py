@@ -88,7 +88,7 @@ def run_bot(headless, login_manager, hour, time_slot, url):
 
 def main():
     # Create login manager for credential handling
-    login_manager = LoginManager("login.txt", "bypass_codes.txt")
+    login_manager = LoginManager("LoginResources/login.txt", "LoginResources/bypass_codes.txt")
 
     # Fetch new codes if falling below threshold
     if login_manager.num_codes_left() <= CODE_THRESHOLD:

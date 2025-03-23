@@ -39,9 +39,9 @@ pip3 install -U selenium
 Create a file to store your username and password (in gitignore so info is not saved). Username must be on first line and password second line:
 
 ```bash
-touch login.txt
-echo your_username >> login.txt
-echo your_password >> login.txt
+touch LoginResources/login.txt
+echo your_username >> LoginResources/login.txt
+echo your_password >> LoginResources/login.txt
 ```
 
 ## Usage
@@ -52,4 +52,19 @@ Once this is completed you can run the following command:
 
 ```bash
 python3 main.py
+```
+
+## Testing
+
+Install pytest:
+
+```bash
+pip3 install pytest
+pip3 install pytest selenium
+```
+
+Run tests
+
+```bash
+pytest Tests/test_login_manager.py
 ```

@@ -3,10 +3,10 @@ import pytest
 from login_manager import LoginManager
 
 @pytest.fixture
-def login_manager(tmp_path):
+def login_manager():
     # Temporary file paths for testing
-    login_file = tmp_path / "login.txt"
-    code_file = tmp_path / "codes.txt"
+    login_file = "Tests/TestResources/login_test.txt"
+    code_file = "Tests/TestResources/bypass_codes_test.txt"
 
     # Write initial login credentials
     with open(login_file, 'w') as f:
@@ -15,9 +15,9 @@ def login_manager(tmp_path):
 
     # Write initial bypass codes
     with open(code_file, 'w') as f:
-        f.write("123456\n")
-        f.write("654321\n")
-        f.write("111222\n")
+        f.write("123456789\n")
+        f.write("987654321\n")
+        f.write("111222333\n")
 
     return LoginManager(login_file_path=login_file, code_file_path=code_file)
 
@@ -30,7 +30,7 @@ def test_get_credentials(login_manager):
 
 def test_get_code(login_manager):
     code = login_manager.get_code()
-    assert code == "123456", f"Expected '123456' but got '{code}'"
+    assert code == "123456789", f"Expected '123456789' but got '{code}'"
     assert login_manager.num_codes_left() == 2, f"Expected 2 codes left, but got {login_manager.num_codes_left()}"
 
 
@@ -50,8 +50,8 @@ def test_num_codes_left(login_manager):
 
 
 def test_save_codes(login_manager):
-    new_codes = ["999999", "888888"]
+    new_codes = ["999999999", "888888888"]
     login_manager.save_codes(new_codes)
 
     assert login_manager.num_codes_left() == 2, f"Expected 2 codes left after saving, but got {login_manager.num_codes_left()}"
-    assert login_manager.get_code() == "999999", "First saved code mismatch"
+    assert login_manager.get_code() == "999999999", "First saved code mismatch"
