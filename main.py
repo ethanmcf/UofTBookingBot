@@ -5,6 +5,7 @@ from Pages.HomePage import HomePage
 from Pages.SelectPage import SelectPage
 from Pages.LoginPage import LoginPage
 from Pages.CodesPage import CodesPage
+from Pages.DuoPage import DuoPage
 
 from login_manager import LoginManager
 from datetime import datetime, timedelta
@@ -37,7 +38,6 @@ def main():
     code_dr.get(BYPASS_CODES_URL)
     codes_page = CodesPage(code_dr)
     login_manager = LoginManager("login.txt", "bypass_codes.txt", codes_page)
-    code = login_manager.get_code()
     code_dr.quit()
 
     # Create and run driver with url
@@ -47,9 +47,12 @@ def main():
     home_page = HomePage(dr)
     home_page.login()
     
-    login_page = LoginPage(dr, code)
+    login_page = LoginPage(dr, login_manager)
     login_page.login()
-    
+
+    duo_page = DuoPage(dr, login_manager)
+    duo_page.bypass()
+
     wanted_date = (datetime.now() + timedelta(days=2)).strftime("%A, %B %d, %Y")
     hour, times = TIMES["11AM"]
     select_time_page = SelectPage(dr, hour, times, wanted_date)
