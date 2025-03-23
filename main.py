@@ -92,7 +92,7 @@ def main():
 
     # Fetch new codes if falling below threshold
     if login_manager.num_codes_left() <= CODE_THRESHOLD:
-        run_fetch_bypass_codes(HEADLESS)
+        run_fetch_bypass_codes(HEADLESS, login_manager)
     
     # Run bot
     url = SPORT_URLS["golf"]
