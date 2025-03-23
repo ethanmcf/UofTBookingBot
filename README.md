@@ -60,7 +60,6 @@ Install pytest:
 
 ```bash
 pip3 install pytest
-pip3 install pytest selenium
 ```
 
 Run tests
