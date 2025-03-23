@@ -100,8 +100,8 @@ def main():
 
         # Cleanup resources used by login manager
         login_manager.cleanup()
-    except:
-        print("An error has occurred.")
+    except Exception as e:
+        print(e)
         exit(1)
     finally:
         login_manager.cleanup()
