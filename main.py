@@ -33,12 +33,8 @@ def create_driver(headless = False):
 
 
 def main():
-    # Get code and reload codes if needed
-    code_dr = create_driver(False)
-    code_dr.get(BYPASS_CODES_URL)
-    codes_page = CodesPage(code_dr)
-    login_manager = LoginManager("login.txt", "bypass_codes.txt", codes_page)
-    code_dr.quit()
+    # Create login manager
+    login_manager = LoginManager("login.txt", "bypass_codes.txt")
 
     # Create and run driver with url
     dr = create_driver(False) 
