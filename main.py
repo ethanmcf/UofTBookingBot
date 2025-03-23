@@ -52,12 +52,12 @@ def run_fetch_bypass_codes(login_manager):
 
     print("Successfully saved new bypass codes.")
 
-def run_bot(login_manager):
-     # Register for drop-in activity
+def run_bot(login_manager, hour, time_slot, url):
+    # Register for drop-in activity
     print("Setting up registration for drop-in activity...")
     
     dr = create_driver(False) 
-    dr.get(SPORT_URLS["golf"])
+    dr.get(url)
 
     home_page = HomePage(dr)
     home_page.login()
@@ -69,8 +69,8 @@ def run_bot(login_manager):
     duo_page.bypass()
 
     wanted_date = (datetime.now() + timedelta(days=2)).strftime("%A, %B %d, %Y")
-    hour, times = TIMES["11AM"]
-    select_time_page = SelectPage(dr, hour, times, wanted_date)
+
+    select_time_page = SelectPage(dr, hour, time_slot, wanted_date)
     select_time_page.select()
 
     payment_page = PaymentPage(dr)
@@ -79,9 +79,11 @@ def run_bot(login_manager):
     check_out_page = CheckoutPage(dr)
     check_out_page.checkout()
 
+    dr.quit()
+
     print("Successfully finished registration.")
     
-    dr.quit()
+    
 
 def main():
     # Create login manager for credential handling
@@ -92,7 +94,9 @@ def main():
         run_fetch_bypass_codes()
     
     # Run bot
-    run_bot(login_manager)
+    url = SPORT_URLS["golf"]
+    hour, time_slot = TIMES["11AM"]
+    run_bot(login_manager, hour, time_slot, url)
    
 
 
