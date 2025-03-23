@@ -9,7 +9,6 @@ from Pages.DuoPage import DuoPage
 
 from login_manager import LoginManager
 from datetime import datetime, timedelta
-import time
 
 SPORT_URLS = {
     "golf" : "https://recreation.utoronto.ca/Program/GetProgramDetails?courseId=5904837f-6aa4-4707-bcfb-2ece4049bae0&semesterid=be7544c3-d05c-443f-844b-8ce87874f958",
@@ -33,10 +32,31 @@ def create_driver(headless = False):
 
 
 def main():
-    # Create login manager
+    # Create login manager for credential handling
     login_manager = LoginManager("login.txt", "bypass_codes.txt")
 
-    # Create and run driver with url
+    # Fetch new bypass codes
+    print("Fetching new bypass codes...")
+
+    codes_dr = create_driver(headless=False)
+    codes_dr.get(BYPASS_CODES_URL)
+
+    codes_login_page = LoginPage(codes_dr, login_manager)
+    codes_login_page.login()
+
+    codes_duo_page = DuoPage(codes_dr, login_manager, has_trust_prompt=False)
+    codes_duo_page.bypass()
+
+    codes_page = CodesPage(codes_dr, login_manager)
+    codes_page.generate_codes()
+
+    codes_dr.quit()
+
+    print("Successfully saved new bypass codes.")
+
+    # Register for drop-in activity
+    print("Setting up registration for drop-in activity...")
+    
     dr = create_driver(False) 
     dr.get(SPORT_URLS["golf"])
 
@@ -60,11 +80,9 @@ def main():
     check_out_page = CheckoutPage(dr)
     check_out_page.checkout()
 
-    print("done")
-    time.sleep(5)
+    print("Successfully finished registration.")
     
     dr.quit()
-
 
 
 if __name__ == '__main__':
