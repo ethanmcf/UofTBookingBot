@@ -1,7 +1,6 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from Pages.BasePage import BasePage
-import time
 
 class LoginPage(BasePage):
     def __init__(self, driver, login_manager):
@@ -15,8 +14,6 @@ class LoginPage(BasePage):
         username, password = self.login_manager.get_credentials()
         self.click(self.utorid_input)
         self.send_keys(self.utorid_input, username)
-        time.sleep(1)
         self.click(self.password_input)
         self.send_keys(self.password_input, password)
-        time.sleep(1)
         self.click(self.login_btn)

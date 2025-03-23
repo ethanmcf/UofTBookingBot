@@ -2,6 +2,7 @@ class LoginManager():
     def __init__(self, login_file_path, code_file_path):
         self.login_file_path = login_file_path
         self.code_file_path = code_file_path
+        self.quit = lambda: exit(1)
 
     def get_credentials(self):
         try:
