@@ -7,24 +7,12 @@ import pytest
 def login_manager():
     
     def create_resource_folder():
-        folder_path = "Tests/TestResources"  # Replace with your desired folder path
-        file1_path = os.path.join(folder_path, 'login_test.txt')  
-        file2_path = os.path.join(folder_path, 'bypass_codes_test.txt')  
+        folder_path = "Tests/TestResources" 
 
         # Check if folder exists
         if not os.path.exists(folder_path):
             # Folder doesn't exist, create it
             os.makedirs(folder_path)
-            
-            # Create two empty files
-            with open(file1_path, 'w') as file1:
-                pass  # Create an empty file
-            with open(file2_path, 'w') as file2:
-                pass  # Create an empty file
-            
-            print('Folder and files created successfully!')
-        else:
-            print('Folder already exists.')
     
     # Create folder and files if they do not exist
     create_resource_folder()
