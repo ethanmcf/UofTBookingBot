@@ -2,9 +2,10 @@ from selenium.webdriver.common.by import By
 from Pages.BasePage import BasePage
 
 class DuoPage(BasePage):
-    def __init__(self, driver, login_manager):
+    def __init__(self, driver, login_manager, has_trust_prompt = True):
         super().__init__(driver)
         self.login_manager = login_manager
+        self.has_trust_prompt = has_trust_prompt
         self.other_options_btn = (By.XPATH, "/html/body/div/div/div[1]/div/div[2]/div[6]/a")
         self.bypass_code_option_btn = (By.XPATH, "/html/body/div/div/div[1]/div/div[1]/ul/li[4]/a")
         self.code_input = (By.ID, "passcode-input")
@@ -19,4 +20,6 @@ class DuoPage(BasePage):
         self.click(self.code_input)
         self.send_keys(self.code_input, code)
         self.click(self.code_submit_btn)
-        self.click(self.trust_device_btn)
+
+        if self.has_trust_prompt:
+            self.click(self.trust_device_btn)

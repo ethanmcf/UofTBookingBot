@@ -32,8 +32,9 @@ class SelectPage(BasePage):
         current_datetime = datetime.now() + timedelta(days=2) 
         dif_time = target_datetime - current_datetime - timedelta(seconds=10) 
         sleep_seconds = dif_time.total_seconds() 
-        print(sleep_seconds if sleep_seconds > 0 else 0)
+        print("Waiting for", sleep_seconds if sleep_seconds > 0 else 0, "seconds...")
         time.sleep(sleep_seconds if sleep_seconds > 0 else 0)
+        print("Registering for drop-in activity...")
 
         card = None
         while True:

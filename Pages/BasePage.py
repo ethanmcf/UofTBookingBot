@@ -23,11 +23,18 @@ class BasePage:
             print("Timeout")
             self.quit()
     
-    
     def send_keys(self, locator, text): 
         try: 
             self.wait.until(EC.element_to_be_clickable(locator)).send_keys(text)
         except TimeoutException:
             print("Timeout")
             self.quit()
+    
+    def find_element(self, locator):
+        try: 
+            return self.wait.until(EC.visibility_of_element_located(locator))
+        except TimeoutException:
+            print("Timeout")
+            self.quit()
         
+        return None
