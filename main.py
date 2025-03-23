@@ -10,6 +10,7 @@ from Pages.DuoPage import DuoPage
 from login_manager import LoginManager
 from datetime import datetime, timedelta
 
+# Global Consts
 SPORT_URLS = {
     "golf" : "https://recreation.utoronto.ca/Program/GetProgramDetails?courseId=5904837f-6aa4-4707-bcfb-2ece4049bae0&semesterid=be7544c3-d05c-443f-844b-8ce87874f958",
     "hockey" : "https://recreation.utoronto.ca/Program/GetProgramDetails?courseId=dcd5a035-731e-416b-a546-5f808404a3dc",
@@ -23,6 +24,7 @@ TIMES = {
     "1PM" : ["13:00:00", "1:00 PM - 1:55 PM"]
 }
 
+CODE_THRESHOLD = 3
 
 def create_driver(headless = False):
     option = webdriver.ChromeOptions()
@@ -30,11 +32,7 @@ def create_driver(headless = False):
     dr = webdriver.Chrome(options=option)
     return dr
 
-
-def main():
-    # Create login manager for credential handling
-    login_manager = LoginManager("login.txt", "bypass_codes.txt")
-
+def run_fetch_bypass_codes(login_manager):
     # Fetch new bypass codes
     print("Fetching new bypass codes...")
 
@@ -54,7 +52,8 @@ def main():
 
     print("Successfully saved new bypass codes.")
 
-    # Register for drop-in activity
+def run_bot(login_manager):
+     # Register for drop-in activity
     print("Setting up registration for drop-in activity...")
     
     dr = create_driver(False) 
@@ -83,6 +82,18 @@ def main():
     print("Successfully finished registration.")
     
     dr.quit()
+
+def main():
+    # Create login manager for credential handling
+    login_manager = LoginManager("login.txt", "bypass_codes.txt")
+
+    # Fetch new codes if falling below threshold
+    if login_manager.num_codes_left() <= CODE_THRESHOLD:
+        run_fetch_bypass_codes()
+    
+    # Run bot
+    run_bot(login_manager)
+   
 
 
 if __name__ == '__main__':
