@@ -84,8 +84,6 @@ def run_bot(headless, login_manager, hour, time_slot, url):
 
     print("Successfully finished registration.")
     
-    
-
 def main():
     # Create login manager for credential handling
     login_manager = LoginManager("login.txt", "bypass_codes.txt")
@@ -98,11 +96,9 @@ def main():
     url = SPORT_URLS["golf"]
     hour, time_slot = TIMES["11AM"]
     run_bot(HEADLESS, login_manager, hour, time_slot, url)
+
+    # Cleanup resources used by login manager
+    login_manager.cleanup()
    
-
-
 if __name__ == '__main__':
     main()
-
-
-
