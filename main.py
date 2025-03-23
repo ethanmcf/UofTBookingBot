@@ -10,6 +10,7 @@ from Pages.DuoPage import DuoPage
 from login_manager import LoginManager
 from datetime import datetime, timedelta
 
+# Global Consts
 SPORT_URLS = {
     "golf" : "https://recreation.utoronto.ca/Program/GetProgramDetails?courseId=5904837f-6aa4-4707-bcfb-2ece4049bae0&semesterid=be7544c3-d05c-443f-844b-8ce87874f958",
     "hockey" : "https://recreation.utoronto.ca/Program/GetProgramDetails?courseId=dcd5a035-731e-416b-a546-5f808404a3dc",
@@ -23,6 +24,8 @@ TIMES = {
     "1PM" : ["13:00:00", "1:00 PM - 1:55 PM"]
 }
 
+CODE_THRESHOLD = 3
+HEADLESS = False
 
 def create_driver(headless = False):
     option = webdriver.ChromeOptions()
@@ -30,15 +33,11 @@ def create_driver(headless = False):
     dr = webdriver.Chrome(options=option)
     return dr
 
-
-def main():
-    # Create login manager for credential handling
-    login_manager = LoginManager("login.txt", "bypass_codes.txt")
-
+def run_fetch_bypass_codes(headless, login_manager):
     # Fetch new bypass codes
     print("Fetching new bypass codes...")
 
-    codes_dr = create_driver(headless=False)
+    codes_dr = create_driver(headless)
     codes_dr.get(BYPASS_CODES_URL)
 
     codes_login_page = LoginPage(codes_dr, login_manager)
@@ -54,11 +53,12 @@ def main():
 
     print("Successfully saved new bypass codes.")
 
+def run_bot(headless, login_manager, hour, time_slot, url):
     # Register for drop-in activity
     print("Setting up registration for drop-in activity...")
     
-    dr = create_driver(False) 
-    dr.get(SPORT_URLS["golf"])
+    dr = create_driver(headless) 
+    dr.get(url)
 
     home_page = HomePage(dr)
     home_page.login()
@@ -70,8 +70,8 @@ def main():
     duo_page.bypass()
 
     wanted_date = (datetime.now() + timedelta(days=2)).strftime("%A, %B %d, %Y")
-    hour, times = TIMES["11AM"]
-    select_time_page = SelectPage(dr, hour, times, wanted_date)
+
+    select_time_page = SelectPage(dr, hour, time_slot, wanted_date)
     select_time_page.select()
 
     payment_page = PaymentPage(dr)
@@ -80,9 +80,25 @@ def main():
     check_out_page = CheckoutPage(dr)
     check_out_page.checkout()
 
+    dr.quit()
+
     print("Successfully finished registration.")
     
-    dr.quit()
+    
+
+def main():
+    # Create login manager for credential handling
+    login_manager = LoginManager("login.txt", "bypass_codes.txt")
+
+    # Fetch new codes if falling below threshold
+    if login_manager.num_codes_left() <= CODE_THRESHOLD:
+        run_fetch_bypass_codes(HEADLESS, login_manager)
+    
+    # Run bot
+    url = SPORT_URLS["golf"]
+    hour, time_slot = TIMES["11AM"]
+    run_bot(HEADLESS, login_manager, hour, time_slot, url)
+   
 
 
 if __name__ == '__main__':
