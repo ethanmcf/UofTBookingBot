@@ -41,6 +41,14 @@ class LoginManager():
             print("Error writing to bypass code file")
             self.quit()
 
+    def num_codes_left(self):
+        try:
+            with open(self.code_file_path, 'r') as file:
+                return sum(1 for _ in file) 
+        except:
+            print("Error reading to bypass code file")
+            self.quit()
+
     def save_codes(self, codes):        
         try:
             with open(self.code_file_path, 'w') as file:
