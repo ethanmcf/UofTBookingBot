@@ -1,8 +1,7 @@
 class LoginManager():
-    def __init__(self, login_file_path, code_file_path, codes_page):
+    def __init__(self, login_file_path, code_file_path):
         self.login_file_path = login_file_path
         self.code_file_path = code_file_path
-        self.codes_page = codes_page
 
     def get_credentials(self):
         try:
