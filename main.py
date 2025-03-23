@@ -25,6 +25,7 @@ TIMES = {
 }
 
 CODE_THRESHOLD = 3
+HEADLESS = False
 
 def create_driver(headless = False):
     option = webdriver.ChromeOptions()
@@ -32,11 +33,11 @@ def create_driver(headless = False):
     dr = webdriver.Chrome(options=option)
     return dr
 
-def run_fetch_bypass_codes(login_manager):
+def run_fetch_bypass_codes(headless, login_manager):
     # Fetch new bypass codes
     print("Fetching new bypass codes...")
 
-    codes_dr = create_driver(headless=False)
+    codes_dr = create_driver(headless)
     codes_dr.get(BYPASS_CODES_URL)
 
     codes_login_page = LoginPage(codes_dr, login_manager)
@@ -52,11 +53,11 @@ def run_fetch_bypass_codes(login_manager):
 
     print("Successfully saved new bypass codes.")
 
-def run_bot(login_manager, hour, time_slot, url):
+def run_bot(headless, login_manager, hour, time_slot, url):
     # Register for drop-in activity
     print("Setting up registration for drop-in activity...")
     
-    dr = create_driver(False) 
+    dr = create_driver(headless) 
     dr.get(url)
 
     home_page = HomePage(dr)
@@ -91,12 +92,12 @@ def main():
 
     # Fetch new codes if falling below threshold
     if login_manager.num_codes_left() <= CODE_THRESHOLD:
-        run_fetch_bypass_codes()
+        run_fetch_bypass_codes(HEADLESS)
     
     # Run bot
     url = SPORT_URLS["golf"]
     hour, time_slot = TIMES["11AM"]
-    run_bot(login_manager, hour, time_slot, url)
+    run_bot(HEADLESS, login_manager, hour, time_slot, url)
    
 
 
