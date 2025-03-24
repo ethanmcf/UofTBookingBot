@@ -11,7 +11,6 @@ class SelectPage(BasePage):
         self.start_time = start_time
         self.posting_offset = posting_offset
         self.time_limit = time_limit
-        self.cards_container = (By.ID, "instanceList")
         self.select_btn = (By.XPATH, "//button[contains(@class, 'program-select-btn') and contains(text(), 'Select')]")
         self.registration_btn = (By.ID, 'registerBtn')
 
