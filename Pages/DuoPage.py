@@ -6,10 +6,10 @@ class DuoPage(BasePage):
         super().__init__(driver)
         self.login_manager = login_manager
         self.has_trust_prompt = has_trust_prompt
-        self.other_options_btn = (By.XPATH, "/html/body/div/div/div[1]/div/div[2]/div[6]/a")
-        self.bypass_code_option_btn = (By.XPATH, "/html/body/div/div/div[1]/div/div[1]/ul/li[4]/a")
+        self.other_options_btn = (By.XPATH, "//a[contains(text(), 'Other options')]")
+        self.bypass_code_option_btn = (By.XPATH, "//a[.//div[contains(text(), 'Bypass code')]]")
         self.code_input = (By.ID, "passcode-input")
-        self.code_submit_btn = (By.XPATH, "/html/body/div/div/div[1]/div/div[2]/form/div[3]/button")
+        self.code_submit_btn = (By.CLASS_NAME, "verify-button")
         self.trust_device_btn = (By.ID, "trust-browser-button")
 
     def bypass(self):
