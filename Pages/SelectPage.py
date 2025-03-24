@@ -1,5 +1,6 @@
 from Pages.BasePage import BasePage
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from datetime import datetime, timedelta
 from selenium.common.exceptions import NoSuchElementException
@@ -15,15 +16,22 @@ class SelectPage(BasePage):
         self.select_btn = (By.XPATH, "//button[contains(@class, 'program-select-btn') and contains(text(), 'Select')]")
         self.registration_btn = (By.ID, 'registerBtn')
 
-        # Create a concrete locator for time slot card
+        # Create a concrete locator for time slot card and select date button
         self.formatted_date = datetime.fromisoformat(self.date).strftime("%A, %B %d, %Y")
         self.formatted_start_time = datetime.strptime(self.start_time, "%H:%M").strftime("%-I:%M %p")
         self.time_slot_card = (By.XPATH, f"//div[@class='card mb-4 d-flex' and @data-instance-dates='{self.formatted_date}' and starts-with(@data-instance-times, '{self.formatted_start_time}')]")
+        self.select_date_btn = (By.XPATH, f"//button[contains(@class, 'date-selector-btn') and not(contains(@class, 'mobile')) and .//*[contains(text(), '{self.formatted_date}')]]")
 
     def wait_for_url_to_start(self):
         WebDriverWait(self.dr, 60).until(
             lambda driver: driver.current_url.startswith("https://recreation.utoronto.ca/")
         )
+
+    def short_wait_find_element(self, locator):
+        try:
+            return WebDriverWait(self.dr, 2).until(EC.element_to_be_clickable(locator))
+        except:
+            return None
 
     def wait_for_time_slot(self):
         # Wait for url
@@ -49,17 +57,23 @@ class SelectPage(BasePage):
         stopping_datetime = datetime.now() + timedelta(seconds=self.time_limit)
         while True:
             try:
-                # Refresh the page
-                self.dr.refresh()
+                # only refresh page if on the correct url page (eliminates refreshing when logging in)
+                if self.dr.current_url.startswith("https://recreation.utoronto.ca/"):
+                    # Refresh the page
+                    self.dr.refresh()
+                    
+                    # Look for correct date and time selection
+                    select_btn = self.short_wait_find_element(self.select_date_btn)
+                    select_btn.click()
 
                 # Look for the correct time slot to press
                 card = self.dr.find_element(*self.time_slot_card)
-                btn = card.find_element(*self.select_btn)
+                slot_btn = card.find_element(*self.select_btn)
 
                 # Click the time slot if it is enabled
-                if not btn.is_enabled():
+                if not slot_btn.is_enabled():
                     raise Exception("Desired time slot button is disabled.")
-                btn.click()
+                slot_btn.click()
 
                 break
             except Exception:
