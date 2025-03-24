@@ -1,5 +1,6 @@
 from Pages.BasePage import BasePage
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from datetime import datetime, timedelta
 import time
@@ -24,6 +25,12 @@ class SelectPage(BasePage):
         WebDriverWait(self.dr, 60).until(
             lambda driver: driver.current_url.startswith("https://recreation.utoronto.ca/")
         )
+
+    def short_wait_find_element(self, locator):
+        try:
+            return WebDriverWait(self.dr, 2).until(EC.element_to_be_clickable(locator))
+        except:
+            return None
 
     def wait_for_time_slot(self):
         # Wait for url
@@ -51,7 +58,8 @@ class SelectPage(BasePage):
                     # Refresh the page
                     self.dr.refresh()
                     # Look for correct date and time selection
-                    select_btn = self.dr.find_element(*self.select_date_btn)
+                    
+                    select_btn = self.short_wait_find_element(self.select_date_btn)
                     select_btn.click()
 
                     # Look for the correct time slot to press
@@ -61,13 +69,14 @@ class SelectPage(BasePage):
 
                     return True
             except Exception:
-                # No element found this iteration -> throttle refresh rate slightly (~30ms)
-                time.sleep(0.8)
+                # No element found this iteration -> throttle refresh rate slightly (~100ms)
+                time.sleep(0.1)
             finally:
                 # Stop checking once we reach our maximum time limit
                 if datetime.now() >= stopping_datetime:
                     return False
     
+
     def select(self):
         if not self.wait_for_time_slot():
             print("Timeout - no slot was found")
