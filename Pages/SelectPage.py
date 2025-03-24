@@ -20,13 +20,9 @@ class SelectPage(BasePage):
         self.time_slot_card = (By.XPATH, f"//div[@class='card mb-4 d-flex' and @data-instance-dates='{formatted_date}' and starts-with(@data-instance-times, '{formatted_start_time}')]")
 
     def wait_for_url_to_start(self):
-        try:
-            WebDriverWait(self.dr, 60).until(
-                lambda driver: driver.current_url.startswith("https://recreation.utoronto.ca/")
-            )
-        except:
-            print("Took too long to login")
-            self.quit()
+        WebDriverWait(self.dr, 60).until(
+            lambda driver: driver.current_url.startswith("https://recreation.utoronto.ca/")
+        )
 
     def wait_for_time_slot(self):
         # Wait for url
@@ -61,8 +57,8 @@ class SelectPage(BasePage):
 
                     return True
             except Exception:
-                # No element found this iteration -> throttle refresh rate slightly (~30ms)
-                time.sleep(0.03)
+                # No element found this iteration -> throttle refresh rate slightly (~100ms)
+                time.sleep(0.1)
             finally:
                 # Stop checking once we reach our maximum time limit
                 if datetime.now() >= stopping_datetime:
