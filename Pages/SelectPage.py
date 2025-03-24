@@ -1,19 +1,23 @@
 from Pages.BasePage import BasePage
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
 from datetime import datetime, timedelta
 import time
 
 class SelectPage(BasePage):
-    def __init__(self, driver, hour, times, wanted_date):
+    def __init__(self, driver, date, start_time, posting_offset, time_limit):
         super().__init__(driver)
-        self.time_slot_card = (By.XPATH, f"//div[@class='card mb-4 d-flex' and @data-instance-dates='{wanted_date}' and @data-instance-times='{times}']")
+        self.date = date
+        self.start_time = start_time
+        self.posting_offset = posting_offset
+        self.time_limit = time_limit
         self.select_btn = (By.XPATH, "//button[contains(@class, 'program-select-btn') and contains(text(), 'Select')]")
         self.registration_btn = (By.ID, 'registerBtn')
-        self.date = wanted_date
-        self.hour = hour
+
+        # Create a concrete locator for time slot card
+        formatted_date = datetime.fromisoformat(self.date).strftime("%A, %B %d, %Y")
+        formatted_start_time = datetime.strptime(self.start_time, "%H:%M").strftime("%-I:%S %p")
+        self.time_slot_card = (By.XPATH, f"//div[@class='card mb-4 d-flex' and @data-instance-dates='{formatted_date}' and starts-with(@data-instance-times, '{formatted_start_time}')]")
 
     def wait_for_url_to_start(self):
         try:
@@ -28,30 +32,41 @@ class SelectPage(BasePage):
         # Wait for url
         self.wait_for_url_to_start()
 
-        target_datetime = datetime.strptime(f"{self.date} {self.hour}", "%A, %B %d, %Y %H:%M:%S")
-        current_datetime = datetime.now() + timedelta(days=2) 
-        dif_time = target_datetime - current_datetime - timedelta(seconds=10) 
-        sleep_seconds = dif_time.total_seconds() 
-        print("Waiting for", sleep_seconds if sleep_seconds > 0 else 0, "seconds...")
-        time.sleep(sleep_seconds if sleep_seconds > 0 else 0)
+        # Wait until registration opens if nec.
+        if self.posting_offset:
+            activity_datetime = datetime.strptime(f"{self.date} {self.start_time}:00", "%Y-%m-%d %H:%M:%S")
+            wakeup_datetime = activity_datetime - timedelta(days=self.posting_offset) - timedelta(seconds=3)
+            diff_time = wakeup_datetime - datetime.now()
+            sleep_seconds = max(0, diff_time.total_seconds())
+
+            print(f"Waiting for {sleep_seconds} seconds...")
+
+            time.sleep(sleep_seconds)
+
         print("Registering for drop-in activity...")
 
-        card = None
+        # Continually wait for the registration button to appear (capped by a time limit)
+        stopping_datetime = datetime.now() + timedelta(seconds=self.time_limit)
         while True:
             try:
-                # only refresh page if on the correct url page (elminates refreshing when loging in)
+                # only refresh page if on the correct url page (eliminates refreshing when logging in)
                 if self.dr.current_url.startswith("https://recreation.utoronto.ca/"):
                     # Refresh the page
                     self.dr.refresh()
-                    
-                    card = self.dr.find_element(self.time_slot_card)
-                    by, info = self.select_btn
-                    btn = card.find_element(by, info)
+
+                    # Look for the correct time slot to press
+                    card = self.dr.find_element(*self.time_slot_card)
+                    btn = card.find_element(*self.select_btn)
                     btn.click()
-                    return 
-                
-            except Exception as e:
-                pass # no element found this iterations
+
+                    return True
+            except Exception:
+                # No element found this iteration -> throttle refresh rate slightly (~30ms)
+                time.sleep(0.03)
+            finally:
+                # Stop checking once we reach our maximum time limit
+                if datetime.now() >= stopping_datetime:
+                    return False
     
     def select(self):
         if not self.wait_for_time_slot():
@@ -66,3 +81,4 @@ class SelectPage(BasePage):
 
         # click registration
         self.click(self.registration_btn)
+        
