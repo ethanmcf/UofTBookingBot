@@ -21,13 +21,9 @@ class SelectPage(BasePage):
         self.select_date_btn = (By.XPATH, f"//button[contains(@class, 'date-selector-btn') and not(contains(@class, 'mobile')) and .//*[contains(text(), '{formatted_date}')]]")
 
     def wait_for_url_to_start(self):
-        try:
-            WebDriverWait(self.dr, 60).until(
-                lambda driver: driver.current_url.startswith("https://recreation.utoronto.ca/")
-            )
-        except:
-            print("Took too long to login")
-            self.quit()
+        WebDriverWait(self.dr, 60).until(
+            lambda driver: driver.current_url.startswith("https://recreation.utoronto.ca/")
+        )
 
     def wait_for_time_slot(self):
         # Wait for url
