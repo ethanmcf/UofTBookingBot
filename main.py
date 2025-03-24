@@ -60,19 +60,23 @@ def run_fetch_bypass_codes(headless, login_manager):
     # Fetch new bypass codes
     print("Fetching new bypass codes...")
 
-    codes_dr = create_driver(headless)
-    codes_dr.get(BYPASS_CODES_URL)
+    dr = create_driver(headless)
+    dr.get(BYPASS_CODES_URL)
 
-    codes_login_page = LoginPage(codes_dr, login_manager)
+    codes_login_page = LoginPage(dr, login_manager)
     codes_login_page.login()
 
-    codes_duo_page = DuoPage(codes_dr, login_manager, has_trust_prompt=False)
-    codes_duo_page.bypass()
+    try:
+        codes_duo_page = DuoPage(dr, login_manager, has_trust_prompt=False)
+        codes_duo_page.bypass()
+    except TimeoutException as e:
+        if not dr.current_url.startswith("https://recreation.utoronto.ca/"):
+            raise e
 
-    codes_page = CodesPage(codes_dr, login_manager)
+    codes_page = CodesPage(dr, login_manager)
     codes_page.generate_codes()
 
-    codes_dr.quit()
+    dr.quit()
 
     print("Successfully saved new bypass codes.")
 
