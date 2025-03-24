@@ -57,8 +57,8 @@ class SelectPage(BasePage):
                 if self.dr.current_url.startswith("https://recreation.utoronto.ca/"):
                     # Refresh the page
                     self.dr.refresh()
-                    # Look for correct date and time selection
                     
+                    # Look for correct date and time selection
                     select_btn = self.short_wait_find_element(self.select_date_btn)
                     select_btn.click()
 
