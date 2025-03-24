@@ -6,6 +6,8 @@ from Pages.SelectPage import SelectPage
 from Pages.LoginPage import LoginPage
 from Pages.CodesPage import CodesPage
 from Pages.DuoPage import DuoPage
+
+from selenium.common.exceptions import TimeoutException
 from login_manager import LoginManager
 import argparse
 
@@ -58,19 +60,23 @@ def run_fetch_bypass_codes(headless, login_manager):
     # Fetch new bypass codes
     print("Fetching new bypass codes...")
 
-    codes_dr = create_driver(headless)
-    codes_dr.get(BYPASS_CODES_URL)
+    dr = create_driver(headless)
+    dr.get(BYPASS_CODES_URL)
 
-    codes_login_page = LoginPage(codes_dr, login_manager)
+    codes_login_page = LoginPage(dr, login_manager)
     codes_login_page.login()
 
-    codes_duo_page = DuoPage(codes_dr, login_manager, has_trust_prompt=False)
-    codes_duo_page.bypass()
+    try:
+        codes_duo_page = DuoPage(dr, login_manager, has_trust_prompt=False)
+        codes_duo_page.bypass()
+    except TimeoutException as e:
+        if not dr.current_url.startswith("https://recreation.utoronto.ca/"):
+            raise e
 
-    codes_page = CodesPage(codes_dr, login_manager)
+    codes_page = CodesPage(dr, login_manager)
     codes_page.generate_codes()
 
-    codes_dr.quit()
+    dr.quit()
 
     print("Successfully saved new bypass codes.")
 
@@ -87,8 +93,12 @@ def run_bot(headless, login_manager, url, date, start_time, posting_offset, time
     login_page = LoginPage(dr, login_manager)
     login_page.login()
 
-    duo_page = DuoPage(dr, login_manager)
-    duo_page.bypass()
+    try:
+        duo_page = DuoPage(dr, login_manager)
+        duo_page.bypass()
+    except TimeoutException as e:
+        if not dr.current_url.startswith("https://recreation.utoronto.ca/"):
+            raise e
 
     select_time_page = SelectPage(dr, date, start_time, posting_offset, time_limit)
     select_time_page.select()
@@ -98,7 +108,6 @@ def run_bot(headless, login_manager, url, date, start_time, posting_offset, time
 
     check_out_page = CheckoutPage(dr)
     check_out_page.checkout()
-
     dr.quit()
 
     print("Successfully finished registration.")

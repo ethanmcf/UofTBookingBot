@@ -1,4 +1,5 @@
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
 from Pages.BasePage import BasePage
 
 class DuoPage(BasePage):
@@ -13,13 +14,15 @@ class DuoPage(BasePage):
         self.trust_device_btn = (By.ID, "trust-browser-button")
 
     def bypass(self):
-        code = self.login_manager.get_code()
-
         self.click(self.other_options_btn)
         self.click(self.bypass_code_option_btn)
         self.click(self.code_input)
+
+        code = self.login_manager.get_code()
         self.send_keys(self.code_input, code)
         self.click(self.code_submit_btn)
 
         if self.has_trust_prompt:
             self.click(self.trust_device_btn)
+
+
