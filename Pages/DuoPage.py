@@ -24,5 +24,3 @@ class DuoPage(BasePage):
 
         if self.has_trust_prompt:
             self.click(self.trust_device_btn)
-
-

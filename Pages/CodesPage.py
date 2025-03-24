@@ -17,6 +17,8 @@ class CodesPage(BasePage):
         # Extract codes
         content = self.find_element(self.main).text
         codes = re.findall(r"\d{9}", content)
+        if not codes:
+            raise Exception("No codes found during bypass code extraction.")
 
         # Save codes locally
         self.login_manager.save_codes(codes)

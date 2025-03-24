@@ -6,6 +6,7 @@ from Pages.SelectPage import SelectPage
 from Pages.LoginPage import LoginPage
 from Pages.CodesPage import CodesPage
 from Pages.DuoPage import DuoPage
+import textwrap
 
 from selenium.common.exceptions import TimeoutException
 from login_manager import LoginManager
@@ -41,8 +42,7 @@ def get_args():
     if args.activity:
         args.url = ACTIVITY_URLS.get(args.activity)
         if not args.url:
-            print("Invalid drop-in activity given.")
-            exit(2)
+            raise Exception("Invalid drop-in activity given.")
     
     # Nullify posting offset if no wait flag was given
     if args.no_wait:
@@ -56,11 +56,10 @@ def create_driver(headless = False):
     dr = webdriver.Chrome(options=option)
     return dr
 
-def run_fetch_bypass_codes(headless, login_manager):
+def run_fetch_bypass_codes(dr, login_manager):
     # Fetch new bypass codes
     print("Fetching new bypass codes...")
 
-    dr = create_driver(headless)
     dr.get(BYPASS_CODES_URL)
 
     codes_login_page = LoginPage(dr, login_manager)
@@ -76,15 +75,12 @@ def run_fetch_bypass_codes(headless, login_manager):
     codes_page = CodesPage(dr, login_manager)
     codes_page.generate_codes()
 
-    dr.quit()
-
     print("Successfully saved new bypass codes.")
 
-def run_bot(headless, login_manager, url, date, start_time, posting_offset, time_limit):
+def run_bot(dr, login_manager, url, date, start_time, posting_offset, time_limit):
     # Register for drop-in activity
     print("Setting up registration for drop-in activity...")
     
-    dr = create_driver(headless) 
     dr.get(url)
 
     home_page = HomePage(dr)
@@ -93,12 +89,14 @@ def run_bot(headless, login_manager, url, date, start_time, posting_offset, time
     login_page = LoginPage(dr, login_manager)
     login_page.login()
 
+    duo_page = DuoPage(dr, login_manager)
     try:
-        duo_page = DuoPage(dr, login_manager)
+        # DUO page doesn't always show up at this point -> Bypass if it does
         duo_page.bypass()
     except TimeoutException as e:
+        # Timeout is expected if DUO page didn't show up, unknown error otherwise
         if not dr.current_url.startswith("https://recreation.utoronto.ca/"):
-            raise e
+            raise e from None
 
     select_time_page = SelectPage(dr, date, start_time, posting_offset, time_limit)
     select_time_page.select()
@@ -108,33 +106,56 @@ def run_bot(headless, login_manager, url, date, start_time, posting_offset, time
 
     check_out_page = CheckoutPage(dr)
     check_out_page.checkout()
-    dr.quit()
 
     print("Successfully finished registration.")
+
+def print_exception(e):
+    title = "ERROR"
+    w = 100  # max width
+    f_c = " "  # fill char in title
+    title_len = len(title)
+    f_len = (w - title_len - 2) // 2  # number of fill chars on each side
+    ex = (w - title_len - 2) % 2  # extra fill char on right side if nec.
+    print(
+        "-" * w + "\n" +
+        f_c * f_len + " " + title + " " + f_c * (f_len + ex) + "\n" + 
+        "-" * w + "\n" +
+        textwrap.fill(str(e), width=w) + "\n" +
+        "-" * w
+    )
     
 def main():
-    # Gather registration data input from command-line
-    args = get_args()
-
-    # Create login manager for credential handling
-    login_manager = LoginManager("LoginResources/login.txt", "LoginResources/bypass_codes.txt")
+    login_manager = None
+    driver = None
 
     try:
+        # Gather registration data input from command-line
+        args = get_args()
+
+        # Create login manager for credential handling
+        login_manager = LoginManager("LoginResources/login.txt", "LoginResources/bypass_codes.txt")
+
         # Fetch new codes if at or below threshold
-        headless = not args.visible
+        headless = not args.visible 
         if login_manager.num_codes_left() <= args.codes_threshold:
-            run_fetch_bypass_codes(headless, login_manager)
+            driver = create_driver(headless)
+            run_fetch_bypass_codes(driver, login_manager)
+            driver.quit()
         
         # Run bot
-        run_bot(headless, login_manager, args.url, args.date, args.time, args.offset, args.time_limit)
-
-        # Cleanup resources used by login manager
-        login_manager.cleanup()
+        driver = create_driver(headless)
+        run_bot(driver, login_manager, args.url, args.date, args.time, args.offset, args.time_limit)
     except Exception as e:
-        print(e)
+        print_exception(e)
         exit(1)
     finally:
-        login_manager.cleanup()
+        # Cleanup resources
+        if driver:
+            driver.quit()
+        if login_manager:
+            login_manager.cleanup()
+    
+    exit(0)
    
 if __name__ == '__main__':
     main()

@@ -11,15 +11,15 @@ class BasePage:
         self.dr.quit()
 
     def click(self, locator, submit = False):
-        btn = self.wait.until(EC.element_to_be_clickable(locator))
+        btn = self.wait.until(EC.element_to_be_clickable(locator), f"Timed out waiting for the following element to be clickable: {locator}.")
         if submit:
             btn.submit()
         else:
             btn.click()
     
     def send_keys(self, locator, text): 
-        self.wait.until(EC.element_to_be_clickable(locator)).send_keys(text)
+        self.wait.until(EC.element_to_be_clickable(locator), f"Timed out waiting for the following element to be clickable: {locator}.").send_keys(text)
 
-    
     def find_element(self, locator):
-        return self.wait.until(EC.visibility_of_element_located(locator))
+        return self.wait.until(EC.visibility_of_element_located(locator), f"Timed out waiting for the following element to be visible:  {locator}.")
+    
