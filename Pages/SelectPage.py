@@ -1,5 +1,6 @@
 from Pages.BasePage import BasePage
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from datetime import datetime, timedelta
 import time
@@ -14,15 +15,22 @@ class SelectPage(BasePage):
         self.select_btn = (By.XPATH, "//button[contains(@class, 'program-select-btn') and contains(text(), 'Select')]")
         self.registration_btn = (By.ID, 'registerBtn')
 
-        # Create a concrete locator for time slot card
+        # Create a concrete locator for time slot card and select date button
         formatted_date = datetime.fromisoformat(self.date).strftime("%A, %B %d, %Y")
         formatted_start_time = datetime.strptime(self.start_time, "%H:%M").strftime("%-I:%S %p")
         self.time_slot_card = (By.XPATH, f"//div[@class='card mb-4 d-flex' and @data-instance-dates='{formatted_date}' and starts-with(@data-instance-times, '{formatted_start_time}')]")
+        self.select_date_btn = (By.XPATH, f"//button[contains(@class, 'date-selector-btn') and not(contains(@class, 'mobile')) and .//*[contains(text(), '{formatted_date}')]]")
 
     def wait_for_url_to_start(self):
         WebDriverWait(self.dr, 60).until(
             lambda driver: driver.current_url.startswith("https://recreation.utoronto.ca/")
         )
+
+    def short_wait_find_element(self, locator):
+        try:
+            return WebDriverWait(self.dr, 2).until(EC.element_to_be_clickable(locator))
+        except:
+            return None
 
     def wait_for_time_slot(self):
         # Wait for url
@@ -49,11 +57,15 @@ class SelectPage(BasePage):
                 if self.dr.current_url.startswith("https://recreation.utoronto.ca/"):
                     # Refresh the page
                     self.dr.refresh()
+                    
+                    # Look for correct date and time selection
+                    select_btn = self.short_wait_find_element(self.select_date_btn)
+                    select_btn.click()
 
                     # Look for the correct time slot to press
                     card = self.dr.find_element(*self.time_slot_card)
-                    btn = card.find_element(*self.select_btn)
-                    btn.click()
+                    slot_btn = card.find_element(*self.select_btn)
+                    slot_btn.click()
 
                     return True
             except Exception:
@@ -64,6 +76,7 @@ class SelectPage(BasePage):
                 if datetime.now() >= stopping_datetime:
                     return False
     
+
     def select(self):
         if not self.wait_for_time_slot():
             print("Timeout - no slot was found")
