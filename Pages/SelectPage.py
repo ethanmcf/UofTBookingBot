@@ -14,10 +14,11 @@ class SelectPage(BasePage):
         self.select_btn = (By.XPATH, "//button[contains(@class, 'program-select-btn') and contains(text(), 'Select')]")
         self.registration_btn = (By.ID, 'registerBtn')
 
-        # Create a concrete locator for time slot card
+        # Create a concrete locator for time slot card and select date button
         formatted_date = datetime.fromisoformat(self.date).strftime("%A, %B %d, %Y")
         formatted_start_time = datetime.strptime(self.start_time, "%H:%M").strftime("%-I:%S %p")
         self.time_slot_card = (By.XPATH, f"//div[@class='card mb-4 d-flex' and @data-instance-dates='{formatted_date}' and starts-with(@data-instance-times, '{formatted_start_time}')]")
+        self.select_date_btn = (By.XPATH, f"//button[contains(@class, 'date-selector-btn') and not(contains(@class, 'mobile')) and .//*[contains(text(), '{formatted_date}')]]")
 
     def wait_for_url_to_start(self):
         try:
@@ -53,16 +54,19 @@ class SelectPage(BasePage):
                 if self.dr.current_url.startswith("https://recreation.utoronto.ca/"):
                     # Refresh the page
                     self.dr.refresh()
+                    # Look for correct date and time selection
+                    select_btn = self.dr.find_element(*self.select_date_btn)
+                    select_btn.click()
 
                     # Look for the correct time slot to press
                     card = self.dr.find_element(*self.time_slot_card)
-                    btn = card.find_element(*self.select_btn)
-                    btn.click()
+                    slot_btn = card.find_element(*self.select_btn)
+                    slot_btn.click()
 
                     return True
             except Exception:
                 # No element found this iteration -> throttle refresh rate slightly (~30ms)
-                time.sleep(0.03)
+                time.sleep(0.8)
             finally:
                 # Stop checking once we reach our maximum time limit
                 if datetime.now() >= stopping_datetime:
