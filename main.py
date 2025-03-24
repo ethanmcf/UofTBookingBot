@@ -7,6 +7,7 @@ from Pages.LoginPage import LoginPage
 from Pages.CodesPage import CodesPage
 from Pages.DuoPage import DuoPage
 
+from selenium.common.exceptions import TimeoutException
 from login_manager import LoginManager
 from datetime import datetime, timedelta
 
@@ -66,8 +67,12 @@ def run_bot(headless, login_manager, hour, time_slot, url):
     login_page = LoginPage(dr, login_manager)
     login_page.login()
 
-    duo_page = DuoPage(dr, login_manager)
-    duo_page.bypass()
+    try:
+        duo_page = DuoPage(dr, login_manager)
+        duo_page.bypass()
+    except TimeoutException as e:
+        if not dr.current_url.startswith("https://recreation.utoronto.ca/"):
+            raise e
 
     wanted_date = (datetime.now() + timedelta(days=2)).strftime("%A, %B %d, %Y")
 
@@ -79,7 +84,6 @@ def run_bot(headless, login_manager, hour, time_slot, url):
 
     check_out_page = CheckoutPage(dr)
     check_out_page.checkout()
-
     dr.quit()
 
     print("Successfully finished registration.")
