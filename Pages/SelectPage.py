@@ -55,6 +55,10 @@ class SelectPage(BasePage):
                 # Look for the correct time slot to press
                 card = self.dr.find_element(*self.time_slot_card)
                 btn = card.find_element(*self.select_btn)
+
+                # Click the time slot if it is enabled
+                if not btn.is_enabled():
+                    raise Exception("Desired time slot button is disabled.")
                 btn.click()
 
                 break
@@ -71,7 +75,7 @@ class SelectPage(BasePage):
     
     def select(self):
         if not self.wait_for_time_slot():
-            raise Exception("Timeout - registration slot could not be found within 10 seconds.")
+            raise Exception("Timeout - registration slot could not be found/accessed within 10 seconds.")
 
         # Handle possible cookie message
         try:
