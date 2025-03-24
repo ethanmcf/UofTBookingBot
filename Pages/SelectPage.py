@@ -28,10 +28,7 @@ class SelectPage(BasePage):
         )
 
     def short_wait_find_element(self, locator):
-        try:
-            return WebDriverWait(self.dr, 2).until(EC.element_to_be_clickable(locator))
-        except:
-            return None
+        return WebDriverWait(self.dr, 2).until(EC.element_to_be_clickable(locator))
 
     def wait_for_time_slot(self):
         # Wait for url
@@ -57,14 +54,12 @@ class SelectPage(BasePage):
         stopping_datetime = datetime.now() + timedelta(seconds=self.time_limit)
         while True:
             try:
-                # only refresh page if on the correct url page (eliminates refreshing when logging in)
-                if self.dr.current_url.startswith("https://recreation.utoronto.ca/"):
-                    # Refresh the page
-                    self.dr.refresh()
-                    
-                    # Look for correct date and time selection
-                    select_btn = self.short_wait_find_element(self.select_date_btn)
-                    select_btn.click()
+                # Refresh the page
+                self.dr.refresh()
+                
+                # Look for correct date and time selection
+                select_btn = self.short_wait_find_element(self.select_date_btn)
+                select_btn.click()
 
                 # Look for the correct time slot to press
                 card = self.dr.find_element(*self.time_slot_card)
