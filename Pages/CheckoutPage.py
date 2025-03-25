@@ -1,7 +1,6 @@
 from selenium.webdriver.common.by import By
 from Pages.BasePage import BasePage
 
-
 class CheckoutPage(BasePage):
     def __init__(self, driver):
         super().__init__(driver)
@@ -11,3 +10,4 @@ class CheckoutPage(BasePage):
     def checkout(self):
         self.click(self.checkout_btn)
         self.click(self.checkout_modal_btn)
+        

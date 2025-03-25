@@ -3,6 +3,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from datetime import datetime, timedelta
+from selenium.common.exceptions import NoSuchElementException
 import time
 
 class SelectPage(BasePage):
@@ -12,14 +13,13 @@ class SelectPage(BasePage):
         self.start_time = start_time
         self.posting_offset = posting_offset
         self.time_limit = time_limit
-        self.select_btn = (By.XPATH, "//button[contains(@class, 'program-select-btn') and contains(text(), 'Select')]")
         self.registration_btn = (By.ID, 'registerBtn')
 
-        # Create a concrete locator for time slot card and select date button
-        formatted_date = datetime.fromisoformat(self.date).strftime("%A, %B %d, %Y")
-        formatted_start_time = datetime.strptime(self.start_time, "%H:%M").strftime("%-I:%S %p")
-        self.time_slot_card = (By.XPATH, f"//div[@class='card mb-4 d-flex' and @data-instance-dates='{formatted_date}' and starts-with(@data-instance-times, '{formatted_start_time}')]")
-        self.select_date_btn = (By.XPATH, f"//button[contains(@class, 'date-selector-btn') and not(contains(@class, 'mobile')) and .//*[contains(text(), '{formatted_date}')]]")
+        # Create a concrete locator for time slot button and select date button
+        self.formatted_date = datetime.fromisoformat(self.date).strftime("%A, %B %d, %Y")
+        self.formatted_start_datetime = datetime.strptime(f"{self.date} {self.start_time}:00", "%Y-%m-%d %H:%M:%S").strftime("%-m/%-d/%Y %-I:%M:%S %p")
+        self.slot_btn = (By.XPATH, f"//button[@data-instance-starttime='{self.formatted_start_datetime}' and contains(@class, 'program-select-btn') and contains(text(), 'Select')]")
+        self.select_date_btn = (By.XPATH, f"//button[contains(@class, 'date-selector-btn') and not(contains(@class, 'mobile')) and .//*[contains(text(), '{self.formatted_date}')]]")
 
     def wait_for_url_to_start(self):
         WebDriverWait(self.dr, 60).until(
@@ -27,10 +27,7 @@ class SelectPage(BasePage):
         )
 
     def short_wait_find_element(self, locator):
-        try:
-            return WebDriverWait(self.dr, 2).until(EC.element_to_be_clickable(locator))
-        except:
-            return None
+        return WebDriverWait(self.dr, 2).until(EC.element_to_be_clickable(locator))
 
     def wait_for_time_slot(self):
         # Wait for url
@@ -43,51 +40,62 @@ class SelectPage(BasePage):
             diff_time = wakeup_datetime - datetime.now()
             sleep_seconds = max(0, diff_time.total_seconds())
 
-            print(f"Waiting for {sleep_seconds} seconds...")
+            print(f"Waiting for {sleep_seconds} second(s)", end="")
+            if sleep_seconds > 0:
+                print(f" until {wakeup_datetime.strftime('%A, %B %d, %Y at %-I:%M:%S %p')}", end="")
+            print("...")
 
             time.sleep(sleep_seconds)
 
-        print("Registering for drop-in activity...")
+        print(f"Registering for drop-in activity on {self.formatted_start_datetime}...")
 
         # Continually wait for the registration button to appear (capped by a time limit)
         stopping_datetime = datetime.now() + timedelta(seconds=self.time_limit)
         while True:
             try:
-                # only refresh page if on the correct url page (eliminates refreshing when logging in)
-                if self.dr.current_url.startswith("https://recreation.utoronto.ca/"):
-                    # Refresh the page
-                    self.dr.refresh()
-                    
-                    # Look for correct date and time selection
-                    select_btn = self.short_wait_find_element(self.select_date_btn)
-                    select_btn.click()
+                # Ensure we are on the right page 
+                if not self.dr.current_url.startswith("https://recreation.utoronto.ca/"):
+                    raise Exception("Bot illegally navigated to a non drop-in website.")
+                
+                # Refresh the page
+                self.dr.refresh()
+                
+                # Look for correct date and time selection
+                select_date_btn = self.short_wait_find_element(self.select_date_btn)
+                select_date_btn.click()
 
-                    # Look for the correct time slot to press
-                    card = self.dr.find_element(*self.time_slot_card)
-                    slot_btn = card.find_element(*self.select_btn)
-                    slot_btn.click()
+                # Look for the correct time slot to press
+                slot_btn = self.short_wait_find_element(self.slot_btn)
 
-                    return True
+                # Click the time slot if it is enabled
+                if not slot_btn.is_enabled():
+                    raise Exception("Desired time slot button is disabled.")
+                slot_btn.click()
+
+                break
             except Exception:
                 # No element found this iteration -> throttle refresh rate slightly (~100ms)
                 time.sleep(0.1)
-            finally:
+
                 # Stop checking once we reach our maximum time limit
                 if datetime.now() >= stopping_datetime:
                     return False
+        
+        return True
+            
     
-
     def select(self):
         if not self.wait_for_time_slot():
-            print("Timeout - no slot was found")
-            self.quit()
-            return
+            raise Exception("Timeout - registration slot could not be found/accessed within 10 seconds.")
 
         # Handle possible cookie message
-        cookie_message = self.dr.find_element(By.ID, "gdpr-cookie-message")
-        cookie_close_btn = cookie_message.find_element(By.XPATH, ".//button")
-        cookie_close_btn.click()
+        try:
+            cookie_message = self.dr.find_element(By.ID, "gdpr-cookie-message")
+            cookie_close_btn = cookie_message.find_element(By.XPATH, ".//button")
+            cookie_close_btn.click()
+        except NoSuchElementException:
+            pass
 
-        # click registration
+        # Click registration
         self.click(self.registration_btn)
         
