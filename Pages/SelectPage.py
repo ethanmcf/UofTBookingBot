@@ -22,11 +22,6 @@ class SelectPage(BasePage):
         self.slot_btn = (By.XPATH, f"//button[@data-instance-starttime='{self.formatted_start_datetime}' and contains(@class, 'program-select-btn') and contains(text(), 'Select')]")
         self.select_date_btn = (By.XPATH, f"//button[contains(@class, 'date-selector-btn') and not(contains(@class, 'mobile')) and .//*[contains(text(), '{self.formatted_date}')]]")
 
-    def wait_for_url_to_start(self):
-        WebDriverWait(self.dr, 60).until(
-            lambda driver: driver.current_url.startswith("https://recreation.utoronto.ca/")
-        )
-
     def short_wait_find_element(self, locator):
         return WebDriverWait(self.dr, 0.1).until(EC.element_to_be_clickable(locator))
     
@@ -50,9 +45,6 @@ class SelectPage(BasePage):
             time.sleep(0.1)
 
     def wait_for_time_slot(self):
-        # Wait for url
-        self.wait_for_url_to_start()
-
         # Wait until registration opens if nec.
         if self.posting_offset:
             activity_datetime = datetime.strptime(f"{self.date} {self.start_time}:00", "%Y-%m-%d %H:%M:%S")
@@ -92,7 +84,7 @@ class SelectPage(BasePage):
                 self.wait_for_fetch_response("https://recreation.utoronto.ca/Program/FilterProgramInstances")
 
                 # Look for the correct time slot to press
-                slot_btn = self.short_wait_find_element(self.slot_btn)
+                slot_btn =  self.short_wait_find_element(self.slot_btn)
 
                 # Click the time slot if it is enabled
                 if not slot_btn.is_enabled():
