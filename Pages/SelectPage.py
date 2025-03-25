@@ -42,7 +42,7 @@ class SelectPage(BasePage):
 
             print(f"Waiting for {sleep_seconds} second(s)", end="")
             if sleep_seconds > 0:
-                print(f" until {wakeup_datetime.strftime("%A, %B %d, %Y at %-I:%M:%S %p")}", end="")
+                print(f" until {wakeup_datetime.strftime('%A, %B %d, %Y at %-I:%M:%S %p')}", end="")
             print("...")
 
             time.sleep(sleep_seconds)
