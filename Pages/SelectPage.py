@@ -45,9 +45,6 @@ class SelectPage(BasePage):
             time.sleep(0.1)
 
     def wait_for_time_slot(self):
-        # Wait for page to load before continuing
-        self.wait_for_fetch_response("https://recreation.utoronto.ca/Program/GetProgramInstances")
-
         # Wait until registration opens if nec.
         if self.posting_offset:
             activity_datetime = datetime.strptime(f"{self.date} {self.start_time}:00", "%Y-%m-%d %H:%M:%S")
