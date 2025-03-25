@@ -54,6 +54,10 @@ class SelectPage(BasePage):
         stopping_datetime = datetime.now() + timedelta(seconds=self.time_limit)
         while True:
             try:
+                # Ensure we are on the right page 
+                if not self.dr.current_url.startswith("https://recreation.utoronto.ca/"):
+                    raise Exception("Bot illegally navigated to a non drop-in website.")
+                
                 # Refresh the page
                 self.dr.refresh()
                 
