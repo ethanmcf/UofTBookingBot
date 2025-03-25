@@ -1,3 +1,4 @@
+import json
 from Pages.BasePage import BasePage
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -27,7 +28,26 @@ class SelectPage(BasePage):
         )
 
     def short_wait_find_element(self, locator):
-        return WebDriverWait(self.dr, 2).until(EC.element_to_be_clickable(locator))
+        return WebDriverWait(self.dr, 0.1).until(EC.element_to_be_clickable(locator))
+    
+    def wait_for_fetch_response(self, target_url, time_limit = 60):
+        max_datetime = datetime.now() + timedelta(seconds=time_limit)
+        while datetime.now() < max_datetime:
+            logs = self.dr.get_log("performance")
+            for log in logs:
+                message = log["message"]       
+                if "Network.responseReceived" not in message:
+                    continue
+
+                params = json.loads(message)["message"].get("params")
+                if not params:
+                    continue
+                
+                response = params.get("response")
+                if response and response["url"].startswith(target_url):
+                    return
+                
+            time.sleep(0.1)
 
     def wait_for_time_slot(self):
         # Wait for url
@@ -48,21 +68,28 @@ class SelectPage(BasePage):
             time.sleep(sleep_seconds)
 
         print(f"Registering for drop-in activity on {self.formatted_start_datetime}...")
-
+        
         # Continually wait for the registration button to appear (capped by a time limit)
+        self.dr.get_log("performance") # clear logs to start fresh
         stopping_datetime = datetime.now() + timedelta(seconds=self.time_limit)
         while True:
             try:
                 # Ensure we are on the right page 
                 if not self.dr.current_url.startswith("https://recreation.utoronto.ca/"):
                     raise Exception("Bot illegally navigated to a non drop-in website.")
-                
+
                 # Refresh the page
                 self.dr.refresh()
-                
+
+                # Wait for date select button data to load
+                self.wait_for_fetch_response("https://recreation.utoronto.ca/Program/GetProgramInstances")
+
                 # Look for correct date and time selection
                 select_date_btn = self.short_wait_find_element(self.select_date_btn)
                 select_date_btn.click()
+
+                # Wait for time slot data to load
+                self.wait_for_fetch_response("https://recreation.utoronto.ca/Program/FilterProgramInstances")
 
                 # Look for the correct time slot to press
                 slot_btn = self.short_wait_find_element(self.slot_btn)
@@ -83,10 +110,9 @@ class SelectPage(BasePage):
         
         return True
             
-    
     def select(self):
         if not self.wait_for_time_slot():
-            raise Exception("Timeout - registration slot could not be found/accessed within 10 seconds.")
+            raise Exception(f"Timeout - registration slot could not be found/accessed within {self.time_limit} seconds.")
 
         # Handle possible cookie message
         try:

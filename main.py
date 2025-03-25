@@ -52,7 +52,9 @@ def get_args():
 
 def create_driver(headless = False):
     option = webdriver.ChromeOptions()
-    if headless: option.add_argument('headless')
+    option.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
+    if headless:
+        option.add_argument('headless')
     dr = webdriver.Chrome(options=option)
     return dr
 
