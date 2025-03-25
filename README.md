@@ -4,7 +4,7 @@ A bot that automates the sign-up process for UofT drop-in activities.
 
 ## Prerequisites
 
-Before you begin, ensure you have Python 3.6+ and pip installed. If you don't have them, follow the instructions on the [official Python website](https://www.python.org/downloads/).
+Before you begin, ensure you have Python 3.11.1+ and pip installed. If you don't have them, follow the instructions on the [official Python website](https://www.python.org/downloads/).
 
 ## Setup Instructions 🚀
 
