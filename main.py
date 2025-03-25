@@ -113,17 +113,17 @@ def run_bot(dr, login_manager, url, date, start_time, posting_offset, time_limit
 
 def print_exception(e):
     title = "ERROR"
-    w = 100  # max width
+    title_width = 35
+    message_width = 80  # max width
     f_c = " "  # fill char in title
     title_len = len(title)
-    f_len = (w - title_len - 2) // 2  # number of fill chars on each side
-    ex = (w - title_len - 2) % 2  # extra fill char on right side if nec.
+    f_len = (title_width - title_len - 2) // 2  # number of fill chars on each side
+    ex = (title_width - title_len - 2) % 2  # extra fill char on right side if nec.
     print(
-        "-" * w + "\n" +
+        "-" * title_width + "\n" +
         f_c * f_len + " " + title + " " + f_c * (f_len + ex) + "\n" + 
-        "-" * w + "\n" +
-        textwrap.fill(str(e), width=w) + "\n" +
-        "-" * w
+        "-" * title_width + "\n" +
+        textwrap.fill(str(e), width=message_width) + "\n"
     )
     
 def main():
