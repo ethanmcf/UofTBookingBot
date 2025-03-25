@@ -13,13 +13,12 @@ class SelectPage(BasePage):
         self.start_time = start_time
         self.posting_offset = posting_offset
         self.time_limit = time_limit
-        self.select_btn = (By.XPATH, "//button[contains(@class, 'program-select-btn') and contains(text(), 'Select')]")
         self.registration_btn = (By.ID, 'registerBtn')
 
-        # Create a concrete locator for time slot card and select date button
+        # Create a concrete locator for time slot button and select date button
         self.formatted_date = datetime.fromisoformat(self.date).strftime("%A, %B %d, %Y")
-        self.formatted_start_time = datetime.strptime(self.start_time, "%H:%M").strftime("%-I:%M %p")
-        self.time_slot_card = (By.XPATH, f"//div[@class='card mb-4 d-flex' and @data-instance-dates='{self.formatted_date}' and starts-with(@data-instance-times, '{self.formatted_start_time}')]")
+        self.formatted_start_datetime = datetime.strptime(f"{self.date} {self.start_time}:00", "%Y-%m-%d %H:%M:%S").strftime("%-m/%-d/%Y %-I:%M:%S %p")
+        self.slot_btn = (By.XPATH, f"//button[@data-instance-starttime='{self.formatted_start_datetime}' and contains(@class, 'program-select-btn') and contains(text(), 'Select')]")
         self.select_date_btn = (By.XPATH, f"//button[contains(@class, 'date-selector-btn') and not(contains(@class, 'mobile')) and .//*[contains(text(), '{self.formatted_date}')]]")
 
     def wait_for_url_to_start(self):
@@ -48,7 +47,7 @@ class SelectPage(BasePage):
 
             time.sleep(sleep_seconds)
 
-        print(f"Registering for drop-in activity on {self.formatted_date} at {self.formatted_start_time}...")
+        print(f"Registering for drop-in activity on {self.formatted_start_datetime}...")
 
         # Continually wait for the registration button to appear (capped by a time limit)
         stopping_datetime = datetime.now() + timedelta(seconds=self.time_limit)
@@ -62,12 +61,11 @@ class SelectPage(BasePage):
                 self.dr.refresh()
                 
                 # Look for correct date and time selection
-                select_btn = self.short_wait_find_element(self.select_date_btn)
-                select_btn.click()
+                select_date_btn = self.short_wait_find_element(self.select_date_btn)
+                select_date_btn.click()
 
                 # Look for the correct time slot to press
-                card = self.dr.find_element(*self.time_slot_card)
-                slot_btn = card.find_element(*self.select_btn)
+                slot_btn = self.short_wait_find_element(self.slot_btn)
 
                 # Click the time slot if it is enabled
                 if not slot_btn.is_enabled():
