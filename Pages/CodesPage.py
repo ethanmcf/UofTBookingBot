@@ -12,7 +12,7 @@ class CodesPage(BasePage):
         
     def generate_codes(self):
         # Generate codes
-        self.click(self.get_codes_btn, submit=True) 
+        self.click(self.get_codes_btn, submit=True, sleep_params=(1, 0.3)) 
 
         # Extract codes
         content = self.find_element(self.main).text
