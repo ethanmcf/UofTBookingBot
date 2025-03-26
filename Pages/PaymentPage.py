@@ -19,6 +19,13 @@ class PaymentPage(BasePage):
         self.random_sleep(1, variance=0.5)
         self.click(self.accept_btn)
 
-        self.random_sleep(1, variance=0.5)
-        self.click(self.proceed_checkout_btn)
-        
+        self.random_sleep(3, variance=0.5)
+        num_clicks = 0
+        while(num_clicks < 20 and self.dr.current_url.startswith("https://recreation.utoronto.ca/registration/")):
+            try:
+                self.click(self.proceed_checkout_btn)
+            except Exception:
+                pass
+            
+            num_clicks += 1
+            self.random_sleep(0.2)
