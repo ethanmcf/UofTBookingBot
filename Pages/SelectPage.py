@@ -68,7 +68,7 @@ class SelectPage(BasePage):
             try:
                 # Ensure we are on the right page 
                 if not self.dr.current_url.startswith("https://recreation.utoronto.ca/"):
-                    raise Exception("Bot illegally navigated to a non drop-in website.")
+                    raise Exception("Bot is not on the drop-in website.")
 
                 # Refresh the page
                 self.dr.refresh()
@@ -78,17 +78,21 @@ class SelectPage(BasePage):
 
                 # Look for correct date and time selection
                 select_date_btn = self.short_wait_find_element(self.select_date_btn)
+                self.scroll_by(top=(450, 550))
+                self.random_sleep(0.3)
                 select_date_btn.click()
 
                 # Wait for time slot data to load
                 self.wait_for_fetch_response("https://recreation.utoronto.ca/Program/FilterProgramInstances")
 
                 # Look for the correct time slot to press
-                slot_btn =  self.short_wait_find_element(self.slot_btn)
+                slot_btn = self.short_wait_find_element(self.slot_btn)
 
                 # Click the time slot if it is enabled
                 if not slot_btn.is_enabled():
                     raise Exception("Desired time slot button is disabled.")
+                self.scroll_by(top=(50, 100))
+                self.random_sleep(0.4)
                 slot_btn.click()
 
                 break
@@ -115,5 +119,6 @@ class SelectPage(BasePage):
             pass
 
         # Click registration
+        self.random_sleep(0.3)
         self.click(self.registration_btn)
         

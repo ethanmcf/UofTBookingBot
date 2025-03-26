@@ -9,7 +9,11 @@ class CheckoutPage(BasePage):
         self.success_alert = (By.CLASS_NAME, "alert-success")
 
     def checkout(self):
+        self.random_sleep(2, variance=0.5)
         self.click(self.checkout_btn)
+
+        self.random_sleep(2, variance=0.5)
         self.click(self.checkout_modal_btn)
+        
         self.find_element(self.success_alert)
         
