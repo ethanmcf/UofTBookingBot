@@ -52,10 +52,30 @@ def get_args():
 
 def create_driver(headless = False):
     option = webdriver.ChromeOptions()
+
+    # Turn on logs for fetch request detection
     option.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
+
+    # Ensure extensions don't interfere with our bot
+    option.add_argument('--disable-extensions')
+
+    # Choose whether to show the browser or not visually
     if headless:
         option.add_argument('headless')
+
+    # Add anti-automation options to reduce liklihood of triggering captchas
+    option.add_argument('--start-maximized')
+    option.add_argument("--disable-blink-features=AutomationControlled") 
+    option.add_experimental_option("useAutomationExtension", False) 
+    option.add_experimental_option("excludeSwitches", ["enable-automation"]) 
+    # option.add_argument("user-agent=whatever you want")  # TODO: look into rotating user agents
+
+    # Create a Google Chrome browser
     dr = webdriver.Chrome(options=option)
+
+    # Clear JS properties that indicate we are a bot
+    dr.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})") 
+
     return dr
 
 def run_fetch_bypass_codes(dr, login_manager):
