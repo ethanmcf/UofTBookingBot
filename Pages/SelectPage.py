@@ -61,7 +61,7 @@ class SelectPage(BasePage):
         # Continually wait for the registration button to appear (capped by a time limit)
         self.dr.get_log("performance") # clear logs to start fresh
         stopping_datetime = datetime.now() + timedelta(seconds=self.time_limit)
-        short_dirver_wait = WebDriverWait(self.dr, 0.1)
+        short_driver_wait = WebDriverWait(self.dr, 0.1)
         while True:
             try:
                 # Ensure we are on the right page 
@@ -76,14 +76,14 @@ class SelectPage(BasePage):
 
                 # Look for correct date and time selection
                 self.scroll_by(top=(450, 550))
-                self.click(self.select_date_btn, driver_wait=short_dirver_wait)
+                self.click(self.select_date_btn, driver_wait=short_driver_wait)
 
                 # Wait for time slot data to load
                 self.wait_for_fetch_response("https://recreation.utoronto.ca/Program/FilterProgramInstances")
 
                 # Look for the correct time slot to press
                 self.scroll_by(top=(50, 100))
-                self.click(self.slot_btn, driver_wait=short_dirver_wait)
+                self.click(self.slot_btn, driver_wait=short_driver_wait)
                 
                 break
             except Exception:
