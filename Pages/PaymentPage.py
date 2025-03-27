@@ -1,6 +1,7 @@
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from Pages.BasePage import BasePage
+import time
 
 class PaymentPage(BasePage):
     def __init__(self, driver):
@@ -15,15 +16,12 @@ class PaymentPage(BasePage):
             # Check for a common CAPTCHA element (update XPath based on the site)
             captcha_element = self.dr.find_elements(By.XPATH, "//iframe[contains(@src, 'recaptcha')]")
             return len(captcha_element) > 0
-        except NoSuchElementException:
+        except Exception:
             return False
     
     def purchase(self):
         print("Payment Page ... purchasing")
         
-        if self.is_captcha_present():
-            raise Exception("**** Captcha detected ... terminating ****")
-
         self.click(self.next_btn, sleep_params=(1, 0.3))
 
         self.click(self.expand_waiver_btn, sleep_params=(1, 0.3))
