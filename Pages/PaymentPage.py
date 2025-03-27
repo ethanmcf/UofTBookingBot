@@ -10,7 +10,19 @@ class PaymentPage(BasePage):
         self.proceed_checkout_btn = (By.XPATH, "//div[contains(@class, 'stepActionButtons desktop')]//button[contains(@class, 'btn-NextRegistrationStep')]")
 
     def purchase(self):
-        self.click(self.next_btn)
-        self.click(self.expand_waiver_btn)
-        self.click(self.accept_btn)
-        self.click(self.proceed_checkout_btn)
+        self.click(self.next_btn, sleep_params=(1, 0.3))
+
+        self.click(self.expand_waiver_btn, sleep_params=(1, 0.3))
+
+        self.click(self.accept_btn, sleep_params=(1, 0.3))
+
+        self.random_sleep(3, variance=0.5)
+        num_clicks = 0
+        while(num_clicks < 20 and self.dr.current_url.startswith("https://recreation.utoronto.ca/registration/")):
+            try:
+                self.click(self.proceed_checkout_btn)
+            except Exception:
+                pass
+
+            num_clicks += 1
+            self.random_sleep(0.2)

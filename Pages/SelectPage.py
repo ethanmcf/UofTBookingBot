@@ -21,9 +21,6 @@ class SelectPage(BasePage):
         self.formatted_start_datetime = datetime.strptime(f"{self.date} {self.start_time}:00", "%Y-%m-%d %H:%M:%S").strftime("%-m/%-d/%Y %-I:%M:%S %p")
         self.slot_btn = (By.XPATH, f"//button[@data-instance-starttime='{self.formatted_start_datetime}' and contains(@class, 'program-select-btn') and contains(text(), 'Select')]")
         self.select_date_btn = (By.XPATH, f"//button[contains(@class, 'date-selector-btn') and not(contains(@class, 'mobile')) and .//*[contains(text(), '{self.formatted_date}')]]")
-
-    def short_wait_find_element(self, locator):
-        return WebDriverWait(self.dr, 0.1).until(EC.element_to_be_clickable(locator))
     
     def wait_for_fetch_response(self, target_url, time_limit = 60):
         max_datetime = datetime.now() + timedelta(seconds=time_limit)
@@ -64,11 +61,12 @@ class SelectPage(BasePage):
         # Continually wait for the registration button to appear (capped by a time limit)
         self.dr.get_log("performance") # clear logs to start fresh
         stopping_datetime = datetime.now() + timedelta(seconds=self.time_limit)
+        short_driver_wait = WebDriverWait(self.dr, 0.1)
         while True:
             try:
                 # Ensure we are on the right page 
                 if not self.dr.current_url.startswith("https://recreation.utoronto.ca/"):
-                    raise Exception("Bot illegally navigated to a non drop-in website.")
+                    raise Exception("Bot is not on the drop-in website.")
 
                 # Refresh the page
                 self.dr.refresh()
@@ -77,20 +75,16 @@ class SelectPage(BasePage):
                 self.wait_for_fetch_response("https://recreation.utoronto.ca/Program/GetProgramInstances")
 
                 # Look for correct date and time selection
-                select_date_btn = self.short_wait_find_element(self.select_date_btn)
-                select_date_btn.click()
+                self.scroll_by(top=(450, 550))
+                self.click(self.select_date_btn, driver_wait=short_driver_wait)
 
                 # Wait for time slot data to load
                 self.wait_for_fetch_response("https://recreation.utoronto.ca/Program/FilterProgramInstances")
 
                 # Look for the correct time slot to press
-                slot_btn =  self.short_wait_find_element(self.slot_btn)
-
-                # Click the time slot if it is enabled
-                if not slot_btn.is_enabled():
-                    raise Exception("Desired time slot button is disabled.")
-                slot_btn.click()
-
+                self.scroll_by(top=(50, 100))
+                self.click(self.slot_btn, driver_wait=short_driver_wait)
+                
                 break
             except Exception:
                 # No element found this iteration -> throttle refresh rate slightly (~100ms)

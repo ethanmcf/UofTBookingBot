@@ -9,7 +9,9 @@ class CheckoutPage(BasePage):
         self.success_alert = (By.CLASS_NAME, "alert-success")
 
     def checkout(self):
-        self.click(self.checkout_btn)
-        self.click(self.checkout_modal_btn)
+        self.click(self.checkout_btn, sleep_params=(1, 0.3))
+
+        self.click(self.checkout_modal_btn, sleep_params=(1, 0.3))
+        
         self.find_element(self.success_alert)
         
