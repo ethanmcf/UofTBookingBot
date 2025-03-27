@@ -11,6 +11,7 @@ class LoginPage(BasePage):
         self.login_btn = (By.ID, "login-btn")
         
     def login(self):
+        print("Login Page ... entering utorid and password")
         username, password = self.login_manager.get_credentials()
         self.click(self.utorid_input)
         self.send_keys(self.utorid_input, username)

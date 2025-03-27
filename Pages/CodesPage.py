@@ -11,6 +11,7 @@ class CodesPage(BasePage):
         self.main = (By.TAG_NAME, "main")
         
     def generate_codes(self):
+        print("Codes Page ... generating codes")
         # Generate codes
         self.click(self.get_codes_btn, submit=True, sleep_params=(1, 0.3)) 
 

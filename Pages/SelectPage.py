@@ -97,6 +97,8 @@ class SelectPage(BasePage):
         return True
             
     def select(self):
+        print("Select Page ... selecting")
+
         if not self.wait_for_time_slot():
             raise Exception(f"Timeout - registration slot could not be found/accessed within {self.time_limit} seconds.")
 

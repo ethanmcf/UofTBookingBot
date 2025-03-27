@@ -1,4 +1,5 @@
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException
 from Pages.BasePage import BasePage
 
 class PaymentPage(BasePage):
@@ -8,8 +9,10 @@ class PaymentPage(BasePage):
         self.expand_waiver_btn = (By.XPATH, "//button[@data-target='#regWaiver-collapse-1']")
         self.accept_btn = (By.CLASS_NAME, "btn-success.btnAccept")
         self.proceed_checkout_btn = (By.XPATH, "//div[contains(@class, 'stepActionButtons desktop')]//button[contains(@class, 'btn-NextRegistrationStep')]")
-
+    
     def purchase(self):
+        print("Payment Page ... purchasing")
+        
         self.click(self.next_btn, sleep_params=(1, 0.3))
 
         self.click(self.expand_waiver_btn, sleep_params=(1, 0.3))

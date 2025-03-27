@@ -11,6 +11,7 @@ import textwrap
 from selenium.common.exceptions import TimeoutException
 from login_manager import LoginManager
 import argparse
+import random
 
 # Global Consts
 BYPASS_CODES_URL = "https://bypass.utormfa.utoronto.ca/index.php"
@@ -19,6 +20,11 @@ ACTIVITY_URLS = {
     "soccer": "https://recreation.utoronto.ca/program/GetProgramDetails?courseId=c762f797-ce00-465f-9acd-52dc42f7eb42",
     "hockey": "https://recreation.utoronto.ca/Program/GetProgramDetails?courseId=dcd5a035-731e-416b-a546-5f808404a3dc"
 }
+AGENTS = [
+    "Mozilla/5.0 (Windows NT 4.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.517 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1309.0 Safari/537.17"
+]
 
 def get_args():
     # Define valid arguments structure
@@ -50,8 +56,15 @@ def get_args():
 
     return args
 
+def random_agent():
+    return random.choice(AGENTS)
+
 def create_driver(headless = False):
     option = webdriver.ChromeOptions()
+    
+    # Set agent
+    agent = random_agent()
+    option.add_argument(f'--user-agent={agent}')
 
     # Turn on logs for fetch request detection
     option.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
@@ -80,7 +93,7 @@ def create_driver(headless = False):
 
 def run_fetch_bypass_codes(dr, login_manager):
     # Fetch new bypass codes
-    print("Fetching new bypass codes...")
+    print("Fetching new bypass codes... \n" + "-"*30)
 
     dr.get(BYPASS_CODES_URL)
 
@@ -97,11 +110,11 @@ def run_fetch_bypass_codes(dr, login_manager):
     codes_page = CodesPage(dr, login_manager)
     codes_page.generate_codes()
 
-    print("Successfully saved new bypass codes.")
+    print("Successfully saved new bypass codes. \n")
 
 def run_bot(dr, login_manager, url, date, start_time, posting_offset, time_limit):
     # Register for drop-in activity
-    print("Setting up registration for drop-in activity...")
+    print("Setting up registration for drop-in activity...\n" + "-"*45)
     
     dr.get(url)
 
@@ -129,7 +142,7 @@ def run_bot(dr, login_manager, url, date, start_time, posting_offset, time_limit
     check_out_page = CheckoutPage(dr)
     check_out_page.checkout()
 
-    print("Successfully finished registration.")
+    print("Successfully finished registration. \n")
 
 def print_exception(e):
     title = "ERROR"
