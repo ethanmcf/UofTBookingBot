@@ -40,6 +40,8 @@ def get_args():
     parser.add_argument("-l", "--time-limit", help="The maximum number of seconds to run the bot past the start time without success. Defaults to 10.", type=int, default=10)
     parser.add_argument("-c", "--codes-threshold", help="The minimum number of codes needed before fetching new ones. Defaults to 3.", type=int, default=3)
     parser.add_argument("--visible", help="Display the browser while running (headless by default)", action="store_true")
+    parser.add_argument("--debug", help="Runs debug mode, adds screenshot in debug folder where exception occurs ", action="store_true")
+
 
     # Get args from command-line
     args = parser.parse_args()
@@ -114,7 +116,7 @@ def run_fetch_bypass_codes(dr, login_manager):
 
 def run_bot(dr, login_manager, url, date, start_time, posting_offset, time_limit):
     # Register for drop-in activity
-    print("Setting up registration for drop-in activity...\n" + "-"*45)
+    print("Setting up registration for drop-in activity...\n" + "-"*50)
     
     dr.get(url)
 
@@ -181,6 +183,8 @@ def main():
         driver = create_driver(headless)
         run_bot(driver, login_manager, args.url, args.date, args.time, args.offset, args.time_limit)
     except Exception as e:
+        if args.debug:
+            driver.save_screenshot("Debug/exception.png")
         print_exception(e)
         exit(1)
     finally:

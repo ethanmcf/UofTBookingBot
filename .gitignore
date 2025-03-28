@@ -4,3 +4,4 @@ __pycache__/
 login.txt
 LoginResources/*.txt
 Tests/TestResources/*.txt
+Debug/
