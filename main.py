@@ -10,9 +10,8 @@ import textwrap
 
 from selenium.common.exceptions import TimeoutException
 from login_manager import LoginManager
-import argparse
-import random
-import os
+import argparse, random, os
+from datetime import datetime
 
 # Global Consts
 BYPASS_CODES_URL = "https://bypass.utormfa.utoronto.ca/index.php"
@@ -193,7 +192,8 @@ def main():
     except Exception as e:
         if args.debug:
             create_debug_folder()
-            driver.save_screenshot("Debug/exception.png")
+            timestamp = datetime.today().strftime('%Y-%m-%d_%H-%M-%S')
+            driver.save_screenshot(f"Debug/exception{timestamp}.png")
         print_exception(e)
         exit(1)
     finally:
