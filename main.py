@@ -12,6 +12,7 @@ from selenium.common.exceptions import TimeoutException
 from login_manager import LoginManager
 import argparse
 import random
+import os
 
 # Global Consts
 BYPASS_CODES_URL = "https://bypass.utormfa.utoronto.ca/index.php"
@@ -160,7 +161,14 @@ def print_exception(e):
         "-" * title_width + "\n" +
         textwrap.fill(str(e), width=message_width) + "\n"
     )
-    
+
+def create_debug_folder():
+        folder_path = "Debug" 
+
+        # Check if folder exists
+        if not os.path.exists(folder_path):
+            # Folder doesn't exist, create it
+            os.makedirs(folder_path)
 def main():
     login_manager = None
     driver = None
@@ -184,6 +192,7 @@ def main():
         run_bot(driver, login_manager, args.url, args.date, args.time, args.offset, args.time_limit)
     except Exception as e:
         if args.debug:
+            create_debug_folder()
             driver.save_screenshot("Debug/exception.png")
         print_exception(e)
         exit(1)

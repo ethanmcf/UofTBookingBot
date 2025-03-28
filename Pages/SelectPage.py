@@ -101,7 +101,8 @@ class SelectPage(BasePage):
 
         if not self.wait_for_time_slot():
             raise Exception(f"Timeout - registration slot could not be found/accessed within {self.time_limit} seconds.")
-
+        
+        print("Spot has been secured!")
         # Handle possible cookie message
         try:
             cookie_message = self.dr.find_element(By.ID, "gdpr-cookie-message")
