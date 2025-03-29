@@ -16,8 +16,8 @@ from datetime import datetime
 # Global Consts
 BYPASS_CODES_URL = "https://bypass.utormfa.utoronto.ca/index.php"
 ACTIVITY_URLS = {
-    "golf": "https://recreation.utoronto.ca/program/GetProgramDetails?courseId=5904837f-6aa4-4707-bcfb-2ece4049bae0",
-    "soccer": "https://recreation.utoronto.ca/program/GetProgramDetails?courseId=c762f797-ce00-465f-9acd-52dc42f7eb42",
+    "golf": "https://recreation.utoronto.ca/Program/GetProgramDetails?courseId=5904837f-6aa4-4707-bcfb-2ece4049bae0",
+    "soccer": "https://recreation.utoronto.ca/Program/GetProgramDetails?courseId=c762f797-ce00-465f-9acd-52dc42f7eb42",
     "hockey": "https://recreation.utoronto.ca/Program/GetProgramDetails?courseId=dcd5a035-731e-416b-a546-5f808404a3dc",
     "basketball": "https://recreation.utoronto.ca/Program/GetProgramDetails?courseId=56e18068-7b50-45df-8854-1921ad1bee80"
 }
@@ -84,7 +84,6 @@ def create_driver(headless = False):
     option.add_argument("--disable-blink-features=AutomationControlled") 
     option.add_experimental_option("useAutomationExtension", False) 
     option.add_experimental_option("excludeSwitches", ["enable-automation"]) 
-    # option.add_argument("user-agent=whatever you want")  # TODO: look into rotating user agents
 
     # Create a Google Chrome browser
     dr = webdriver.Chrome(options=option)
