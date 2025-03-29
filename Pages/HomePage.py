@@ -9,6 +9,6 @@ class HomePage(BasePage):
         self.uoft_login_btn_pu = (By.CLASS_NAME, "btn-sso-shibboleth")
 
     def login(self):
-        print("Home Page ... loging in")
+        print("Home Page ... logging in")
         self.click(self.login_btn)
         self.click(self.uoft_login_btn_pu)

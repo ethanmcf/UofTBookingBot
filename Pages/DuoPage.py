@@ -14,7 +14,7 @@ class DuoPage(BasePage):
         self.trust_device_btn = (By.ID, "trust-browser-button")
 
     def bypass(self):
-        print("Dou Page ... bypassing")
+        print("Duo Page ... bypassing")
         self.click(self.other_options_btn)
         self.click(self.bypass_code_option_btn)
         self.click(self.code_input)
