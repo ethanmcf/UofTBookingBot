@@ -65,7 +65,7 @@ class SelectPage(BasePage):
         while True:
             try:
                 # Ensure we are on the right page 
-                if not self.dr.current_url.startswith("https://recreation.utoronto.ca/"):
+                if not self.dr.current_url.lower().startswith("https://recreation.utoronto.ca/program/"):
                     raise Exception("Bot is not on the drop-in website.")
 
                 # Refresh the page
@@ -95,22 +95,31 @@ class SelectPage(BasePage):
                     return False
         
         return True
+    
+    def handle_cookie_message(self):
+        # Handle possible cookie message
+        try:
+            print("Checking for cookies message...")
+
+            # Find and click cookie
+            cookie_message = self.dr.find_element(By.ID, "gdpr-cookie-message")
+            cookie_close_btn = cookie_message.find_element(By.XPATH, ".//button")
+            cookie_close_btn.click()
+
+            # Wait until cookies message is gone
+            self.wait.until(EC.invisibility_of_element(cookie_message))
+
+            print("Cookies message handled. Continuing")
+        except NoSuchElementException:
+            print("No cookies message found. Continuing")
             
     def select(self):
         print("Select Page ... selecting")
 
         if not self.wait_for_time_slot():
             raise Exception(f"Timeout - registration slot could not be found/accessed within {self.time_limit} seconds.")
-        
-        print("Spot has been secured!")
-        # Handle possible cookie message
-        try:
-            cookie_message = self.dr.find_element(By.ID, "gdpr-cookie-message")
-            cookie_close_btn = cookie_message.find_element(By.XPATH, ".//button")
-            cookie_close_btn.click()
-        except NoSuchElementException:
-            pass
+
+        self.handle_cookie_message()
 
         # Click registration
-        self.click(self.registration_btn)
-        
+        self.click_repeatedly(self.registration_btn, max_clicks=20, init_wait_period=0.3, wait_multiplier=1.25)

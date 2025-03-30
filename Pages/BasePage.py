@@ -1,5 +1,7 @@
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import ElementClickInterceptedException, NoSuchElementException, StaleElementReferenceException
 import random
 import time
 
@@ -25,6 +27,8 @@ class BasePage:
             btn.submit()
         else:
             btn.click()
+
+        return btn
     
     def send_keys(self, locator, text, driver_wait = None): 
         if not driver_wait:
@@ -54,3 +58,41 @@ class BasePage:
         self.dr.execute_script(
             f"window.scrollBy({{top: {top}, left: {left}, behavior: 'smooth'}});"
         )
+    
+    def click_repeatedly(self, locator, max_clicks = 20, init_wait_period = 0.2,
+                         wait_multiplier = 1, exit_cond = None, submit = False, sleep_params = None, driver_wait = None):
+        btn_to_click = locator
+        wait_period = init_wait_period
+        num_clicks = 0
+        while(num_clicks < max_clicks):
+            try:
+                if isinstance(locator, tuple):
+                    btn_to_click = self.click(btn_to_click, submit=submit, sleep_params=sleep_params, driver_wait=driver_wait)
+                else:
+                    btn_to_click.click(btn_to_click)
+            except ElementClickInterceptedException as e:
+                # Most likely a temporary spinner overlay -> wait it out as long as possible
+                if num_clicks == max_clicks - 1:
+                    # Overlay is not disappearing on time so bubble the error up
+                    raise e from None
+            except (NoSuchElementException, StaleElementReferenceException) as e:
+                if num_clicks == 0:
+                    # Error came on first click, which means it doesn't have to do
+                    # with the button no longer being found due to a previous click,
+                    # so re-raise the error
+                    raise e from None
+            
+                            
+            # Stop clicking if the page switched or refreshed
+            if EC.invisibility_of_element(btn_to_click):
+                return
+            
+            # Stop clicking if the custom exiting condition is met
+            if callable(exit_cond) and exit_cond():
+                return
+
+            num_clicks += 1
+            time.sleep(wait_period)
+
+            # Back off time between clicks exponentially to avoid captchas
+            wait_period *= wait_multiplier
