@@ -17,10 +17,11 @@ class SelectPage(BasePage):
         self.registration_btn = (By.ID, 'registerBtn')
 
         # Create a concrete locator for time slot button and select date button
-        self.formatted_date = datetime.fromisoformat(self.date).strftime("%A, %B %d, %Y")
+        self.formatted_date = datetime.fromisoformat(self.date).strftime("%A, %B %-d, %Y")
         self.formatted_start_datetime = datetime.strptime(f"{self.date} {self.start_time}:00", "%Y-%m-%d %H:%M:%S").strftime("%-m/%-d/%Y %-I:%M:%S %p")
         self.slot_btn = (By.XPATH, f"//button[@data-instance-starttime='{self.formatted_start_datetime}' and contains(@class, 'program-select-btn') and contains(text(), 'Select')]")
         self.select_date_btn = (By.XPATH, f"//button[contains(@class, 'date-selector-btn') and not(contains(@class, 'mobile')) and .//*[contains(text(), '{self.formatted_date}')]]")
+        print(self.formatted_date)
     
     def wait_for_fetch_response(self, target_url, time_limit = 60):
         max_datetime = datetime.now() + timedelta(seconds=time_limit)
