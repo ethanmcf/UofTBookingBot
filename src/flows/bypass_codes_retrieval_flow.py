@@ -1,6 +1,7 @@
 import re
 from typing import Optional
 from playwright.sync_api import sync_playwright, expect
+from playwright_stealth import Stealth
 from utils.login_manager import LoginManager
 from utils.constants import (
     BYPASS_CODES_URL,
@@ -27,7 +28,8 @@ def run_bypass_codes_retrieval_flow(
 
     print("Starting bypass codes retrieval flow...")
 
-    with sync_playwright() as playwright:
+
+    with Stealth().use_sync(sync_playwright()) as playwright:
         # Launch browser
         browser = playwright.chromium.launch(headless=headless)
         context = browser.new_context(user_agent=user_agent)

@@ -8,59 +8,28 @@ Before you begin, ensure you have Python 3.11.1+ and pip installed. If you don't
 
 ## Setup Instructions 🚀
 
-Start by cloning this repo:
+### Start by cloning this repo:
 
 ```bash
 git clone https://github.com/ethanmcf/UofTBookingBot.git
 cd UoftBookingBot
 ```
 
-### 1. Create a Virtual Environment
+### Run setup script
 
-To create a virtual environment, run the following command:
-
-```bash
-python3 -m venv .venv
-```
-
-### 2. Activate the Virtual Environment
-
-To activate your virtual environment, run the following command:
+This script will create a virtual env, install dependencies and create secrets files. Secret files
+are in gitignore so they will not be commited.
 
 ```bash
-source .venv/bin/activate
+chmod +x scripts/setup.sh && ./scripts/setup.sh your_utorid your_password
+source .venv/bin/activate # activate virtual environment
 ```
 
-### 3. Install dependencies
+Make sure to select the correct interpreter befor running.
 
-To install the required dependencies, run the following commands:
+### 5. Generate bypass codes
 
-```bash
-pip3 install -r requirements.txt
-playwright install
-```
-
-### 4. Configure environment variables
-
-Copy `.env.example` into `.env`:
-
-```bash
-cp .env.example .env
-```
-
-Fill out all the keys in `.env` with your desired values. Adjust file paths as desired.
-
-### 5. Create login info
-
-Create a file corresponding to the `.env` variable `LOGIN_CREDENTIALS_PATH` to store your username and password (in gitignore so info is not saved). Username must be on the first line and password on the second line:
-
-```bash
-touch secrets/login_credentials.txt  # i.e. the value of <LOGIN_CREDENTIALS_PATH>
-echo your_username >> secrets/login_credentials.txt
-echo your_password >> secrets/login_credentials.txt
-```
-
-You must also manually generate a list of DUO Mobile (MFA) bypass codes and place them in a file corresponding to the `.env` variable `BYPASS_CODES_PATH`. This only has to do be done once as the bot will automatically regenerate them after the first the run when needed. Each code should be on its own line, e.g.:
+You must also manually generate a list of DUO Mobile (MFA) bypass codes and place them in `secrets/bypass_codes.txt` This only has to do be done once as the bot will automatically regenerate them after the first the run when needed. Each code should be on its own line, e.g.:
 
 ```txt
 111111111

@@ -1,6 +1,7 @@
 import re
 from typing import Optional
 from playwright.sync_api import sync_playwright, expect
+from playwright_stealth import Stealth
 from utils.login_manager import LoginManager
 from utils.login_manager import LoginManager
 from utils.handlers import button_click_handler, captcha_handler
@@ -43,7 +44,7 @@ def run_registration_flow(
 
     print("Starting registration flow...")
 
-    with sync_playwright() as playwright:
+    with Stealth().use_sync(sync_playwright()) as playwright:
         # Launch browser
         browser = playwright.chromium.launch(headless=headless)
         context = browser.new_context(user_agent=user_agent)
