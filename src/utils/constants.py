@@ -1,15 +1,15 @@
 import os
+
 from dotenv import load_dotenv
 
-
 load_dotenv()
-
 
 LOGIN_CREDENTIALS_PATH = os.getenv(
     "LOGIN_CREDENTIALS_PATH", "./secrets/login_credentials.txt"
 )
 BYPASS_CODES_PATH = os.getenv("BYPASS_CODES_PATH", "./secrets/bypass_codes.txt")
-DEBUG_FOLDER_PATH = os.getenv("DEBUG_FOLDER_PATH", "./debug")
+
+DEBUG_FOLDER_PATH = "./debug"
 BYPASS_CODES_URL = "https://bypass.utormfa.utoronto.ca/index.php"
 ACTIVITY_URLS = {
     "golf": "https://recreation.utoronto.ca/program/GetProgramDetails?courseId=5904837f-6aa4-4707-bcfb-2ece4049bae0",
