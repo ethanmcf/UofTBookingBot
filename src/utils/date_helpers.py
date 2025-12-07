@@ -47,6 +47,7 @@ def format_date_for_program_timeslot(date_string: str, time_string: str) -> str:
     """
     Combines date ("YYYY-MM-DD") and time ("HH:MM") strings and formats them
     into a display string starting with "Select ", like "Select Dec 7, 2025 12:10 PM".
+    Ensures no leading zero on the day or the hour (12-hour clock).
     """
 
     datetime_string = f"{date_string} {time_string}"
@@ -55,9 +56,19 @@ def format_date_for_program_timeslot(date_string: str, time_string: str) -> str:
     datetime_object = datetime.strptime(datetime_string, input_format)
     formatted_date_temp = datetime_object.strftime(standard_output_format)
     parts = formatted_date_temp.split(", ")
-    first_part_elements = parts[0].split(" ")
-    day_no_leading_zero = str(int(first_part_elements[-1]))
-    first_part_elements[-1] = day_no_leading_zero
-    first_part_no_zero = " ".join(first_part_elements)
+    date_parts = parts[0].split(" ")  # ['Dec', '07']
+    day_padded = date_parts[-1]
+    day_no_leading_zero = str(int(day_padded))
+    date_parts[-1] = day_no_leading_zero
+    date_part_no_zero = " ".join(date_parts)
+    time_parts = parts[1].split(" ")  # ['2025', '07:10', 'AM']
+    time_str = time_parts[1]  # "07:10"
+    hour_minute = time_str.split(":")  # ['07', '10']
+    hour_padded = hour_minute[0]
+    minute = hour_minute[1]
+    hour_no_leading_zero = str(int(hour_padded))
+    time_part_no_zero = f"{hour_no_leading_zero}:{minute}"
+    time_parts[1] = time_part_no_zero
+    time_part_no_zero_full = " ".join(time_parts)
 
-    return f"Select {first_part_no_zero}, {parts[1]}"
+    return f"Select {date_part_no_zero}, {time_part_no_zero_full}"
