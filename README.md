@@ -8,7 +8,12 @@ Before you begin, ensure you have Python 3.11.1+ and pip installed. If you don't
 
 ## Setup Instructions 🚀
 
-Make sure you clone this repo first.
+Start by cloning this repo:
+
+```bash
+git clone https://github.com/ethanmcf/UofTBookingBot.git
+cd UoftBookingBot
+```
 
 ### 1. Create a Virtual Environment
 
@@ -26,22 +31,41 @@ To activate your virtual environment, run the following command:
 source .venv/bin/activate
 ```
 
-### 3. Install selenium
+### 3. Install dependencies
 
-To install selenium, run the following command:
+To install the required dependencies, run the following commands:
 
 ```bash
-pip3 install -U selenium
+pip3 install -r requirements.txt
+playwright install
 ```
 
-### 4. Create login info
+### 4. Configure environment variables
 
-Create a file to store your username and password (in gitignore so info is not saved). Username must be on first line and password second line:
+Copy `.env.example` into `.env`:
 
 ```bash
-touch LoginResources/login.txt
-echo your_username >> LoginResources/login.txt
-echo your_password >> LoginResources/login.txt
+cp .env.example .env
+```
+
+Fill out all the keys in `.env` with your desired values. Adjust file paths as desired.
+
+### 5. Create login info
+
+Create a file corresponding to the `.env` variable `LOGIN_CREDENTIALS_PATH` to store your username and password (in gitignore so info is not saved). Username must be on the first line and password on the second line:
+
+```bash
+touch secrets/login_credentials.txt  # i.e. the value of <LOGIN_CREDENTIALS_PATH>
+echo your_username >> secrets/login_credentials.txt
+echo your_password >> secrets/login_credentials.txt
+```
+
+You must also manually generate a list of DUO Mobile (MFA) bypass codes and place them in a file corresponding to the `.env` variable `BYPASS_CODES_PATH`. This only has to do be done once as the bot will automatically regenerate them after the first the run when needed. Each code should be on its own line, e.g.:
+
+```txt
+111111111
+222222222
+333333333
 ```
 
 ## Usage
@@ -49,21 +73,22 @@ echo your_password >> LoginResources/login.txt
 Once the dependencies are installed, you can run the bot to automatically sign up for UofT drop-in activities. You need to input the URL, date, and start time for your chosen activity using the command-line arguments `-u`, `-d`, and `-t`, respectively, as shown below:
 
 ```bash
-python main.py -u ACTIVITY_URL -d YYYY-MM-DD -t HH:MM
+python src/register.py -u ACTIVITY_URL -d YYYY-MM-DD -t HH:MM
 ```
 
 Instead of passing in a URL, you can also simply pass in the name of the activity using `-a` for a select few sports. For instance, to sign up for drop-in golf on March 26th, 2025 at 11:00 AM, you would enter the following:
 
 ```bash
-python main.py -a golf -d 2025-03-26 -t 11:00
+python src/register.py -a golf -d 2025-03-26 -t 11:00
 ```
 
 ## Advanced
 
-There are multiple customizations available that I don't feel like explaining right now, so here is the help menu instead (found by running `python main.py -h`).
+There are multiple customizations available that I don't feel like explaining right now, so here is the help menu instead (found by running `python src/register.py -h`).
 
 ```
-usage: main.py [-h] (-u URL | -a ACTIVITY) -d DATE -t TIME [-o OFFSET | --no-wait] [-l TIME_LIMIT] [-c CODES_THRESHOLD] [--visible]
+usage: register.py [-h] (-u URL | -a ACTIVITY) -d DATE -t TIME [-o OFFSET | --no-wait] [-c CODES_THRESHOLD] [-l TIME_LIMIT] [--visible]
+                   [--debug]
 
 options:
   -h, --help            show this help message and exit
@@ -75,23 +100,20 @@ options:
   -o OFFSET, --offset OFFSET
                         The offset of how early registration opens up given in days before the start time. Defaults to 2.
   --no-wait             Runs bot immediately rather than waiting until posting date.
-  -l TIME_LIMIT, --time-limit TIME_LIMIT
-                        The maximum number of seconds to run the bot past the start time without success. Defaults to 10.
   -c CODES_THRESHOLD, --codes-threshold CODES_THRESHOLD
                         The minimum number of codes needed before fetching new ones. Defaults to 3.
+  -l TIME_LIMIT, --time-limit TIME_LIMIT
+                        The maximum number of seconds to run the bot past the start time without success. Defaults to 10.
   --visible             Display the browser while running (headless by default)
+  --debug               Runs debug mode, adds screenshot in debug folder where exception occurs
 ```
 
 ## Testing
 
-Install pytest:
+To run tests:
 
 ```bash
-pip3 install pytest
+python -m pytest tests/
 ```
 
-Run tests
-
-```bash
-pytest Tests/test_login_manager.py
-```
+Tests can be found in the `tests` folder.
