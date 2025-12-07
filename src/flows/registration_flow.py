@@ -116,12 +116,12 @@ def run_registration_flow(
                     "Failed to register within the time limit. The activity may be full."
                 )
 
-            print("Successfully registered for the activity. Completing checkout...")
-
-            # Complete payment options page
+            # Complete payment options page (assumes no payment required)
+            # Note: Getting here means registration was successful
             expect(page.locator("#groupRegistrationStepData")).to_contain_text(
                 "How would you like to pay?"
             )
+            print("Successfully registered for the activity. Completing checkout...")
             page.get_by_role("button", name="Next").click()
 
             # Complete waivers page
