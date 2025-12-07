@@ -1,8 +1,12 @@
 import random
 from utils.cli import get_cli_args
-from utils.constants import LOGIN_CREDENTIALS_PATH, BYPASS_CODES_PATH, USER_AGENTS
+from utils.constants import (
+    LOGIN_CREDENTIALS_PATH,
+    BYPASS_CODES_PATH,
+    USER_AGENTS,
+)
 from utils.login_manager import LoginManager
-from utils.debug_helpers import print_exception
+from utils.debug_helpers import print_exception, get_app_logger
 from flows.bypass_codes_retrieval_flow import run_bypass_codes_retrieval_flow
 from flows.registration_flow import run_registration_flow
 
@@ -33,6 +37,9 @@ if __name__ == "__main__":
             debug=args.debug,
         )
     except Exception as e:
+        if args.debug:
+            logger = get_app_logger()
+            logger.exception("An unexpected error occurred.")
         print_exception(e)
         exit(1)
 

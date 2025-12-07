@@ -1,15 +1,39 @@
 import os
+import logging
 import textwrap
 from playwright.sync_api import Page
 from datetime import datetime
+from utils.constants import DEBUG_FOLDER_PATH
+
+
+def get_app_logger():
+    """Configures and returns the application logger."""
+
+    log_folder = os.path.join(DEBUG_FOLDER_PATH, "logs")
+    if not os.path.exists(log_folder):
+        os.makedirs(log_folder)
+
+    logging.basicConfig(
+        level=logging.ERROR,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        filename=os.path.join(log_folder, "error.log"),
+        filemode="a",
+    )
+
+    return logging.getLogger()
 
 
 def save_debug_screenshot(page: Page, folder_path: str) -> None:
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
+    """Saves a screenshot of the current page state for debugging."""
+
+    screenshots_folder = os.path.join(folder_path, "screenshots")
+    if not os.path.exists(screenshots_folder):
+        os.makedirs(screenshots_folder)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    screenshot_path = os.path.join(folder_path, f"error_screenshot_{timestamp}.png")
+    screenshot_path = os.path.join(
+        screenshots_folder, f"error_screenshot_{timestamp}.png"
+    )
     page.screenshot(path=screenshot_path)
     print(f"Debug screenshot saved to: {screenshot_path}")
 
