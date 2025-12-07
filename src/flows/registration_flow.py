@@ -122,15 +122,28 @@ def run_registration_flow(
                 "How would you like to pay?"
             )
             print("Successfully registered for the activity. Completing checkout...")
-            page.get_by_role("button", name="Next").click()
 
-            # Complete waivers page
-            expect(page.locator("#groupRegistrationStepData")).to_contain_text(
-                "Please review and accept"
+            # Click Next or Proceed to Checkout button (depends on whether waivers are needed)
+            next_button_locator = page.get_by_role("button", name="Next")
+            checkout_button_locator = page.get_by_role(
+                "button", name="shopping_cart Proceed to"
             )
-            page.get_by_role("button", name="expand_more").click()
-            page.get_by_role("button", name="Accept").click()
-            page.get_by_role("button", name="shopping_cart Proceed to").click()
+            has_waivers = False
+            expect(next_button_locator.or_(checkout_button_locator)).to_be_visible()
+            if next_button_locator.is_visible():
+                next_button_locator.click()
+                has_waivers = True
+            else:
+                checkout_button_locator.click()
+
+            # Complete waivers page (if applicable)
+            if has_waivers:
+                expect(page.locator("#groupRegistrationStepData")).to_contain_text(
+                    "Please review and accept"
+                )
+                page.get_by_role("button", name="expand_more").click()
+                page.get_by_role("button", name="Accept").click()
+                page.get_by_role("button", name="shopping_cart Proceed to").click()
 
             # Complete checkout page
             expect(page.locator("h1")).to_contain_text("Shopping Cart")
