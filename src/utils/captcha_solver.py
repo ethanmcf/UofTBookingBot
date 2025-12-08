@@ -1,15 +1,11 @@
-import os
+import os, ssl, certifi, random, time
 import urllib.request
-import ssl, certifi
-import random
 import pydub
 import speech_recognition
-import time
 from typing import Optional
 from playwright.sync_api import Page, Locator
-from playwright_stealth import Stealth
 
-class RecaptchaSolver:
+class CaptchaSolver:
     """A class to solve reCAPTCHA challenges using audio recognition."""
 
     # Constants
@@ -27,6 +23,7 @@ class RecaptchaSolver:
         self.page = page
 
     def humanizeClick(self, locator: Locator) -> None: 
+        """Perform a human-like click: random mouse movement, hover, short wait, then click."""
         box = locator.bounding_box()
         if box:
             jitter_x = box["x"] + random.uniform(1, box["width"] - 1)
@@ -66,7 +63,7 @@ class RecaptchaSolver:
 
         response_field = challenge_frame.locator("#audio-response")
 
-        # Captcha errors out so handle errors
+        # Captcha errors-out so handle errors
         try:
             response_field.type(text_response.lower(), timeout=self.TIMEOUT_STANDARD)
         except:

@@ -1,8 +1,7 @@
 from playwright.sync_api import sync_playwright, expect
 from playwright_stealth import Stealth
 from src.utils.constants import DEFAULT_TIMEOUT_MILLISECONDS, USER_AGENTS
-from src.utils.handlers import captcha_handler
-from src.utils.captcha_solver import RecaptchaSolver
+from src.utils.captcha_solver import CaptchaSolver
 import time, random
 
 
@@ -22,12 +21,12 @@ def test_captcha_handler():
         try:
             # Navigate to the UTORMFA bypass codes page
             page.goto(captcha_url)
-            solver = RecaptchaSolver(page)
+            solver = CaptchaSolver(page)
             try: 
                 solver.solveCaptcha()
             except Exception as e:
                 print(e)
-        
+
         except:
            print()
 
