@@ -44,7 +44,7 @@ class CaptchaSolver:
         Raises:
             Exception: If captcha solving fails or bot is detected
         """
-        frame = self.page.frame_locator('iframe[title*="reCAPTCHA"]').first
+        frame = self.page.frame_locator('iframe[src*="recaptcha"]').first
         anchor = frame.locator("#recaptcha-anchor")
 
         self.humanize_click(anchor)
@@ -137,7 +137,7 @@ class CaptchaSolver:
 
             # Check for harder challenge presence
             try:
-                challenge = self.page.frame_locator('iframe[title*="recaptcha challenge expires in two minutes"]').first
+                challenge = self.page.frame_locator('iframe[src*="bframe"]').first
                 expect(challenge.locator("div").first).to_be_visible(timeout=500)
                 return False
             except Exception:
@@ -152,7 +152,7 @@ class CaptchaSolver:
     def is_detected(self) -> bool:
         """Check if the bot has been detected."""
         try:
-            challenge = self.page.frame_locator('iframe[title*="recaptcha challenge expires in two minutes"]').first
+            challenge = self.page.frame_locator('iframe[src*="bframe"]').first
             expect(challenge.get_by_text("Try again later", exact=False)).to_be_visible(timeout=int(self.TIMEOUT_DETECTION * 1000))
             return True
         except Exception:
