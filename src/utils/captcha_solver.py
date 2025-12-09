@@ -133,7 +133,7 @@ class CaptchaSolver:
     def is_solved(self) -> bool:
         """Check if the captcha has been solved successfully."""
         try:
-            frame = self.page.frame_locator('iframe[title*="reCAPTCHA"]').first
+            frame = self.page.frame_locator('iframe[src*="recaptcha"]').first
 
             # Check for harder challenge presence
             try:
