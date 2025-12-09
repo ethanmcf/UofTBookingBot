@@ -105,20 +105,3 @@ class CaptchaSolver:
                         os.remove(path)
                     except OSError:
                         pass
-
-    def is_detected(self) -> bool:
-        """Check if the bot has been detected."""
-        try:
-            challenge = self.page.frame_locator('iframe[src*="bframe"]').first
-            return challenge.get_by_text("Try again later", exact=False).is_visible(timeout=int(self.TIMEOUT_DETECTION * 1000))
-        except Exception:
-            return False
-
-    def get_token(self) -> Optional[str]:
-        """Get the reCAPTCHA token if available."""
-        try:
-            challenge = self.page.frame_locator('iframe[src*="bframe"]').first
-            el = challenge.locator("#recaptcha-token")
-            return el.get_attribute("value")
-        except Exception:
-            return None
