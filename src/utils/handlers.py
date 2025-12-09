@@ -15,7 +15,6 @@ def captcha_handler(page: Page) -> None:
     solver = CaptchaSolver(page)
     solver.solveCaptcha() 
 
-    time.sleep(200)
     page.locator("#btnReCaptchaConfirm").click()
 
     print("CAPTCHA solved...")
