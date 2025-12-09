@@ -45,20 +45,20 @@ class CaptchaSolver:
 
         self.humanizeClick(anchor)
 
-        if self.is_solved():
-            return
-        
         # Open audio challenge
+        print("Opening captcha audio challenge")
         challenge_frame = self.page.frame_locator('iframe[src*="bframe"]').first
-        anchor = challenge_frame.locator("#recaptcha-audio-button")
+        anchor = challenge_frame.locator("#recaptcha-audio-button") 
         self.humanizeClick(anchor)
 
         # Download audio and transcribe
+        print("Analyzing captcha audio")
         audio_src = challenge_frame.locator("#audio-source").get_attribute("src")
 
         if not audio_src:
             raise Exception("Audio challenge source not found")
 
+        print("Verifying captcha")
         text_response = self._process_audio_challenge(audio_src)
 
         response_field = challenge_frame.locator("#audio-response")
@@ -72,11 +72,6 @@ class CaptchaSolver:
             response_field.press('Enter')
         except:
             pass
-
-        time.sleep(0.4)
-
-        if not self.is_solved():
-            raise Exception("Failed to solve the captcha")
     
     def _process_audio_challenge(self, audio_url: str) -> str:
         """Process the audio challenge and return the recognized text.
@@ -110,15 +105,6 @@ class CaptchaSolver:
                         os.remove(path)
                     except OSError:
                         pass
-
-    def is_solved(self) -> bool:
-        """Check if the captcha has been solved successfully."""
-        try:
-            frame = self.page.frame_locator('iframe[src*="recaptcha"]').first
-            checkmark = frame.locator(".recaptcha-checkbox-checkmark")
-            return checkmark.is_visible(timeout=int(self.TIMEOUT_SHORT * 1000))
-        except Exception:
-            return False
 
     def is_detected(self) -> bool:
         """Check if the bot has been detected."""

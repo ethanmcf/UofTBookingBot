@@ -82,7 +82,7 @@ options:
 To run tests:
 
 ```bash
-python -m pytest tests/
+python -m Tests.utils.test_captcha_handler
 ```
 
 Tests can be found in the `tests` folder.

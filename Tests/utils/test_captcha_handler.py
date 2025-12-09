@@ -24,6 +24,7 @@ def test_captcha_handler():
             solver = CaptchaSolver(page)
             try: 
                 solver.solveCaptcha()
+                time.sleep(5)
             except Exception as e:
                 print(e)
 

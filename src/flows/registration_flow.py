@@ -48,6 +48,7 @@ def run_registration_flow(
         # Launch browser
         browser = playwright.chromium.launch(headless=headless)
         context = browser.new_context(user_agent=user_agent)
+        # context = browser.new_context(user_agent="Mozilla/5.0 (Playwright; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36")
         page = context.new_page()
         page.set_default_timeout(DEFAULT_TIMEOUT_MILLISECONDS)
 
@@ -63,7 +64,8 @@ def run_registration_flow(
 
             # Handle CAPTCHA if it appears
             page.add_locator_handler(
-                page.locator("#modal-captcha-confirm"), captcha_handler
+                page.locator("#modal-captcha-confirm"), 
+                lambda locator: captcha_handler(page)
             )
 
             # Sign in with UTORID
