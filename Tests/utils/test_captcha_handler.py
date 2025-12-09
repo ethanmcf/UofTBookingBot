@@ -23,7 +23,7 @@ def test_captcha_handler():
             page.goto(captcha_url)
             solver = CaptchaSolver(page)
             try: 
-                solver.solveCaptcha()
+                solver.solve_captcha()
                 time.sleep(5)
             except Exception as e:
                 print(e)

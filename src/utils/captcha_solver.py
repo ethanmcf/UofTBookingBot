@@ -3,7 +3,11 @@ import urllib.request
 import pydub
 import speech_recognition
 from typing import Optional
-from playwright.sync_api import Page, Locator
+from playwright.sync_api import Page, Locator, expect
+
+class CaptchaSolverFailedError(Exception):
+    """Exception raised when captcha solving fails."""
+    pass
 
 class CaptchaSolver:
     """A class to solve reCAPTCHA challenges using audio recognition."""
@@ -12,7 +16,7 @@ class CaptchaSolver:
     TEMP_DIR = "/tmp"
     TIMEOUT_STANDARD = 7
     TIMEOUT_SHORT = 1
-    TIMEOUT_DETECTION = 0.05
+    TIMEOUT_DETECTION = 0.5
 
     def __init__(self, page: Page) -> None:
         """Initialize the solver with a page.
@@ -22,7 +26,7 @@ class CaptchaSolver:
         """
         self.page = page
 
-    def humanizeClick(self, locator: Locator) -> None: 
+    def humanize_click(self, locator: Locator) -> None:
         """Perform a human-like click: random mouse movement, hover, short wait, then click."""
         box = locator.bounding_box()
         if box:
@@ -34,29 +38,42 @@ class CaptchaSolver:
         time.sleep(random.uniform(0.1, 0.4))
         locator.click()
 
-    def solveCaptcha(self) -> None:
+    def solve_captcha(self) -> None:
         """Attempt to solve the reCAPTCHA challenge.
 
         Raises:
             Exception: If captcha solving fails or bot is detected
         """
-        frame = self.page.frame_locator('iframe[src*="recaptcha"]').first
+        frame = self.page.frame_locator('iframe[title*="reCAPTCHA"]').first
         anchor = frame.locator("#recaptcha-anchor")
 
-        self.humanizeClick(anchor)
+        self.humanize_click(anchor)
+
+        # Check if bot was detected after clicking the checkbox
+        if self.is_detected():
+            raise CaptchaSolverFailedError("Bot detected after clicking checkbox.")
+
+        # Check if challenge only requires checkbox click
+        if self.is_solved():
+            return
+        
+        print("Challenge requires more than checkbox click, proceeding to audio challenge...")
 
         # Open audio challenge
-        print("Opening captcha audio challenge")
         challenge_frame = self.page.frame_locator('iframe[src*="bframe"]').first
-        anchor = challenge_frame.locator("#recaptcha-audio-button") 
-        self.humanizeClick(anchor)
+        anchor = challenge_frame.locator("#recaptcha-audio-button")
+        self.humanize_click(anchor)
+
+        # Check if bot was detected after opening audio challenge
+        if self.is_detected():
+            raise CaptchaSolverFailedError("Bot detected after clicking audio challenge button.")
 
         # Download audio and transcribe
         print("Analyzing captcha audio")
         audio_src = challenge_frame.locator("#audio-source").get_attribute("src")
 
         if not audio_src:
-            raise Exception("Audio challenge source not found")
+            raise Exception("Audio challenge source in CAPTCHA not found")
 
         print("Verifying captcha")
         text_response = self._process_audio_challenge(audio_src)
@@ -72,6 +89,13 @@ class CaptchaSolver:
             response_field.press('Enter')
         except:
             pass
+
+        # Check if bot was detected after entering audio response
+        if self.is_detected():
+            raise CaptchaSolverFailedError("Bot detected after entering audio response.")
+
+        if not self.is_solved():
+            raise CaptchaSolverFailedError("Failed to solve the captcha")
     
     def _process_audio_challenge(self, audio_url: str) -> str:
         """Process the audio challenge and return the recognized text.
@@ -105,3 +129,31 @@ class CaptchaSolver:
                         os.remove(path)
                     except OSError:
                         pass
+
+    def is_solved(self) -> bool:
+        """Check if the captcha has been solved successfully."""
+        try:
+            frame = self.page.frame_locator('iframe[title*="reCAPTCHA"]').first
+
+            # Check for harder challenge presence
+            try:
+                challenge = self.page.frame_locator('iframe[title*="recaptcha challenge expires in two minutes"]').first
+                expect(challenge.locator("div").first).to_be_visible(timeout=500)
+                return False
+            except Exception:
+                pass
+
+            # No harder challenge found -> check for solved checkbox
+            checkmark = frame.locator(".recaptcha-checkbox-checkmark")
+            return checkmark.is_visible(timeout=int(self.TIMEOUT_SHORT * 1000))
+        except Exception:
+            return False
+
+    def is_detected(self) -> bool:
+        """Check if the bot has been detected."""
+        try:
+            challenge = self.page.frame_locator('iframe[title*="recaptcha challenge expires in two minutes"]').first
+            expect(challenge.get_by_text("Try again later", exact=False)).to_be_visible(timeout=int(self.TIMEOUT_DETECTION * 1000))
+            return True
+        except Exception:
+            return False

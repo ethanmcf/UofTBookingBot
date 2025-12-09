@@ -82,6 +82,7 @@ options:
 To run tests:
 
 ```bash
+python -m pytest tests/
 python -m Tests.utils.test_captcha_handler
 ```
 

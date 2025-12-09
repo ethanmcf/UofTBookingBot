@@ -1,11 +1,10 @@
 import re
 from typing import Optional
-from playwright.sync_api import sync_playwright, expect
+from playwright.sync_api import sync_playwright, expect, Locator
 from playwright_stealth import Stealth
+from utils.captcha_solver import CaptchaSolver, CaptchaSolverFailedError
 from utils.login_manager import LoginManager
-from utils.login_manager import LoginManager
-from utils.handlers import button_click_handler, captcha_handler
-from utils.debug_helpers import save_debug_screenshot
+from utils.debug_helpers import get_app_logger, print_exception, save_debug_screenshot
 from utils.constants import (
     DEBUG_FOLDER_PATH,
     DEFAULT_TIMEOUT_MILLISECONDS,
@@ -59,13 +58,33 @@ def run_registration_flow(
             # Acknowledge cookies if it appears
             page.add_locator_handler(
                 page.get_by_role("button", name="Acknowledge Cookies"),
-                button_click_handler,
+                lambda locator: locator.click(),
             )
 
             # Handle CAPTCHA if it appears
+            def captcha_handler() -> None:
+                """Handler that deals with CAPTCHA."""
+
+                try:
+                    print("CAPTCHA detected, starting to solve...")
+
+                    solver = CaptchaSolver(page)
+                    solver.solve_captcha()
+                    page.locator("#btnReCaptchaConfirm").click()
+
+                    print("CAPTCHA solved.")
+                except CaptchaSolverFailedError as e:
+                    print(f"CAPTCHA SOLVER FAILED: {str(e)}")
+                except Exception as e:
+                    print_exception(e)
+                    if debug:
+                        logger = get_app_logger()
+                        logger.exception("An unexpected error occurred in captcha_handler.")
+                        save_debug_screenshot(page, DEBUG_FOLDER_PATH)
+
             page.add_locator_handler(
                 page.locator("#modal-captcha-confirm"), 
-                lambda locator: captcha_handler(page)
+                captcha_handler
             )
 
             # Sign in with UTORID
@@ -122,7 +141,8 @@ def run_registration_flow(
             # Complete payment options page (assumes no payment required)
             # Note: Getting here means registration was successful
             expect(page.locator("#groupRegistrationStepData")).to_contain_text(
-                "How would you like to pay?"
+                "How would you like to pay?",
+                timeout=30000, # CAPTCHA may appear here, so allow extra time
             )
             print("Successfully registered for the activity. Completing checkout...")
 
