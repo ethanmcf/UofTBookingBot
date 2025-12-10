@@ -125,20 +125,14 @@ class CaptchaSolver:
 
     def is_solved(self) -> bool:
         """Check if the captcha has been solved successfully."""
+
         try:
             frame = self.page.frame_locator('iframe[src*="recaptcha"]').first
-
-            # Check for harder challenge presence
-            try:
-                challenge = self.page.frame_locator('iframe[src*="bframe"]').first
-                expect(challenge.locator("div").first).to_be_visible(timeout=500)
-                return False
-            except Exception:
-                pass
-
-            # No harder challenge found -> check for solved checkbox
-            checkmark = frame.locator(".recaptcha-checkbox-checkmark")
-            return checkmark.is_visible(timeout=int(self.TIMEOUT_SHORT * 1000))
+            expect(frame.locator("#recaptcha-accessible-status")).to_have_text(
+                "You are verified",
+                timeout=500,
+            )
+            return True
         except Exception:
             return False
 
