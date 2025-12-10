@@ -1,6 +1,6 @@
 import re
 from typing import Optional
-from playwright.sync_api import sync_playwright, expect, Locator
+from playwright.sync_api import sync_playwright, expect
 from playwright_stealth import Stealth
 from utils.captcha_solver import CaptchaSolver, CaptchaSolverFailedError
 from utils.login_manager import LoginManager
@@ -141,7 +141,7 @@ def run_registration_flow(
             # Note: Getting here means registration was successful
             expect(page.locator("#groupRegistrationStepData")).to_contain_text(
                 "How would you like to pay?",
-                timeout=30000, # CAPTCHA may appear here, so allow extra time
+                timeout=15000, # CAPTCHA may appear here, so allow extra time
             )
             print("Successfully registered for the activity. Completing checkout...")
 
