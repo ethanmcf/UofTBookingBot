@@ -2,7 +2,6 @@ import os, ssl, certifi, random, time
 import urllib.request
 import pydub
 import speech_recognition
-from typing import Optional
 from playwright.sync_api import Page, Locator, expect
 
 class CaptchaSolverFailedError(Exception):
@@ -14,9 +13,8 @@ class CaptchaSolver:
 
     # Constants
     TEMP_DIR = "/tmp"
-    TIMEOUT_STANDARD = 7
-    TIMEOUT_SHORT = 1
-    TIMEOUT_DETECTION = 0.5
+    TIMEOUT_IS_DETECTED = 500
+    TIMEOUT_IS_SOLVED = 100
 
     def __init__(self, page: Page) -> None:
         """Initialize the solver with a page.
@@ -130,7 +128,7 @@ class CaptchaSolver:
             frame = self.page.frame_locator('iframe[src*="recaptcha"]').first
             expect(frame.locator("#recaptcha-accessible-status")).to_have_text(
                 "You are verified",
-                timeout=500,
+                timeout=self.TIMEOUT_IS_SOLVED,
             )
             return True
         except Exception:
@@ -140,7 +138,7 @@ class CaptchaSolver:
         """Check if the bot has been detected."""
         try:
             challenge = self.page.frame_locator('iframe[src*="bframe"]').first
-            expect(challenge.get_by_text("Try again later", exact=False)).to_be_visible(timeout=int(self.TIMEOUT_DETECTION * 1000))
+            expect(challenge.get_by_text("Try again later", exact=False)).to_be_visible(timeout=self.TIMEOUT_IS_DETECTED)
             return True
         except Exception:
             return False

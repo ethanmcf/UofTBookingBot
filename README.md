@@ -82,8 +82,13 @@ options:
 To run tests:
 
 ```bash
-python -m pytest tests/
-python -m Tests.utils.test_captcha_handler
+pytest
 ```
 
-Tests can be found in the `tests` folder.
+Tests can be found in the `Tests` folder.
+
+Although a pytest test exists for the CAPTCHA handler, visual verification can be done via the following command:
+
+```bash
+python -m Tests.utils.test_captcha_handler
+```
