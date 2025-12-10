@@ -75,20 +75,13 @@ class CaptchaSolver:
         if not audio_src:
             raise Exception("Audio challenge source in CAPTCHA not found")
 
-        print("Verifying captcha")
         text_response = self._process_audio_challenge(audio_src)
 
-        response_field = challenge_frame.locator("#audio-response")
+        print(f"Entering captcha audio transcript: {text_response}")
 
-        # Captcha errors-out so handle errors
-        try:
-            response_field.type(text_response.lower(), timeout=self.TIMEOUT_STANDARD)
-        except:
-            pass
-        try: 
-            response_field.press('Enter')
-        except:
-            pass
+        response_field = challenge_frame.locator("#audio-response")
+        response_field.press_sequentially(text_response.lower(), delay=40)
+        response_field.press('Enter')
 
         # Check if bot was detected after entering audio response
         if self.is_detected():
