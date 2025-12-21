@@ -136,12 +136,19 @@ def run_registration_flow(
                 raise Exception(
                     "Failed to register within the time limit. The activity may be full."
                 )
+            
+            # Select first family member if needed (for when multiple family members exist)
+            expect(page.locator("#groupRegistrationStepData").or_(page.locator("#family-member-section"))).to_be_visible(
+                timeout=15000, # CAPTCHA may appear here, so allow extra time
+            )
+            if(page.locator("#family-member-section").is_visible()):
+                page.locator("#family-member-section [name='radioGroupFamilyMember'] + label").first.click()
+                page.locator("#btnNext").click()
 
             # Complete payment options page (assumes no payment required)
             # Note: Getting here means registration was successful
             expect(page.locator("#groupRegistrationStepData")).to_contain_text(
                 "How would you like to pay?",
-                timeout=15000, # CAPTCHA may appear here, so allow extra time
             )
             print("Successfully registered for the activity. Completing checkout...")
 

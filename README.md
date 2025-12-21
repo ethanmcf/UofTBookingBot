@@ -27,7 +27,7 @@ source .venv/bin/activate # activate virtual environment
 
 Make sure to select the correct interpreter befor running.
 
-### 5. Generate bypass codes
+### Generate bypass codes
 
 You must also manually generate a list of DUO Mobile (MFA) bypass codes and place them in `secrets/bypass_codes.txt` This only has to do be done once as the bot will automatically regenerate them after the first the run when needed. Each code should be on its own line, e.g.:
 
