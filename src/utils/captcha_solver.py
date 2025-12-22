@@ -6,7 +6,9 @@ from playwright.sync_api import Page, Locator, expect
 
 class CaptchaSolverFailedError(Exception):
     """Exception raised when captcha solving fails."""
-    pass
+
+    def __init__(self, message):
+        super().__init__(f"CAPTCHA SOLVER FAILED: {message}")
 
 class CaptchaSolver:
     """A class to solve reCAPTCHA challenges using audio recognition."""

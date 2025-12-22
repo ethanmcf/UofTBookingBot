@@ -2,9 +2,9 @@ import re
 from typing import Optional
 from playwright.sync_api import sync_playwright, expect
 from playwright_stealth import Stealth
-from utils.captcha_solver import CaptchaSolver, CaptchaSolverFailedError
+from utils.captcha_solver import CaptchaSolver
 from utils.login_manager import LoginManager
-from utils.debug_helpers import get_app_logger, print_exception, save_debug_screenshot
+from utils.debug_helpers import save_debug_screenshot
 from utils.constants import (
     DEBUG_FOLDER_PATH,
     DEFAULT_TIMEOUT_MILLISECONDS,
@@ -60,32 +60,6 @@ def run_registration_flow(
                 lambda locator: locator.click(),
             )
 
-            # Handle CAPTCHA if it appears
-            def captcha_handler() -> None:
-                """Handler that deals with CAPTCHA."""
-
-                try:
-                    print("CAPTCHA detected, starting to solve...")
-
-                    solver = CaptchaSolver(page)
-                    solver.solve_captcha()
-                    page.locator("#btnReCaptchaConfirm").click()
-
-                    print("CAPTCHA solved.")
-                except CaptchaSolverFailedError as e:
-                    print(f"CAPTCHA SOLVER FAILED: {str(e)}")
-                except Exception as e:
-                    print_exception(e)
-                    if debug:
-                        logger = get_app_logger()
-                        logger.exception("An unexpected error occurred in captcha_handler.")
-                        save_debug_screenshot(page, DEBUG_FOLDER_PATH)
-
-            page.add_locator_handler(
-                page.locator("#modal-captcha-confirm"), 
-                captcha_handler
-            )
-
             # Sign in with UTORID
             utorid, password = login_manager.get_credentials()
             page.get_by_role("button", name="Sign In").click()
@@ -137,19 +111,40 @@ def run_registration_flow(
                     "Failed to register within the time limit. The activity may be full."
                 )
             
-            # Select first family member if needed (for when multiple family members exist)
-            expect(page.locator("#groupRegistrationStepData").or_(page.locator("#family-member-section"))).to_be_visible(
-                timeout=15000, # CAPTCHA may appear here, so allow extra time
-            )
-            if(page.locator("#family-member-section").is_visible()):
-                page.locator("#family-member-section [name='radioGroupFamilyMember'] + label").first.click()
+            # In this order, clicking the register button should lead to either the:
+            # - CAPTCHA confirmation modal (captcha appeared)
+            # - Family member selection modal (no captcha appeared; user has family members)
+            # - Payment page (no captcha appeared; user has no family members)
+            captcha_locator = page.locator("#modal-captcha-confirm")
+            family_member_section_locator = page.locator("#family-member-section")
+            payment_page_locator = page.locator("#groupRegistrationStepData", has_text="How would you like to pay?")
+            expect(
+                captcha_locator.filter(visible=True)
+                    .or_(family_member_section_locator).filter(visible=True)
+                    .or_(payment_page_locator).filter(visible=True)
+            ).to_be_visible()
+
+            # Solve CAPTCHA if it appears
+            if (captcha_locator.is_visible()):
+                print("CAPTCHA detected, starting to solve...")
+
+                solver = CaptchaSolver(page)
+                solver.solve_captcha()
+                page.locator("#btnReCaptchaConfirm").click()
+
+                print("CAPTCHA solved.")
+            
+            # CAPTCHA handled (if needed); proceed with registration flow depending on whether user has family members
+            expect(family_member_section_locator.or_( payment_page_locator)).to_be_visible()
+
+            # Complete family member selection modal (if applicable)
+            if (family_member_section_locator.is_visible()):
+                family_member_section_locator.locator("[name='radioGroupFamilyMember'] + label").first.click()
                 page.locator("#btnNext").click()
 
             # Complete payment options page (assumes no payment required)
             # Note: Getting here means registration was successful
-            expect(page.locator("#groupRegistrationStepData")).to_contain_text(
-                "How would you like to pay?",
-            )
+            expect(payment_page_locator).to_be_visible()
             print("Successfully registered for the activity. Completing checkout...")
 
             # Click Next or Proceed to Checkout button (depends on whether waivers are needed)
