@@ -5,14 +5,10 @@ from automation.shared.config import DEFAULT_TIMEOUT_MILLISECONDS
 from automation.registration.config import REGISTRATION_START_BUFFER_SECONDS
 
 
-def wait_until_time_slot_opens(
-    posting_offset: int, start_date: str, start_time: str
-) -> bool:
+def wait_until_time_slot_opens(posting_offset: int, start_date: str, start_time: str) -> bool:
     """Waits until just before the booking slot opens to start the registration process."""
 
-    activity_datetime = datetime.strptime(
-        f"{start_date} {start_time}:00", "%Y-%m-%d %H:%M:%S"
-    )
+    activity_datetime = datetime.strptime(f"{start_date} {start_time}:00", "%Y-%m-%d %H:%M:%S")
     wakeup_datetime = (
         activity_datetime
         - timedelta(days=posting_offset)
@@ -53,9 +49,7 @@ def compete_for_registration(
             page.reload()
 
             # Look for correct date and time selection to press
-            expect(page.locator("#programInstances")).to_contain_text(
-                programInstanceTextDate
-            )
+            expect(page.locator("#programInstances")).to_contain_text(programInstanceTextDate)
             page.get_by_role("button", name=programInstanceRoleDate).click()
 
             # Look for the correct time slot to press

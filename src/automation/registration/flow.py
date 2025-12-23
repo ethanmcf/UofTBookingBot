@@ -86,9 +86,7 @@ def run_registration_flow(
 
             # Ensure we are on the initial registration page
             expect(page).to_have_url(
-                re.compile(
-                    r"^https:\/\/recreation\.utoronto\.ca\/program\/getprogramdetails"
-                ),
+                re.compile(r"^https:\/\/recreation\.utoronto\.ca\/program\/getprogramdetails"),
             )
 
             print(f"Registering for drop-in activity on {date} at {time}...")
@@ -138,9 +136,7 @@ def run_registration_flow(
                 print("CAPTCHA solved.")
 
             # CAPTCHA handled (if needed); proceed with registration flow depending on whether user has family members
-            expect(
-                family_member_section_locator.or_(payment_page_locator)
-            ).to_be_visible()
+            expect(family_member_section_locator.or_(payment_page_locator)).to_be_visible()
 
             # Complete family member selection modal (if applicable)
             if family_member_section_locator.is_visible():
@@ -156,9 +152,7 @@ def run_registration_flow(
 
             # Click Next or Proceed to Checkout button (depends on whether waivers are needed)
             next_button_locator = page.get_by_role("button", name="Next")
-            checkout_button_locator = page.get_by_role(
-                "button", name="shopping_cart Proceed to"
-            )
+            checkout_button_locator = page.get_by_role("button", name="shopping_cart Proceed to")
             has_waivers = False
             expect(next_button_locator.or_(checkout_button_locator)).to_be_visible()
             if next_button_locator.is_visible():
@@ -182,9 +176,7 @@ def run_registration_flow(
             page.locator("#btnCheckoutCart").click()
 
             # Confirm successful checkout on receipt page
-            expect(
-                page.get_by_role("heading", name="Payment was Successful")
-            ).to_be_visible()
+            expect(page.get_by_role("heading", name="Payment was Successful")).to_be_visible()
 
             print("Registration flow completed successfully.")
         except Exception as e:
