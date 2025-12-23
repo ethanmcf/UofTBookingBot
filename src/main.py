@@ -1,8 +1,8 @@
 import argparse
 import sys
-from automation.registration.config import ACTIVITY_URLS
-from automation.main import run_registration_bot
-from config import DEBUG_DIR, SECRETS_DIR
+from src.automation.features.registration.config import ACTIVITY_URLS
+from src.automation.main import run_registration_bot
+from src.config import DEBUG_DIR, SECRETS_DIR, run_global_configurations
 
 
 def get_cli_args() -> argparse.Namespace:
@@ -13,9 +13,7 @@ def get_cli_args() -> argparse.Namespace:
         description="UofT Drop-in Activity Booking Bot. Run with no arguments to open the GUI, or with arguments to run the CLI booking script."
     )
     url_group = parser.add_mutually_exclusive_group(required=True)
-    url_group.add_argument(
-        "-u", "--url", help="The URL to a drop-in activity.", required=False
-    )
+    url_group.add_argument("-u", "--url", help="The URL to a drop-in activity.", required=False)
     url_group.add_argument(
         "-a", "--activity", help="The name of a drop-in activity.", required=False
     )
@@ -88,6 +86,8 @@ def get_cli_args() -> argparse.Namespace:
 def main():
     """Main entry point for the booking bot executable. Running with no
     arguments opens the GUI, otherwise runs the CLI script."""
+
+    run_global_configurations()
 
     if len(sys.argv) == 1:
         # Run GUI for desktop app

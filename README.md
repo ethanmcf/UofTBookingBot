@@ -42,18 +42,18 @@ You must also manually generate a list of DUO Mobile (MFA) bypass codes and plac
 Once the dependencies are installed, you can run the bot to automatically sign up for UofT drop-in activities. You need to input the URL, date, and start time for your chosen activity using the command-line arguments `-u`, `-d`, and `-t`, respectively, as shown below:
 
 ```bash
-python src/main.py -u ACTIVITY_URL -d YYYY-MM-DD -t HH:MM
+python -m src.main -u ACTIVITY_URL -d YYYY-MM-DD -t HH:MM
 ```
 
 Instead of passing in a URL, you can also simply pass in the name of the activity using `-a` for a select few sports. For instance, to sign up for drop-in golf on March 26th, 2025 at 11:00 AM, you would enter the following:
 
 ```bash
-python src/main.py -a golf -d 2025-03-26 -t 11:00
+python -m src.main -a golf -d 2025-03-26 -t 11:00
 ```
 
 ## Advanced
 
-There are multiple customizations available that I don't feel like explaining right now, so here is the help menu instead (found by running `python src/main.py -h`).
+There are multiple customizations available that I don't feel like explaining right now, so here is the help menu instead (found by running `python -m src.main -h`).
 
 ```
 usage: main.py [-h] (-u URL | -a ACTIVITY) -d DATE -t TIME [-o OFFSET | --no-wait] [-c CODES_THRESHOLD] [-l TIME_LIMIT] [--visible] [--debug]
@@ -91,7 +91,7 @@ Tests can be found in the `Tests` folder.
 Although a pytest test exists for the CAPTCHA solver, visual verification can be done via the following command:
 
 ```bash
-python -m Tests.automation.registration.test_captcha_solver
+python -m Tests.automation.features.captcha_solver.test_captcha_solver
 ```
 
 ## Scheduler

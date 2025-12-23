@@ -4,11 +4,8 @@ import pydub
 import speech_recognition
 from playwright.sync_api import Page, Locator, expect
 
-class CaptchaSolverFailedError(Exception):
-    """Exception raised when captcha solving fails."""
+from src.automation.features.captcha_solver.exceptions import CaptchaSolverFailedError
 
-    def __init__(self, message):
-        super().__init__(f"CAPTCHA SOLVER FAILED: {message}")
 
 class CaptchaSolver:
     """A class to solve reCAPTCHA challenges using audio recognition."""
@@ -56,7 +53,7 @@ class CaptchaSolver:
         # Check if challenge only requires checkbox click
         if self.is_solved():
             return
-        
+
         print("Challenge requires more than checkbox click, proceeding to audio challenge...")
 
         # Open audio challenge
@@ -81,7 +78,7 @@ class CaptchaSolver:
 
         response_field = challenge_frame.locator("#audio-response")
         response_field.press_sequentially(text_response.lower(), delay=40)
-        response_field.press('Enter')
+        response_field.press("Enter")
 
         # Check if bot was detected after entering audio response
         if self.is_detected():
@@ -89,7 +86,7 @@ class CaptchaSolver:
 
         if not self.is_solved():
             raise CaptchaSolverFailedError("Failed to solve the captcha")
-    
+
     def _process_audio_challenge(self, audio_url: str) -> str:
         """Process the audio challenge and return the recognized text.
 
@@ -140,7 +137,9 @@ class CaptchaSolver:
         """Check if the bot has been detected."""
         try:
             challenge = self.page.frame_locator('iframe[src*="bframe"]').first
-            expect(challenge.get_by_text("Try again later", exact=False)).to_be_visible(timeout=self.TIMEOUT_IS_DETECTED)
+            expect(challenge.get_by_text("Try again later", exact=False)).to_be_visible(
+                timeout=self.TIMEOUT_IS_DETECTED
+            )
             return True
         except Exception:
             return False

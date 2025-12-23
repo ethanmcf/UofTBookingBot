@@ -2,15 +2,15 @@ import re
 from typing import Optional
 from playwright.sync_api import sync_playwright, expect
 from playwright_stealth import Stealth
-from automation.registration.captcha_solver import CaptchaSolver
-from automation.shared.login_manager import LoginManager
-from automation.shared.debug_helpers import save_debug_screenshot
-from automation.shared.config import DEFAULT_TIMEOUT_MILLISECONDS
-from automation.registration.helpers import (
+from src.automation.features.captcha_solver.captcha_solver import CaptchaSolver
+from src.automation.features.credentials.login_manager import LoginManager
+from src.automation.features.debugging.helpers import save_debug_screenshot
+from src.automation.features.shared.config import DEFAULT_TIMEOUT_MILLISECONDS
+from src.automation.features.registration.booking_helpers import (
     compete_for_registration,
     wait_until_time_slot_opens,
 )
-from automation.registration.config import REGISTRATION_START_BUFFER_SECONDS
+from src.automation.features.registration.config import REGISTRATION_START_BUFFER_SECONDS
 
 
 def run_registration_flow(

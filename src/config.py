@@ -37,12 +37,26 @@ def get_external_root() -> Path:
         return get_internal_root()
 
 
+def get_project_root() -> Path:
+    """Get the root path of the project, depending on the execution context."""
+
+    if getattr(sys, "frozen", False):
+        # In bundle, PROJECT_ROOT usually refers to the folder where the .exe sits
+        return Path(sys.executable).parent
+    else:
+        return get_internal_root()
+
+
 # Define global paths
 INTERNAL_ROOT = get_internal_root()
 EXTERNAL_ROOT = get_external_root()
+PROJECT_ROOT = get_project_root()
 SECRETS_DIR = EXTERNAL_ROOT / "secrets"
 DEBUG_DIR = EXTERNAL_ROOT / "debug"
 
-# Ensure external folders exist
-(SECRETS_DIR).mkdir(exist_ok=True)
-(DEBUG_DIR).mkdir(exist_ok=True)
+
+def run_global_configurations():
+    """Run any global configurations needed at startup."""
+
+    SECRETS_DIR.mkdir(exist_ok=True)
+    DEBUG_DIR.mkdir(exist_ok=True)

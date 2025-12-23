@@ -3,7 +3,7 @@ import pytest
 import os
 from dotenv import load_dotenv
 
-from src.automation.shared.login_manager import LoginManager
+from src.automation.features.credentials.login_manager import LoginManager
 
 
 @pytest.fixture
@@ -51,22 +51,16 @@ class TestLoginManager:
 
     def test_remove_code(self, login_manager: LoginManager):
         login_manager.get_code()  # Retrieves and removes the first code
-        assert (
-            login_manager.num_codes_left() == 2
-        ), "Code removal failed: Expected 2 codes left"
+        assert login_manager.num_codes_left() == 2, "Code removal failed: Expected 2 codes left"
 
         login_manager.get_code()  # Retrieves and removes the next code
-        assert (
-            login_manager.num_codes_left() == 1
-        ), "Code removal failed: Expected 1 code left"
+        assert login_manager.num_codes_left() == 1, "Code removal failed: Expected 1 code left"
 
     def test_num_codes_left(self, login_manager: LoginManager):
         assert login_manager.num_codes_left() == 3, "Initial code count should be 3"
 
         login_manager.get_code()  # Removes one code
-        assert (
-            login_manager.num_codes_left() == 2
-        ), "Code count mismatch: Expected 2 codes left"
+        assert login_manager.num_codes_left() == 2, "Code count mismatch: Expected 2 codes left"
 
     def test_save_codes(self, login_manager: LoginManager):
         new_codes = ["999999999", "888888888"]

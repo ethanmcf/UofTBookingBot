@@ -2,11 +2,11 @@ import re
 from typing import Optional
 from playwright.sync_api import sync_playwright, expect
 from playwright_stealth import Stealth
-from automation.shared.login_manager import LoginManager
-from automation.shared.config import (
+from src.automation.features.credentials.login_manager import LoginManager
+from src.automation.features.shared.config import (
     DEFAULT_TIMEOUT_MILLISECONDS,
 )
-from automation.shared.debug_helpers import save_debug_screenshot
+from src.automation.features.debugging.helpers import save_debug_screenshot
 
 
 def run_bypass_codes_retrieval_flow(

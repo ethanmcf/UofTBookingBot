@@ -6,14 +6,15 @@ from hashlib import md5
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-from scheduler.base_scheduler import BaseScheduler
+from src.scheduler.base_scheduler import BaseScheduler
 
 
 class MacOSScheduler(BaseScheduler):
     """Scheduler implementation for macOS using launchd."""
 
-    def __init__(self, debug_file_path: str):
-        self.debug_file_path = debug_file_path
+    def __init__(self, debug_folder_path: str, project_root: str):
+        self.debug_folder_path = debug_folder_path
+        self.project_root = project_root
         self.agent_dir = os.path.expanduser("~/Library/LaunchAgents")
         self.label_prefix = "com.uoftbookingbot"
 
@@ -39,14 +40,10 @@ class MacOSScheduler(BaseScheduler):
         ]
 
         # Determine the execution path
-        if getattr(sys, "frozen", False):
-            # Running as a PyInstaller bundle
-            exec_path = sys.executable
-        else:
-            # Running in development -> we must call: python src/main.py [args]
-            exec_path = sys.executable
-            script_path = os.path.abspath("src/main.py")
-            activity_args = [script_path] + activity_args
+        exec_path = sys.executable
+        if not getattr(sys, "frozen", False):
+            # in dev, run as: python -m src.main
+            activity_args = ["-m", "src.main"] + activity_args
 
         booking_dt_toronto = self._validate_and_get_booking_datetime(
             activity_date, activity_time, activity_offset
@@ -54,16 +51,23 @@ class MacOSScheduler(BaseScheduler):
 
         plist_content = {
             "Label": label,
+            "Program": exec_path,
             "ProgramArguments": [exec_path] + activity_args,
+            "WorkingDirectory": self.project_root,
+            "EnvironmentVariables": {
+                "PATH": os.environ.get("PATH", ""),
+                "PYTHONUNBUFFERED": "1",  # Ensures logs are written immediately
+            },
             "StartCalendarInterval": {
                 "Month": booking_dt_toronto.month,
                 "Day": booking_dt_toronto.day,
                 "Hour": booking_dt_toronto.hour,
                 "Minute": booking_dt_toronto.minute,
             },
-            "StandardOutPath": os.path.join(self.debug_file_path, "logs/", "output.log"),
-            "StandardErrorPath": os.path.join(self.debug_file_path, "logs/", "error.log"),
+            "StandardOutPath": os.path.join(self.debug_folder_path, "logs/", "output.log"),
+            "StandardErrorPath": os.path.join(self.debug_folder_path, "logs/", "error.log"),
             "RunAtLoad": False,
+            "AbandonProcessGroup": True,
         }
 
         with open(plist_path, "wb") as f:
@@ -117,10 +121,11 @@ class MacOSScheduler(BaseScheduler):
             days=activity_offset, seconds=BOT_START_BUFFER_SECONDS
         )
 
-        now_dt_toronto = datetime.now(toronto_tz)
+        now_dt_local = datetime.now().astimezone()
+        now_dt_toronto = now_dt_local.astimezone(toronto_tz)
         if activity_dt_toronto - timedelta(seconds=BOT_START_BUFFER_SECONDS) < now_dt_toronto:
             raise ValueError("Cannot schedule the booking bot for an activity in the past.")
         if booking_dt_toronto < now_dt_toronto:
-            booking_dt_toronto = now_dt_toronto + timedelta(seconds=5)
+            booking_dt_toronto = now_dt_local + timedelta(minutes=1)
 
         return booking_dt_toronto
