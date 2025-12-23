@@ -4,7 +4,6 @@ from playwright.sync_api import sync_playwright, expect
 from playwright_stealth import Stealth
 from automation.shared.login_manager import LoginManager
 from automation.shared.config import (
-    DEBUG_FOLDER_PATH,
     DEFAULT_TIMEOUT_MILLISECONDS,
 )
 from automation.shared.debug_helpers import save_debug_screenshot
@@ -12,6 +11,7 @@ from automation.shared.debug_helpers import save_debug_screenshot
 
 def run_bypass_codes_retrieval_flow(
     login_manager: LoginManager,
+    debug_folder_path: str,
     user_agent: Optional[str] = None,
     headless: bool = True,
     debug: bool = False,
@@ -68,7 +68,7 @@ def run_bypass_codes_retrieval_flow(
             print("Bypass codes retrieval flow completed successfully.")
         except Exception as e:
             if debug:
-                save_debug_screenshot(page, DEBUG_FOLDER_PATH)
+                save_debug_screenshot(page, debug_folder_path)
             raise e from None
         finally:
             context.close()

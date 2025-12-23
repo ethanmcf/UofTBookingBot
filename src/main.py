@@ -2,6 +2,7 @@ import argparse
 import sys
 from automation.registration.config import ACTIVITY_URLS
 from automation.main import run_registration_bot
+from config import DEBUG_DIR, SECRETS_DIR
 
 
 def get_cli_args() -> argparse.Namespace:
@@ -104,6 +105,8 @@ def main():
         codes_threshold=args.codes_threshold,
         headless=not args.visible,
         debug=args.debug,
+        secrets_folder_path=str(SECRETS_DIR),
+        debug_folder_path=str(DEBUG_DIR),
     )
     exit(0 if user_is_registered else 1)
 

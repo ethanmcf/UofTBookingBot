@@ -1,15 +1,14 @@
-import os
 import logging
+import os
 import textwrap
 from playwright.sync_api import Page
 from datetime import datetime
-from automation.shared.config import DEBUG_FOLDER_PATH
 
 
-def get_app_logger():
+def get_app_logger(debug_folder_path: str):
     """Configures and returns the application logger."""
 
-    log_folder = os.path.join(DEBUG_FOLDER_PATH, "logs")
+    log_folder = os.path.join(debug_folder_path, "logs")
     if not os.path.exists(log_folder):
         os.makedirs(log_folder)
 
@@ -23,10 +22,10 @@ def get_app_logger():
     return logging.getLogger()
 
 
-def save_debug_screenshot(page: Page, folder_path: str) -> None:
+def save_debug_screenshot(page: Page, debug_folder_path: str) -> None:
     """Saves a screenshot of the current page state for debugging."""
 
-    screenshots_folder = os.path.join(folder_path, "screenshots")
+    screenshots_folder = os.path.join(debug_folder_path, "screenshots")
     if not os.path.exists(screenshots_folder):
         os.makedirs(screenshots_folder)
 

@@ -93,3 +93,21 @@ Although a pytest test exists for the CAPTCHA solver, visual verification can be
 ```bash
 python -m Tests.automation.registration.test_captcha_solver
 ```
+
+## Scheduler
+
+Useful commands for debugging MacOS scheduling:
+
+```bash
+# finds the job ID of a previously scheduled activity
+launchctl list | grep uoftbookingbot
+
+# lists information about the job (i.e. when it will run and what command)
+launchctl print gui/$(id -u)/<JOB_ID>
+
+# runs the job immediately regardless of its scheduled time
+launchctl kickstart -p gui/$(id -u)/<JOB_ID>
+
+# unschedules a job
+launchctl bootout gui/$(id -u)/<JOB_ID>
+```

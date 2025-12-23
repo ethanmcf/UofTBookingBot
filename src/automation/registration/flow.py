@@ -5,7 +5,7 @@ from playwright_stealth import Stealth
 from automation.registration.captcha_solver import CaptchaSolver
 from automation.shared.login_manager import LoginManager
 from automation.shared.debug_helpers import save_debug_screenshot
-from automation.shared.config import DEBUG_FOLDER_PATH, DEFAULT_TIMEOUT_MILLISECONDS
+from automation.shared.config import DEFAULT_TIMEOUT_MILLISECONDS
 from automation.registration.helpers import (
     compete_for_registration,
     wait_until_time_slot_opens,
@@ -18,6 +18,7 @@ def run_registration_flow(
     date: str,
     time: str,
     login_manager: LoginManager,
+    debug_folder_path: str,
     posting_offset: Optional[int] = None,
     time_limit: int = 60,
     user_agent: str | None = None,
@@ -31,6 +32,7 @@ def run_registration_flow(
         date: The date of the activity in YYYY-MM-DD format.
         time: The start time of the activity in HH:MM format.
         login_manager: An instance of LoginManager to handle login credentials and bypass codes.
+        debug_folder_path: Path to the folder for saving debug information.
         posting_offset: Optional number of days before the start time to begin registration.
         time_limit: The maximum number of seconds to run the bot past the start time without success.
         user_agent: Optional custom user agent string for the browser.
@@ -187,7 +189,7 @@ def run_registration_flow(
             print("Registration flow completed successfully.")
         except Exception as e:
             if debug:
-                save_debug_screenshot(page, DEBUG_FOLDER_PATH)
+                save_debug_screenshot(page, debug_folder_path)
             raise e from None
         finally:
             context.close()

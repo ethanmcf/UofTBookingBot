@@ -1,10 +1,6 @@
 import random
 from typing import Optional
-from automation.shared.config import (
-    LOGIN_CREDENTIALS_PATH,
-    BYPASS_CODES_PATH,
-    USER_AGENTS,
-)
+from automation.shared.config import USER_AGENTS
 from automation.shared.login_manager import LoginManager
 from automation.shared.debug_helpers import print_exception, get_app_logger
 from automation.bypass_codes.flow import run_bypass_codes_retrieval_flow
@@ -20,6 +16,8 @@ def run_registration_bot(
     codes_threshold: int,
     headless: bool,
     debug: bool,
+    secrets_folder_path: str,
+    debug_folder_path: str,
 ) -> bool:
     """Main entry point for running the registration bot.
 
@@ -32,17 +30,23 @@ def run_registration_bot(
         codes_threshold: The minimum number of bypass codes before fetching new ones.
         headless: Whether to run the browser in headless mode.
         debug: Whether to run in debug mode.
+        secrets_folder_path: Path to the folder containing secret files.
+        debug_folder_path: Path to the folder for saving debug information.
     Returns:
         bool: True iff registration completed without unhandled exceptions, False otherwise.
     """
 
     try:
-        login_manager = LoginManager(LOGIN_CREDENTIALS_PATH, BYPASS_CODES_PATH)
+        login_manager = LoginManager(
+            f"{secrets_folder_path}/login_credentials.txt",
+            f"{secrets_folder_path}/bypass_codes.txt",
+        )
         user_agent = random.choice(USER_AGENTS)
 
         if login_manager.num_codes_left() < codes_threshold:
             run_bypass_codes_retrieval_flow(
                 login_manager=login_manager,
+                debug_folder_path=debug_folder_path,
                 user_agent=user_agent,
                 headless=headless,
                 debug=debug,
@@ -53,6 +57,7 @@ def run_registration_bot(
             date=activity_date,
             time=activity_time,
             login_manager=login_manager,
+            debug_folder_path=debug_folder_path,
             posting_offset=activity_offset,
             time_limit=time_limit,
             user_agent=user_agent,
@@ -61,7 +66,7 @@ def run_registration_bot(
         )
     except Exception as e:
         if debug:
-            logger = get_app_logger()
+            logger = get_app_logger(debug_folder_path)
             logger.exception("An unexpected error occurred.")
         print_exception(e)
         return False
