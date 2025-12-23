@@ -1,5 +1,4 @@
 from abc import abstractmethod, ABCMeta
-from typing import Optional
 
 
 class BaseScheduler:
@@ -17,6 +16,4 @@ class BaseScheduler:
     ): ...
 
     @abstractmethod
-    def unschedule_bot(
-        self, activity_url: str, activity_date: str, activity_time: str
-    ): ...
+    def unschedule_bot(self, activity_url: str, activity_date: str, activity_time: str): ...
