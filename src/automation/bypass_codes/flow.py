@@ -2,13 +2,12 @@ import re
 from typing import Optional
 from playwright.sync_api import sync_playwright, expect
 from playwright_stealth import Stealth
-from utils.login_manager import LoginManager
-from utils.constants import (
-    BYPASS_CODES_URL,
+from automation.shared.login_manager import LoginManager
+from automation.shared.config import (
     DEBUG_FOLDER_PATH,
     DEFAULT_TIMEOUT_MILLISECONDS,
 )
-from utils.debug_helpers import save_debug_screenshot
+from automation.shared.debug_helpers import save_debug_screenshot
 
 
 def run_bypass_codes_retrieval_flow(
@@ -28,7 +27,6 @@ def run_bypass_codes_retrieval_flow(
 
     print("Starting bypass codes retrieval flow...")
 
-
     with Stealth().use_sync(sync_playwright()) as playwright:
         # Launch browser
         browser = playwright.chromium.launch(headless=headless)
@@ -38,7 +36,7 @@ def run_bypass_codes_retrieval_flow(
 
         try:
             # Navigate to the UTORMFA bypass codes page
-            page.goto(BYPASS_CODES_URL)
+            page.goto("https://bypass.utormfa.utoronto.ca/index.php")
 
             # Sign in with UTORID
             utorid, password = login_manager.get_credentials()

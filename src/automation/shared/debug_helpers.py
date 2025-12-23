@@ -3,7 +3,7 @@ import logging
 import textwrap
 from playwright.sync_api import Page
 from datetime import datetime
-from utils.constants import DEBUG_FOLDER_PATH
+from automation.shared.config import DEBUG_FOLDER_PATH
 
 
 def get_app_logger():
