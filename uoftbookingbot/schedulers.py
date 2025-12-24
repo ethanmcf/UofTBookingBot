@@ -1,15 +1,33 @@
+from abc import abstractmethod, ABCMeta
+from datetime import datetime, timedelta
+from hashlib import md5
 import os
-import sys
+import platform
 import plistlib
 import subprocess
-from hashlib import md5
-from datetime import datetime, timedelta
+import sys
 from zoneinfo import ZoneInfo
 
-from src.scheduler.base_scheduler import BaseScheduler
+
+class _BaseScheduler:
+    """Base class for schedulers."""
+
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def schedule_bot(
+        self,
+        activity_url: str,
+        activity_date: str,
+        activity_time: str,
+        activity_offset: int,
+    ): ...
+
+    @abstractmethod
+    def unschedule_bot(self, activity_url: str, activity_date: str, activity_time: str): ...
 
 
-class MacOSScheduler(BaseScheduler):
+class _MacOSScheduler(_BaseScheduler):
     """Scheduler implementation for macOS using launchd."""
 
     def __init__(self, debug_folder_path: str, project_root: str):
@@ -42,8 +60,8 @@ class MacOSScheduler(BaseScheduler):
         # Determine the execution path
         exec_path = sys.executable
         if not getattr(sys, "frozen", False):
-            # in dev, run as: python -m src.main
-            activity_args = ["-m", "src.main"] + activity_args
+            # in dev, run as: python -m uoftbookingbot
+            activity_args = ["-m", "uoftbookingbot"] + activity_args
 
         booking_dt_toronto = self._validate_and_get_booking_datetime(
             activity_date, activity_time, activity_offset
@@ -124,3 +142,15 @@ class MacOSScheduler(BaseScheduler):
             booking_dt_toronto = now_dt_local + timedelta(minutes=1)
 
         return booking_dt_toronto
+
+
+def get_scheduler(debug_folder_path: str, project_root: str) -> _BaseScheduler:
+    """Factory function to get the appropriate scheduler based on the OS."""
+
+    os_name = platform.system()
+    if os_name == "Darwin":
+        return _MacOSScheduler(debug_folder_path=debug_folder_path, project_root=project_root)
+    elif os_name == "Windows":
+        raise NotImplementedError("Windows Task Scheduler support coming soon.")
+    else:
+        raise NotImplementedError("Linux systemd support coming soon.")

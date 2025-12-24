@@ -1,7 +1,25 @@
+import logging
 import os
 import textwrap
 from playwright.sync_api import Page
 from datetime import datetime
+
+
+def get_app_logger(debug_folder_path: str) -> logging.Logger:
+    """Configures and returns the application logger."""
+
+    log_folder = os.path.join(debug_folder_path, "logs")
+    if not os.path.exists(log_folder):
+        os.makedirs(log_folder)
+
+    logging.basicConfig(
+        level=logging.ERROR,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        filename=os.path.join(log_folder, "error.log"),
+        filemode="a",
+    )
+
+    return logging.getLogger()
 
 
 def save_debug_screenshot(page: Page, debug_folder_path: str) -> None:
@@ -17,7 +35,9 @@ def save_debug_screenshot(page: Page, debug_folder_path: str) -> None:
     print(f"Debug screenshot saved to: {screenshot_path}")
 
 
-def print_exception(e):
+def print_exception(e: Exception) -> None:
+    """Prints a formatted exception message to the console."""
+
     title = "ERROR"
     title_width = 20
     message_width = 80  # max width

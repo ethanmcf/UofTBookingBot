@@ -1,11 +1,11 @@
 import argparse
 import sys
-from src.automation.features.registration.config import ACTIVITY_URLS
-from src.automation.main import run_registration_bot
-from src.config import DEBUG_DIR, SECRETS_DIR, run_global_configurations
+from uoftbookingbot.automation.constants import ACTIVITY_URLS
+from uoftbookingbot.automation.runner import run_registration_bot
+from uoftbookingbot.config import DEBUG_DIR, SECRETS_DIR, run_global_configurations
 
 
-def get_cli_args() -> argparse.Namespace:
+def _get_cli_args() -> argparse.Namespace:
     """Parses and returns command-line arguments."""
 
     # Define valid arguments structure
@@ -95,7 +95,7 @@ def main():
         exit(0)
 
     # Run CLI script
-    args = get_cli_args()
+    args = _get_cli_args()
     user_is_registered = run_registration_bot(
         activity_url=args.url,
         activity_date=args.date,

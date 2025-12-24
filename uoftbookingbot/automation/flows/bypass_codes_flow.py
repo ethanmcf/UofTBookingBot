@@ -2,11 +2,9 @@ import re
 from typing import Optional
 from playwright.sync_api import sync_playwright, expect
 from playwright_stealth import Stealth
-from src.automation.features.credentials.login_manager import LoginManager
-from src.automation.features.shared.config import (
-    DEFAULT_TIMEOUT_MILLISECONDS,
-)
-from src.automation.features.debugging.helpers import save_debug_screenshot
+from uoftbookingbot.automation.login_manager import LoginManager
+from uoftbookingbot.automation.constants import DEFAULT_TIMEOUT_MILLISECONDS
+from uoftbookingbot.automation.debugging import save_debug_screenshot
 
 
 def run_bypass_codes_retrieval_flow(

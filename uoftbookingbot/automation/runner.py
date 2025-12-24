@@ -1,11 +1,12 @@
 import random
 from typing import Optional
-from src.automation.features.shared.config import USER_AGENTS
-from src.automation.features.credentials.login_manager import LoginManager
-from src.automation.features.debugging.helpers import print_exception
-from src.automation.features.debugging.logger import get_app_logger
-from src.automation.flows.bypass_codes_retrieval_flow import run_bypass_codes_retrieval_flow
-from src.automation.flows.registration_flow import run_registration_flow
+from uoftbookingbot.automation.constants import USER_AGENTS
+from uoftbookingbot.automation.login_manager import LoginManager
+from uoftbookingbot.automation.debugging import print_exception, get_app_logger
+from uoftbookingbot.automation.flows.bypass_codes_flow import (
+    run_bypass_codes_retrieval_flow,
+)
+from uoftbookingbot.automation.flows.registration_flow import run_registration_flow
 
 
 def run_registration_bot(
@@ -66,9 +67,8 @@ def run_registration_bot(
             debug=debug,
         )
     except Exception as e:
-        if debug:
-            logger = get_app_logger(debug_folder_path)
-            logger.exception("An unexpected error occurred.")
+        logger = get_app_logger(debug_folder_path)
+        logger.exception("An unexpected error occurred.")
         print_exception(e)
         return False
 

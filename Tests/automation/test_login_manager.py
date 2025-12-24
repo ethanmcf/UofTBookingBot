@@ -3,7 +3,7 @@ import pytest
 import os
 from dotenv import load_dotenv
 
-from src.automation.features.credentials.login_manager import LoginManager
+from uoftbookingbot.automation.login_manager import LoginManager
 
 
 @pytest.fixture

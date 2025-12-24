@@ -2,8 +2,11 @@ from playwright.sync_api import sync_playwright
 from playwright_stealth import Stealth
 import time, random
 
-from src.automation.features.captcha_solver.captcha_solver import CaptchaSolver
-from src.automation.features.shared.config import DEFAULT_TIMEOUT_MILLISECONDS, USER_AGENTS
+from uoftbookingbot.automation.captcha_solver import CaptchaSolver
+from uoftbookingbot.automation.constants import (
+    DEFAULT_TIMEOUT_MILLISECONDS,
+    USER_AGENTS,
+)
 
 
 def test_captcha_solver(headless: bool = True) -> None:
