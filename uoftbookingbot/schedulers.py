@@ -10,6 +10,9 @@ from typing import Optional
 from zoneinfo import ZoneInfo
 
 
+_BOT_START_BUFFER_SECONDS = 300  # bot starts 5 minutes before booking time
+
+
 class _BaseScheduler:
     """Base class for schedulers."""
 
@@ -125,8 +128,6 @@ class _MacOSScheduler(_BaseScheduler):
     ) -> datetime:
         """Validates the input date and time strings and returns a datetime object for booking."""
 
-        BOT_START_BUFFER_SECONDS = 120
-
         # Always treat the input datetime as Toronto time
         toronto_tz = ZoneInfo("America/Toronto")
         activity_dt_toronto = datetime.strptime(
@@ -135,13 +136,13 @@ class _MacOSScheduler(_BaseScheduler):
 
         now_dt_local = datetime.now().astimezone()
         now_dt_toronto = now_dt_local.astimezone(toronto_tz)
-        if activity_dt_toronto - timedelta(seconds=BOT_START_BUFFER_SECONDS) < now_dt_toronto:
+        if activity_dt_toronto - timedelta(seconds=_BOT_START_BUFFER_SECONDS) < now_dt_toronto:
             raise ValueError("Cannot schedule the booking bot for an activity in the past.")
 
         booking_dt_toronto = None
         if activity_offset is not None:
             booking_dt_toronto = activity_dt_toronto - timedelta(
-                days=activity_offset, seconds=BOT_START_BUFFER_SECONDS
+                days=activity_offset, seconds=_BOT_START_BUFFER_SECONDS
             )
 
         if booking_dt_toronto is None or booking_dt_toronto < now_dt_toronto:
