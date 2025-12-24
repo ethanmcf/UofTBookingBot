@@ -161,7 +161,7 @@ def run_registration_flow(
     date: str,
     time: str,
     login_manager: LoginManager,
-    debug_folder_path: str,
+    screenshots_path: str,
     posting_offset: Optional[int] = None,
     time_limit: int = 60,
     user_agent: str | None = None,
@@ -175,7 +175,7 @@ def run_registration_flow(
         date: The date of the activity in YYYY-MM-DD format.
         time: The start time of the activity in HH:MM format.
         login_manager: An instance of LoginManager to handle login credentials and bypass codes.
-        debug_folder_path: Path to the folder for saving debug information.
+        screenshots_path: Path to save debug screenshots.
         posting_offset: Optional number of days before the start time to begin registration.
         time_limit: The maximum number of seconds to run the bot past the start time without success.
         user_agent: Optional custom user agent string for the browser.
@@ -327,7 +327,7 @@ def run_registration_flow(
             print("Registration flow completed successfully.")
         except Exception as e:
             if debug:
-                save_debug_screenshot(page, debug_folder_path)
+                save_debug_screenshot(page, screenshots_path)
             raise e from None
         finally:
             context.close()

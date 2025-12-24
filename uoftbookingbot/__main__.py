@@ -2,7 +2,12 @@ import argparse
 import sys
 from uoftbookingbot.automation.constants import ACTIVITY_URLS
 from uoftbookingbot.automation.runner import run_registration_bot
-from uoftbookingbot.config import DEBUG_DIR, SECRETS_DIR, run_global_configurations
+from uoftbookingbot.constants import (
+    BYPASS_CODES_PATH,
+    CREDENTIALS_PATH,
+    ERROR_LOG_PATH,
+    SCREENSHOTS_PATH,
+)
 
 
 def _get_cli_args() -> argparse.Namespace:
@@ -87,8 +92,6 @@ def main():
     """Main entry point for the booking bot executable. Running with no
     arguments opens the GUI, otherwise runs the CLI script."""
 
-    run_global_configurations()
-
     if len(sys.argv) == 1:
         # Run GUI for desktop app
         print("Run GUI here...")
@@ -105,8 +108,10 @@ def main():
         codes_threshold=args.codes_threshold,
         headless=not args.visible,
         debug=args.debug,
-        secrets_folder_path=str(SECRETS_DIR),
-        debug_folder_path=str(DEBUG_DIR),
+        credentials_path=CREDENTIALS_PATH,
+        bypass_codes_path=BYPASS_CODES_PATH,
+        error_log_path=ERROR_LOG_PATH,
+        screenshots_path=SCREENSHOTS_PATH,
     )
     exit(0 if user_is_registered else 1)
 

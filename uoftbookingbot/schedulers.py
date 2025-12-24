@@ -2,12 +2,15 @@ from abc import abstractmethod, ABCMeta
 from datetime import datetime, timedelta
 from hashlib import md5
 import os
+from pathlib import Path
 import platform
 import plistlib
 import subprocess
 import sys
 from typing import Optional
 from zoneinfo import ZoneInfo
+
+from uoftbookingbot.utils import is_running_as_bundle
 
 
 _BOT_START_BUFFER_SECONDS = 300  # bot starts 5 minutes before booking time
@@ -17,6 +20,9 @@ class _BaseScheduler:
     """Base class for schedulers."""
 
     __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def __init__(self, error_log_path: str, output_log_path: str): ...
 
     @abstractmethod
     def schedule_bot(
@@ -34,9 +40,9 @@ class _BaseScheduler:
 class _MacOSScheduler(_BaseScheduler):
     """Scheduler implementation for macOS using launchd."""
 
-    def __init__(self, debug_folder_path: str, project_root: str):
-        self.debug_folder_path = debug_folder_path
-        self.project_root = project_root
+    def __init__(self, error_log_path: str, output_log_path: str):
+        self.error_log_path = error_log_path
+        self.output_log_path = output_log_path
         self.agent_dir = os.path.expanduser("~/Library/LaunchAgents")
         self.label_prefix = "com.uoftbookingbot"
 
@@ -62,9 +68,13 @@ class _MacOSScheduler(_BaseScheduler):
 
         # Determine the execution path
         exec_path = sys.executable
-        if not getattr(sys, "frozen", False):
+        if not is_running_as_bundle():
             # in dev, run as: python -m uoftbookingbot
             activity_args = ["-m", "uoftbookingbot"] + activity_args
+
+        project_root = str(
+            Path(sys.executable).parent if is_running_as_bundle() else Path(__file__).parent.parent
+        )
 
         booking_dt_toronto = self._validate_and_get_booking_datetime(
             activity_date, activity_time, activity_offset
@@ -73,7 +83,7 @@ class _MacOSScheduler(_BaseScheduler):
         plist_content = {
             "Label": label,
             "ProgramArguments": [exec_path] + activity_args,
-            "WorkingDirectory": self.project_root,
+            "WorkingDirectory": project_root,
             "EnvironmentVariables": {
                 "PATH": "/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/homebrew/bin"
             },
@@ -83,8 +93,8 @@ class _MacOSScheduler(_BaseScheduler):
                 "Hour": booking_dt_toronto.hour,
                 "Minute": booking_dt_toronto.minute,
             },
-            "StandardOutPath": os.path.join(self.debug_folder_path, "logs", "output.log"),
-            "StandardErrorPath": os.path.join(self.debug_folder_path, "logs", "error.log"),
+            "StandardOutPath": self.output_log_path,
+            "StandardErrorPath": self.error_log_path,
             "RunAtLoad": False,
         }
 
@@ -151,12 +161,12 @@ class _MacOSScheduler(_BaseScheduler):
         return booking_dt_toronto
 
 
-def get_scheduler(debug_folder_path: str, project_root: str) -> _BaseScheduler:
+def get_scheduler(error_log_path: str, output_log_path: str) -> _BaseScheduler:
     """Factory function to get the appropriate scheduler based on the OS."""
 
     os_name = platform.system()
     if os_name == "Darwin":
-        return _MacOSScheduler(debug_folder_path=debug_folder_path, project_root=project_root)
+        return _MacOSScheduler(error_log_path=error_log_path, output_log_path=output_log_path)
     elif os_name == "Windows":
         raise NotImplementedError("Windows Task Scheduler support coming soon.")
     else:
