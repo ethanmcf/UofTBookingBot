@@ -1,11 +1,15 @@
 from playwright.sync_api import sync_playwright
 from playwright_stealth import Stealth
-from src.utils.constants import DEFAULT_TIMEOUT_MILLISECONDS, USER_AGENTS
-from src.utils.captcha_solver import CaptchaSolver
 import time, random
 
+from uoftbookingbot.automation.captcha_solver import CaptchaSolver
+from uoftbookingbot.automation.constants import (
+    DEFAULT_TIMEOUT_MILLISECONDS,
+    USER_AGENTS,
+)
 
-def test_captcha_handler(headless: bool = True) -> None: 
+
+def test_captcha_solver(headless: bool = True) -> None:
     """Test the captcha handling functionality."""
 
     captcha_url = "https://www.google.com/recaptcha/api2/demo"
@@ -24,10 +28,12 @@ def test_captcha_handler(headless: bool = True) -> None:
         solver.solve_captcha()
 
         if not headless:
-            time.sleep(3)  # Pause to visually confirm captcha solved in non-headless mode
+            # Pause to visually confirm captcha solved in non-headless mode
+            time.sleep(3)
 
     assert True  # If no exceptions were raised, the test passes
 
+
 if __name__ == "__main__":
-    # Verify captcha handler manually in non-headless mode
-    test_captcha_handler(headless=False)
+    # Verify captcha solver manually in non-headless mode
+    test_captcha_solver(headless=False)

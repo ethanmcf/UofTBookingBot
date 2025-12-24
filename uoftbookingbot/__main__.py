@@ -1,17 +1,24 @@
 import argparse
+import sys
+from uoftbookingbot.automation.constants import ACTIVITY_URLS
+from uoftbookingbot.automation.runner import run_registration_bot
+from uoftbookingbot.constants import (
+    BYPASS_CODES_PATH,
+    CREDENTIALS_PATH,
+    ERROR_LOG_PATH,
+    SCREENSHOTS_PATH,
+)
 
-from utils.constants import ACTIVITY_URLS
 
-
-def get_cli_args() -> argparse.Namespace:
+def _get_cli_args() -> argparse.Namespace:
     """Parses and returns command-line arguments."""
 
     # Define valid arguments structure
-    parser = argparse.ArgumentParser()
-    url_group = parser.add_mutually_exclusive_group(required=True)
-    url_group.add_argument(
-        "-u", "--url", help="The URL to a drop-in activity.", required=False
+    parser = argparse.ArgumentParser(
+        description="UofT Drop-in Activity Booking Bot. Run with no arguments to open the GUI, or with arguments to run the CLI booking script."
     )
+    url_group = parser.add_mutually_exclusive_group(required=True)
+    url_group.add_argument("-u", "--url", help="The URL to a drop-in activity.", required=False)
     url_group.add_argument(
         "-a", "--activity", help="The name of a drop-in activity.", required=False
     )
@@ -61,7 +68,7 @@ def get_cli_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--debug",
-        help="Runs debug mode, adds screenshot in debug folder where exception occurs ",
+        help="Runs debug mode, adds screenshot and log in debug folder where exception occurs ",
         action="store_true",
     )
 
@@ -79,3 +86,35 @@ def get_cli_args() -> argparse.Namespace:
         args.offset = None
 
     return args
+
+
+def main():
+    """Main entry point for the booking bot executable. Running with no
+    arguments opens the GUI, otherwise runs the CLI script."""
+
+    if len(sys.argv) == 1:
+        # Run GUI for desktop app
+        print("Run GUI here...")
+        exit(0)
+
+    # Run CLI script
+    args = _get_cli_args()
+    user_is_registered = run_registration_bot(
+        activity_url=args.url,
+        activity_date=args.date,
+        activity_time=args.time,
+        activity_offset=args.offset,
+        time_limit=args.time_limit,
+        codes_threshold=args.codes_threshold,
+        headless=not args.visible,
+        debug=args.debug,
+        credentials_path=CREDENTIALS_PATH,
+        bypass_codes_path=BYPASS_CODES_PATH,
+        error_log_path=ERROR_LOG_PATH,
+        screenshots_path=SCREENSHOTS_PATH,
+    )
+    exit(0 if user_is_registered else 1)
+
+
+if __name__ == "__main__":
+    main()

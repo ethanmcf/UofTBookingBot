@@ -2,17 +2,14 @@ import re
 from typing import Optional
 from playwright.sync_api import sync_playwright, expect
 from playwright_stealth import Stealth
-from utils.login_manager import LoginManager
-from utils.constants import (
-    BYPASS_CODES_URL,
-    DEBUG_FOLDER_PATH,
-    DEFAULT_TIMEOUT_MILLISECONDS,
-)
-from utils.debug_helpers import save_debug_screenshot
+from uoftbookingbot.automation.login_manager import LoginManager
+from uoftbookingbot.automation.constants import DEFAULT_TIMEOUT_MILLISECONDS
+from uoftbookingbot.automation.debugging import save_debug_screenshot
 
 
 def run_bypass_codes_retrieval_flow(
     login_manager: LoginManager,
+    screenshots_path: str,
     user_agent: Optional[str] = None,
     headless: bool = True,
     debug: bool = False,
@@ -21,13 +18,13 @@ def run_bypass_codes_retrieval_flow(
 
     Args:
         login_manager: An instance of LoginManager to handle login credentials and bypass codes.
+        screenshots_path: Path to save debug screenshots.
         user_agent: Optional custom user agent string for the browser.
         headless: Whether to run the browser in headless mode.
         debug: Whether to save debug screenshots on failure.
     """
 
     print("Starting bypass codes retrieval flow...")
-
 
     with Stealth().use_sync(sync_playwright()) as playwright:
         # Launch browser
@@ -38,7 +35,7 @@ def run_bypass_codes_retrieval_flow(
 
         try:
             # Navigate to the UTORMFA bypass codes page
-            page.goto(BYPASS_CODES_URL)
+            page.goto("https://bypass.utormfa.utoronto.ca/index.php")
 
             # Sign in with UTORID
             utorid, password = login_manager.get_credentials()
@@ -70,7 +67,7 @@ def run_bypass_codes_retrieval_flow(
             print("Bypass codes retrieval flow completed successfully.")
         except Exception as e:
             if debug:
-                save_debug_screenshot(page, DEBUG_FOLDER_PATH)
+                save_debug_screenshot(page, screenshots_path)
             raise e from None
         finally:
             context.close()

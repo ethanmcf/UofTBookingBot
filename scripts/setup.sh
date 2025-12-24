@@ -8,17 +8,6 @@ fi
 UTORID="$1"
 PASSWORD="$2"
 
-# Ensure .env exists (copy from example if missing)
-if [[ -f ".env.example" && ! -f ".env" ]]; then
-  cp .env.example .env
-  echo "[ok] Created .env from .env.example"
-fi
-
-# Load paths from .env
-set -a
-[[ -f ".env" ]] && source .env
-set +a
-
 # Fallback defaults if not set in .env
 LOGIN_CREDENTIALS_PATH="${LOGIN_CREDENTIALS_PATH:-./secrets/login_credentials.txt}"
 BYPASS_CODES_PATH="${BYPASS_CODES_PATH:-./secrets/bypass_codes.txt}"
