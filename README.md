@@ -6,7 +6,7 @@ A bot that automates the sign-up process for UofT drop-in activities.
 
 Before you begin, ensure you have Python 3.11.1+ and pip installed. If you don't have them, follow the instructions on the [official Python website](https://www.python.org/downloads/).
 
-## Setup Instructions 🚀
+## Setup Instructions For Running Backend Locally 🚀
 
 ### Start by cloning this repo:
 
@@ -15,21 +15,25 @@ git clone https://github.com/ethanmcf/UofTBookingBot.git
 cd UoftBookingBot
 ```
 
-### Run setup script
+### Set up
 
-This script will create a virtual env, install dependencies and create secrets files. Secret files
-are in gitignore so they will not be commited.
+Create virtual env in root director if not already created (`python3 -m venv .venv`) and run following commands:
 
 ```bash
-chmod +x scripts/setup.sh && ./scripts/setup.sh your_utorid your_password
-source .venv/bin/activate # activate virtual environment
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r app/backend/requirements.txt
+playwright install
+
+printf "YOUR_UTORID\nYOUR_PASSWORD\n" >> app/backend/database/login_credentials.txt
+touch app/backend/database/bypass_codes.txt
 ```
 
 Make sure to select the correct interpreter befor running.
 
 ### Generate bypass codes
 
-You must also manually generate a list of DUO Mobile (MFA) bypass codes and place them in `secrets/bypass_codes.txt` This only has to do be done once as the bot will automatically regenerate them after the first the run when needed. Each code should be on its own line, e.g.:
+You must also manually generate a list of DUO Mobile (MFA) bypass codes and place them in `app/backend/database/bypass_codes.txt` This only has to do be done once as the bot will automatically regenerate them after the first the run when needed. Each code should be on its own line, e.g.:
 
 ```txt
 111111111
@@ -42,13 +46,13 @@ You must also manually generate a list of DUO Mobile (MFA) bypass codes and plac
 Once the dependencies are installed, you can run the bot to automatically sign up for UofT drop-in activities. You need to input the URL, date, and start time for your chosen activity using the command-line arguments `-u`, `-d`, and `-t`, respectively, as shown below:
 
 ```bash
-python src/register.py -u ACTIVITY_URL -d YYYY-MM-DD -t HH:MM
+python app/backend/register.py -u ACTIVITY_URL -d YYYY-MM-DD -t HH:MM
 ```
 
 Instead of passing in a URL, you can also simply pass in the name of the activity using `-a` for a select few sports. For instance, to sign up for drop-in golf on March 26th, 2025 at 11:00 AM, you would enter the following:
 
 ```bash
-python src/register.py -a golf -d 2025-03-26 -t 11:00
+python app/backend/register.py -a golf -d 2025-03-26 -t 11:00
 ```
 
 ## Advanced
@@ -82,7 +86,7 @@ options:
 To run tests:
 
 ```bash
-pytest
+python3 -m pytest app/backend/tests
 ```
 
 Tests can be found in the `Tests` folder.
@@ -90,5 +94,5 @@ Tests can be found in the `Tests` folder.
 Although a pytest test exists for the CAPTCHA handler, visual verification can be done via the following command:
 
 ```bash
-python -m Tests.utils.test_captcha_handler
+python -m tests.utils.test_captcha_handler
 ```

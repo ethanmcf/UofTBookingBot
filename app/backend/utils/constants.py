@@ -1,13 +1,6 @@
-import os
+LOGIN_CREDENTIALS_PATH = "./app/backend/database/login_credentials.txt"
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
-LOGIN_CREDENTIALS_PATH = os.getenv(
-    "LOGIN_CREDENTIALS_PATH", "./secrets/login_credentials.txt"
-)
-BYPASS_CODES_PATH = os.getenv("BYPASS_CODES_PATH", "./secrets/bypass_codes.txt")
+BYPASS_CODES_PATH = "./app/backend/database/bypass_codes.txt"
 
 DEBUG_FOLDER_PATH = "./debug"
 BYPASS_CODES_URL = "https://bypass.utormfa.utoronto.ca/index.php"

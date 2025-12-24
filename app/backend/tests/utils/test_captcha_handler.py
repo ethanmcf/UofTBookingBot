@@ -1,7 +1,7 @@
 from playwright.sync_api import sync_playwright
 from playwright_stealth import Stealth
-from src.utils.constants import DEFAULT_TIMEOUT_MILLISECONDS, USER_AGENTS
-from src.utils.captcha_solver import CaptchaSolver
+from app.backend.utils.constants import DEFAULT_TIMEOUT_MILLISECONDS, USER_AGENTS
+from app.backend.utils.captcha_solver import CaptchaSolver
 import time, random
 
 

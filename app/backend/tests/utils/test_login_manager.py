@@ -1,16 +1,12 @@
 import os
 import pytest
-import os
-from dotenv import load_dotenv
-from src.utils.login_manager import LoginManager
+from app.backend.utils.login_manager import LoginManager
 
 
 @pytest.fixture
 def login_manager() -> LoginManager:
-    load_dotenv()
-
     # Create folder and files if they do not exist
-    folder_path = os.getenv("TEST_RESOURCES_PATH", "./tests/resources")
+    folder_path = "app/backend/tests/resources"
     if not os.path.exists(folder_path):
         # Folder doesn't exist, create it
         os.makedirs(folder_path)

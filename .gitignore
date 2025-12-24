@@ -1,9 +1,10 @@
 .venv/
 .DS_Store
 __pycache__/
-tests/resources/
+app/backend/tests/resources/
 Debug/
-secrets/
+login_credentials.txt
+bypass_codes.txt
 debug/
 .env
 node_modules/
