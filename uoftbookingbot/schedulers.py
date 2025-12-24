@@ -6,6 +6,7 @@ import platform
 import plistlib
 import subprocess
 import sys
+from typing import Optional
 from zoneinfo import ZoneInfo
 
 
@@ -20,7 +21,7 @@ class _BaseScheduler:
         activity_url: str,
         activity_date: str,
         activity_time: str,
-        activity_offset: int,
+        activity_offset: Optional[int],
     ): ...
 
     @abstractmethod
@@ -41,11 +42,12 @@ class _MacOSScheduler(_BaseScheduler):
         activity_url: str,
         activity_date: str,
         activity_time: str,
-        activity_offset: int,
+        activity_offset: Optional[int],
     ):
         label = self._get_task_label(activity_url, activity_date, activity_time)
         plist_path = os.path.join(self.agent_dir, f"{label}.plist")
 
+        offset_args = ["-o", str(activity_offset)] if activity_offset is not None else ["--no-wait"]
         activity_args = [
             "-u",
             activity_url,
@@ -53,9 +55,7 @@ class _MacOSScheduler(_BaseScheduler):
             activity_date,
             "-t",
             activity_time,
-            "-o",
-            str(activity_offset),
-        ]
+        ] + offset_args
 
         # Determine the execution path
         exec_path = sys.executable
@@ -71,6 +71,9 @@ class _MacOSScheduler(_BaseScheduler):
             "Label": label,
             "ProgramArguments": [exec_path] + activity_args,
             "WorkingDirectory": self.project_root,
+            "EnvironmentVariables": {
+                "PATH": "/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/homebrew/bin"
+            },
             "StartCalendarInterval": {
                 "Month": booking_dt_toronto.month,
                 "Day": booking_dt_toronto.day,
@@ -118,7 +121,7 @@ class _MacOSScheduler(_BaseScheduler):
         self,
         activity_date: str,
         activity_time: str,
-        activity_offset: int,
+        activity_offset: Optional[int],
     ) -> datetime:
         """Validates the input date and time strings and returns a datetime object for booking."""
 
@@ -130,15 +133,18 @@ class _MacOSScheduler(_BaseScheduler):
             f"{activity_date} {activity_time}", "%Y-%m-%d %H:%M"
         ).replace(tzinfo=toronto_tz)
 
-        booking_dt_toronto = activity_dt_toronto - timedelta(
-            days=activity_offset, seconds=BOT_START_BUFFER_SECONDS
-        )
-
         now_dt_local = datetime.now().astimezone()
         now_dt_toronto = now_dt_local.astimezone(toronto_tz)
         if activity_dt_toronto - timedelta(seconds=BOT_START_BUFFER_SECONDS) < now_dt_toronto:
             raise ValueError("Cannot schedule the booking bot for an activity in the past.")
-        if booking_dt_toronto < now_dt_toronto:
+
+        booking_dt_toronto = None
+        if activity_offset is not None:
+            booking_dt_toronto = activity_dt_toronto - timedelta(
+                days=activity_offset, seconds=BOT_START_BUFFER_SECONDS
+            )
+
+        if booking_dt_toronto is None or booking_dt_toronto < now_dt_toronto:
             booking_dt_toronto = now_dt_local + timedelta(minutes=1)
 
         return booking_dt_toronto
