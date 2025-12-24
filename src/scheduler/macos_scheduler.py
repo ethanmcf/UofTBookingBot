@@ -51,29 +51,24 @@ class MacOSScheduler(BaseScheduler):
 
         plist_content = {
             "Label": label,
-            "Program": exec_path,
             "ProgramArguments": [exec_path] + activity_args,
             "WorkingDirectory": self.project_root,
-            "EnvironmentVariables": {
-                "PATH": os.environ.get("PATH", ""),
-                "PYTHONUNBUFFERED": "1",  # Ensures logs are written immediately
-            },
             "StartCalendarInterval": {
                 "Month": booking_dt_toronto.month,
                 "Day": booking_dt_toronto.day,
                 "Hour": booking_dt_toronto.hour,
                 "Minute": booking_dt_toronto.minute,
             },
-            "StandardOutPath": os.path.join(self.debug_folder_path, "logs/", "output.log"),
-            "StandardErrorPath": os.path.join(self.debug_folder_path, "logs/", "error.log"),
+            "StandardOutPath": os.path.join(self.debug_folder_path, "logs", "output.log"),
+            "StandardErrorPath": os.path.join(self.debug_folder_path, "logs", "error.log"),
             "RunAtLoad": False,
-            "AbandonProcessGroup": True,
         }
 
         with open(plist_path, "wb") as f:
             plistlib.dump(plist_content, f)
 
         subprocess.run(["launchctl", "bootstrap", f"gui/{os.getuid()}", plist_path], check=False)
+        subprocess.run(["launchctl", "enable", f"gui/{os.getuid()}/{label}"], check=False)
 
     def unschedule_bot(
         self,
@@ -95,7 +90,7 @@ class MacOSScheduler(BaseScheduler):
         activity_time: str,
     ) -> str:
         task_id = (
-            f"{md5(activity_url.encode()).hexdigest()}.{activity_date}.{activity_time}".replace(
+            f"{md5(activity_url.encode()).hexdigest()}--{activity_date}--{activity_time}".replace(
                 ":", "-"
             )
         )
