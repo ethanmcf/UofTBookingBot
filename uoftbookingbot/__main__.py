@@ -95,7 +95,7 @@ def main():
     if len(sys.argv) == 1:
         # Run GUI for desktop app
         print("Run GUI here...")
-        exit(0)
+        sys.exit(0)
 
     # Run CLI script
     args = _get_cli_args()
@@ -113,7 +113,7 @@ def main():
         error_log_path=ERROR_LOG_PATH,
         screenshots_path=SCREENSHOTS_PATH,
     )
-    exit(0 if user_is_registered else 1)
+    sys.exit(0 if user_is_registered else 1)
 
 
 if __name__ == "__main__":

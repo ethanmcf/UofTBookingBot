@@ -6,3 +6,5 @@ playwright==1.57.0
 pydub==0.25.1
 SpeechRecognition==3.14.4
 tzdata==2025.3
+pyinstaller==5.13.2
+pyinstaller-hooks-contrib==2025.11
