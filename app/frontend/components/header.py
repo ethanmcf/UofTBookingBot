@@ -1,7 +1,7 @@
 from app.frontend.theme import Colors  
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton
-from PyQt6.QtCore import Qt, QPointF
-from PyQt6.QtGui import QPainter, QPainterPath, QLinearGradient, QColor, QPolygonF
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPainter, QPainterPath, QLinearGradient, QColor, QPixmap
 
 class Header(QWidget):
     def __init__(self, paint_background=True, parent=None):
@@ -17,8 +17,23 @@ class Header(QWidget):
         self.layout.setSpacing(16)
         
         # Logo
-        self.logo = QLabel("Blue & Booked")
-        self.logo.setStyleSheet("background: none; font-weight: bold; font-size: 20px; border: none;")
+        self.logo_group = QWidget()
+        self.logo_group.setStyleSheet("background: transparent")
+        self.logo_layout = QHBoxLayout(self.logo_group)
+        self.logo_layout.setContentsMargins(0, 0, 0, 0)
+        self.logo_layout.setSpacing(4) 
+
+        self.logo_img = QLabel()
+        logo_img_pixmap = QPixmap("app/frontend/assets/robot-logo.svg")
+        scaled_icon = logo_img_pixmap.scaled(24, 24, Qt.AspectRatioMode.KeepAspectRatio, 
+                                 Qt.TransformationMode.SmoothTransformation)
+        self.logo_img.setPixmap(scaled_icon)
+        self.logo_label = QLabel("Blue & Booked")
+        self.logo_label.setStyleSheet("background: none; font-weight: bold; font-size: 20px; border: none;")
+        self.logo_layout.addWidget(self.logo_img)
+        self.logo_layout.addWidget(self.logo_label)
+        self.logo_layout.addStretch()
+        
         
         # Nav Buttons
         self.setup_btn = QPushButton("Setup")
@@ -47,7 +62,7 @@ class Header(QWidget):
         self.setup_btn.setStyleSheet(btn_style)
         self.run_btn.setStyleSheet(btn_style)
         
-        self.layout.addWidget(self.logo)
+        self.layout.addWidget(self.logo_group)
         self.layout.addStretch()
         self.layout.addWidget(self.setup_btn)
         self.layout.addSpacing(32)
