@@ -7,6 +7,7 @@ def complete_utorid_login(login_manager: LoginManager, page: Page, recreation_lo
 
     # Navigate to sign-in page if logging in from recreation site
     if recreation_login:
+        page.goto("https://recreation.utoronto.ca/")
         page.get_by_role("button", name="Sign In").click()
         page.get_by_role("button", name="school Log in with UTORID").click()
 
@@ -27,3 +28,4 @@ def complete_utorid_login(login_manager: LoginManager, page: Page, recreation_lo
     page.get_by_test_id("verify-button").click()
     if recreation_login:
         page.get_by_role("button", name="Yes, this is my device").click()
+        page.wait_for_url("https://recreation.utoronto.ca/")

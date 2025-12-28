@@ -159,6 +159,7 @@ def _compete_for_registration(
 
 def _clear_cart(page: Page) -> None:
     """Clears the shopping cart if it contains any items."""
+    page.goto("https://recreation.utoronto.ca/")
 
     # Check if cart is empty
     page.get_by_role("button", name="Shopping Cart Notfications Area").click()
@@ -170,6 +171,8 @@ def _clear_cart(page: Page) -> None:
         # TODO: Handle multiple items in cart
         page.get_by_role("button", name="Go to Cart Page").click()
         page.get_by_role("button", name="Remove").click()
+
+    page.wait_for_url("https://recreation.utoronto.ca/")
 
 
 def run_registration_flow(
@@ -211,7 +214,6 @@ def run_registration_flow(
 
         try:
             # Sign in with UTORID
-            page.goto("https://recreation.utoronto.ca/")
             complete_utorid_login(
                 login_manager=login_manager,
                 page=page,
@@ -238,14 +240,6 @@ def run_registration_flow(
                     start_time=time,
                     registration_start_buffer_seconds=_REGISTRATION_START_BUFFER_SECONDS,
                 )
-
-            # Ensure we are on the initial registration page
-            expect(page).to_have_url(
-                re.compile(
-                    r"^https:\/\/recreation\.utoronto\.ca\/program\/getprogramdetails",
-                    flags=re.IGNORECASE,
-                )
-            )
 
             print(f"Registering for drop-in activity on {date} at {time}...")
 
