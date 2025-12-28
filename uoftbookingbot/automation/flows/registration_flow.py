@@ -5,6 +5,7 @@ from typing import Optional
 from playwright.sync_api import sync_playwright, expect, Page
 from playwright_stealth import Stealth
 from uoftbookingbot.automation.captcha_solver import CaptchaSolver
+from uoftbookingbot.automation.common import complete_utorid_login
 from uoftbookingbot.automation.login_manager import LoginManager
 from uoftbookingbot.automation.debugging import save_debug_screenshot
 from uoftbookingbot.automation.constants import DEFAULT_TIMEOUT_MILLISECONDS
@@ -156,6 +157,21 @@ def _compete_for_registration(
     return won_registration
 
 
+def _clear_cart(page: Page) -> None:
+    """Clears the shopping cart if it contains any items."""
+
+    # Check if cart is empty
+    page.get_by_role("button", name="Shopping Cart Notfications Area").click()
+    go_to_cart_button = page.get_by_role("button", name="Go to Cart Page").filter(visible=True)
+    empty_cart_link = page.get_by_role("link", name="Your Cart is Empty!").filter(visible=True)
+    expect(go_to_cart_button.or_(empty_cart_link)).to_be_visible()
+    if go_to_cart_button.is_visible():
+        # Cart is not empty; proceed to clear it
+        # TODO: Handle multiple items in cart
+        page.get_by_role("button", name="Go to Cart Page").click()
+        page.get_by_role("button", name="Remove").click()
+
+
 def run_registration_flow(
     program_url: str,
     date: str,
@@ -191,8 +207,20 @@ def run_registration_flow(
         context = browser.new_context(user_agent=user_agent)
         page = context.new_page()
         page.set_default_timeout(DEFAULT_TIMEOUT_MILLISECONDS)
+        expect.set_options(timeout=DEFAULT_TIMEOUT_MILLISECONDS)
 
         try:
+            # Sign in with UTORID
+            page.goto("https://recreation.utoronto.ca/")
+            complete_utorid_login(
+                login_manager=login_manager,
+                page=page,
+                recreation_login=True,
+            )
+
+            # Clear cart (if necessary) before starting registration
+            _clear_cart(page)
+
             # Navigate to the program registration page
             page.goto(program_url)
 
@@ -201,25 +229,6 @@ def run_registration_flow(
                 page.get_by_role("button", name="Acknowledge Cookies"),
                 lambda locator: locator.click(),
             )
-
-            # Sign in with UTORID
-            utorid, password = login_manager.get_credentials()
-            page.get_by_role("button", name="Sign In").click()
-            page.get_by_role("button", name="school Log in with UTORID").click()
-            page.get_by_role("textbox", name="UTORid / JOINid").click()
-            page.get_by_role("textbox", name="UTORid / JOINid").fill(utorid)
-            page.locator("#password").click()
-            page.locator("#password").fill(password)
-            page.get_by_role("button", name="log in").click()
-
-            # Complete multi-factor authentication (MFA)
-            bypass_code = login_manager.get_code()
-            page.get_by_role("link", name="Other options").click()
-            page.get_by_role("link", name="Bypass code Enter a code from").click()
-            page.get_by_role("textbox", name="Bypass code").click()
-            page.get_by_role("textbox", name="Bypass code").fill(bypass_code)
-            page.get_by_test_id("verify-button").click()
-            page.get_by_role("button", name="Yes, this is my device").click()
 
             # Wait for bookings to open if necessary
             if posting_offset is not None:
@@ -232,7 +241,10 @@ def run_registration_flow(
 
             # Ensure we are on the initial registration page
             expect(page).to_have_url(
-                re.compile(r"^https:\/\/recreation\.utoronto\.ca\/program\/getprogramdetails"),
+                re.compile(
+                    r"^https:\/\/recreation\.utoronto\.ca\/program\/getprogramdetails",
+                    flags=re.IGNORECASE,
+                )
             )
 
             print(f"Registering for drop-in activity on {date} at {time}...")
@@ -318,6 +330,10 @@ def run_registration_flow(
 
             # Complete checkout page
             expect(page.locator("h1")).to_contain_text("Shopping Cart")
+
+            print("test is done!")
+            return
+
             page.get_by_role("button", name="Checkout").click()
             page.locator("#btnCheckoutCart").click()
 
