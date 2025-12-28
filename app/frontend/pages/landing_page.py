@@ -1,22 +1,14 @@
 from app.frontend.theme import Colors 
-from app.frontend.components.header import Header 
+from app.frontend.pages.base_page import BasePage
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
 from PyQt6.QtCore import Qt, QRectF
 from PyQt6.QtGui import QPainter, QPainterPath, QLinearGradient, QColor, QImage
 from PyQt6.QtSvg import QSvgRenderer
 import math
 
-class LandingPage(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent) 
-
-        # Page layout
-        self.page_layout = QVBoxLayout(self)
-        self.page_layout.setContentsMargins(0, 0, 0, 0)
-        self.page_layout.setSpacing(0)
-
-        # Add header
-        self.page_layout.addWidget(Header(False))
+class LandingPage(BasePage):
+    def __init__(self):
+        super().__init__() 
 
         # Welcome title
         self.title_label = QLabel("Welcome to\nBlue & Booked")
@@ -58,7 +50,7 @@ class LandingPage(QWidget):
         self.left_box.setStyleSheet(content_container_style)
         self.content = QVBoxLayout(self.left_box)
         self.content.setSpacing(35)
-        self.content.setContentsMargins(115,85,0,0)
+        self.content.setContentsMargins(115, 40, 0, 0)
 
         # Add widgets to layout
         self.content.addWidget(self.title_label)
@@ -71,8 +63,6 @@ class LandingPage(QWidget):
 
         # Add content to page and fix to top
         self.page_layout.addLayout(self.split_container)
-
-        # Fix to top
         self.page_layout.addStretch()
 
     def paintEvent(self, event):
@@ -133,18 +123,16 @@ class LandingPage(QWidget):
             svg_rect = QRectF(svg_size - (svg_size * 0.5), h - (svg_size * 0.78), svg_size, svg_size)
             renderer.render(buffer_painter, svg_rect)
             
-            # 3. APPLY GRADIENT MASK TO THE IMAGE BUFFER
-            # We use the buffer_painter to "erase" parts of the image before drawing it to the screen
+            # Create gradient and apply buffer
             buffer_painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_DestinationIn)
             
             mask_gradient = QLinearGradient(w * 0.4, 0, w, h)
-            mask_gradient.setColorAt(0.0, QColor(0, 0, 0, 0))   # Left: Transparent
-            mask_gradient.setColorAt(1.0, QColor(0, 0, 0, 255)) # Right: Opaque
+            mask_gradient.setColorAt(0.0, QColor(0, 0, 0, 0))  
+            mask_gradient.setColorAt(1.0, QColor(0, 0, 0, 255)) 
             
             buffer_painter.fillRect(img_buffer.rect(), mask_gradient)
             buffer_painter.end()
 
-            # 4. DRAW THE FADED IMAGE TO SCREEN
-            painter.setOpacity(0.4) # Control overall visibility of the robot
+            painter.setOpacity(0.4)
             painter.drawImage(0, 0, img_buffer)
             painter.setOpacity(1.0)
