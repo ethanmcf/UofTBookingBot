@@ -13,7 +13,7 @@ class SetupPage(BasePage):
 
         # Split layout (left: inputs, right: instructions)
         self.split_container = QHBoxLayout()
-        self.split_container.setContentsMargins(0, 0, 0, 0)
+        self.split_container.setContentsMargins(10, 0, 0, 0)
         self.split_container.setSpacing(0)
 
         # Left column
@@ -29,25 +29,37 @@ class SetupPage(BasePage):
         # Right column (instructions)
         self.right_box = QWidget()
         self.right_col = QVBoxLayout(self.right_box)
-        self.right_col.setContentsMargins(10, 0, 10, 0) 
-        self.right_col.setSpacing(12)
+        self.right_col.setContentsMargins(70, 0, 10, 0) 
+        self.right_col.setSpacing(22)
 
         # Todo image
         self.createTodoImage()
 
         # Instructions
-        instr_title = QLabel("Setup Instructions", self.right_box)
-        instr_title.setStyleSheet(f"color: {Colors.TEXT_MAIN}; font-weight: bold; font-size: 16px;")
-        instr_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.right_col.addWidget(instr_title)
+        instruction_title = QLabel("Setup Instructions")
+        instruction_title.setStyleSheet(f"color: {Colors.TEXT_MAIN}; font-weight: bold; font-size: 16px;")
+        instruction_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.right_col.addWidget(instruction_title)
 
-        instr_1 = QLabel("Enter your UTORID", self.right_box)
-        instr_2 = QLabel("Enter your PASSWORD", self.right_box)
-        instr_3 = QLabel("Enter bypass code\n    • Login to https://bypass.utormfa.utoronto.ca/index.php\n    • Click ‘Generate Bypass Codes’ button\n    • Copy any one code into text field", self.right_box)
-        for label in (instr_1, instr_2, instr_3):
-            label.setStyleSheet(f"color: {Colors.TEXT_MAIN}; font-size: 16px;")
-            label.setWordWrap(True)
-            self.right_col.addWidget(label)
+        label_style = f"color: {Colors.TEXT_MAIN}; font-size: 16px;"
+        utorid_label = QLabel("Enter your UTORID", self.right_box)
+        utorid_label.setStyleSheet(label_style)
+        self.right_col.addWidget(utorid_label)
+
+        password_label = QLabel("Enter your PASSWORD", self.right_box)
+        password_label.setStyleSheet(label_style)
+        self.right_col.addWidget(password_label)
+
+        bypass_label = QLabel("Enter BYPASS CODE") 
+        bypass_label.setStyleSheet(label_style)
+        bypass_row = self.createInfoBox(bypass_label, 
+                           "app/frontend/assets/info-icon.png", 
+                           "1) Login to https://bypass.utormfa.utoronto.ca/index.php\n" \
+                           "2) Click ‘Generate Bypass Codes’ button\n" \
+                           "3) Copy any one code into text field",
+                           stretch=False)
+        self.right_col.addLayout(bypass_row)
+        
         self.right_col.addStretch()
 
         # Add columns to split layout
@@ -58,6 +70,26 @@ class SetupPage(BasePage):
         self.page_layout.addLayout(self.split_container)
         self.page_layout.addStretch()
 
+    def createInfoBox(self, component, icon_path, tooltip, stretch=True):
+        self.row_layout = QHBoxLayout()
+        self.row_layout.setSpacing(10) 
+
+        self.row_layout.addWidget(component, stretch= 1 if stretch else 0)
+
+        # Create the Info Icon/Image
+        self.info_icon = QLabel()
+        info_pixmap = QPixmap(icon_path) 
+        self.info_icon.setPixmap(info_pixmap.scaled(30, 30, Qt.AspectRatioMode.KeepAspectRatio, 
+                                                   Qt.TransformationMode.SmoothTransformation))
+        
+        # Add the ToolTip to the icon
+        self.info_icon.setToolTip(tooltip)
+        self.info_icon.setCursor(Qt.CursorShape.PointingHandCursor) # Feedback on hover
+        
+        self.row_layout.addWidget(self.info_icon)
+        
+        return self.row_layout
+    
     def createTodoImage(self):
         self.image_label = QLabel(self.right_box)
         self.image_label.setStyleSheet("background: transparent;")
@@ -71,7 +103,7 @@ class SetupPage(BasePage):
 
     def createForm(self):
         BORDER_RADIUS = 5
-        WIDTH = 350
+        WIDTH = 400
         HEIGHT = 50
         INNER_FONT_SIZE = 14
         OUTER_FONT_SIZE = 10
@@ -112,5 +144,11 @@ class SetupPage(BasePage):
         self.left_col.addStretch()
 
         self.save_btn = Button("Save")
-        self.left_col.addWidget(self.save_btn)
+        row = self.createInfoBox(self.save_btn, 
+                           "app/frontend/assets/lock-icon.png", 
+                           "End-to-end local encryption ensures your data stays private.\n" \
+                           "Because your info is stored only on your machine,\n" \
+                           "we have zero access to your sensitive credentials")
+        self.left_col.addLayout(row, 1)
         self.left_col.addStretch()
+       

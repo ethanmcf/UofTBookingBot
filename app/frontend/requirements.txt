@@ -1,1 +1,2 @@
 PyQt6==6.10.1
+pyqt-animated-line-edit==1.0.1
