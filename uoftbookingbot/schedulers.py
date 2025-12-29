@@ -1,6 +1,5 @@
 from abc import abstractmethod, ABCMeta
 from datetime import datetime, timedelta
-from hashlib import md5
 import os
 from pathlib import Path
 import platform
@@ -27,14 +26,14 @@ class Scheduler:
     @abstractmethod
     def schedule_bot(
         self,
-        activity_url: str,
+        activity_id: str,
         activity_date: str,
         activity_time: str,
         activity_offset: Optional[int],
     ): ...
 
     @abstractmethod
-    def unschedule_bot(self, activity_url: str, activity_date: str, activity_time: str): ...
+    def unschedule_bot(self, activity_id: str, activity_date: str, activity_time: str): ...
 
 
 class _MacOSScheduler(Scheduler):
@@ -48,18 +47,18 @@ class _MacOSScheduler(Scheduler):
 
     def schedule_bot(
         self,
-        activity_url: str,
+        activity_id: str,
         activity_date: str,
         activity_time: str,
         activity_offset: Optional[int],
     ):
-        label = self._get_task_label(activity_url, activity_date, activity_time)
+        label = self._get_task_label(activity_id, activity_date, activity_time)
         plist_path = os.path.join(self.agent_dir, f"{label}.plist")
 
         offset_args = ["-o", str(activity_offset)] if activity_offset is not None else ["--no-wait"]
         activity_args = [
-            "-u",
-            activity_url,
+            "-i",
+            activity_id,
             "-d",
             activity_date,
             "-t",
@@ -106,11 +105,11 @@ class _MacOSScheduler(Scheduler):
 
     def unschedule_bot(
         self,
-        activity_url: str,
+        activity_id: str,
         activity_date: str,
         activity_time: str,
     ):
-        label = self._get_task_label(activity_url, activity_date, activity_time)
+        label = self._get_task_label(activity_id, activity_date, activity_time)
         plist_path = os.path.join(self.agent_dir, f"{label}.plist")
 
         subprocess.run(["launchctl", "bootout", f"gui/{os.getuid()}/{label}"], check=False)
@@ -119,12 +118,12 @@ class _MacOSScheduler(Scheduler):
 
     def _get_task_label(
         self,
-        activity_url: str,
+        activity_id: str,
         activity_date: str,
         activity_time: str,
     ) -> str:
         task_id = (
-            f"{md5(activity_url.encode()).hexdigest()}--{activity_date}--{activity_time}".replace(
+            f"{activity_id}--{activity_date}--{activity_time}".replace(
                 ":", "-"
             )
         )
@@ -155,6 +154,7 @@ class _MacOSScheduler(Scheduler):
                 days=activity_offset, seconds=_BOT_START_BUFFER_SECONDS
             )
 
+        # No wait or booking time is in the past, schedule immediately (with 1 minute buffer)
         if booking_dt_toronto is None or booking_dt_toronto < now_dt_toronto:
             booking_dt_toronto = now_dt_local + timedelta(minutes=1)
 

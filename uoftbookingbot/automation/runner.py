@@ -11,7 +11,7 @@ from uoftbookingbot.automation.flows.registration_flow import run_registration_f
 
 
 def run_registration_bot(
-    activity_url: str,
+    activity_id: str,
     activity_date: str,
     activity_time: str,
     activity_offset: Optional[int],
@@ -27,7 +27,7 @@ def run_registration_bot(
     """Main entry point for running the registration bot.
 
     Args:
-        activity_url: The URL to the drop-in activity.
+        activity_id: The ID of the drop-in activity.
         activity_date: The date of the activity in YYYY-MM-DD format.
         activity_time: The start time of the activity in HH:MM format.
         activity_offset: The number of days before the activity that registration opens.
@@ -42,7 +42,7 @@ def run_registration_bot(
         bool: True iff registration completed without unhandled exceptions, False otherwise.
     """
 
-    print(f"{datetime.datetime.now().isoformat()}: STARTING REGISTRATION BOT FOR [{activity_url} {activity_date} {activity_time}] ")
+    print(f"{datetime.datetime.now().isoformat()}: STARTING REGISTRATION BOT FOR [{activity_id} {activity_date} {activity_time}] ")
 
     try:
         login_manager = LoginManager(credentials_path, bypass_codes_path)
@@ -58,12 +58,12 @@ def run_registration_bot(
             )
 
         run_registration_flow(
-            program_url=activity_url,
-            date=activity_date,
-            time=activity_time,
+            activity_id=activity_id,
+            activity_date=activity_date,
+            activity_time=activity_time,
             login_manager=login_manager,
             screenshots_path=screenshots_path,
-            posting_offset=activity_offset,
+            activity_offset=activity_offset,
             time_limit=time_limit,
             user_agent=user_agent,
             headless=headless,
@@ -75,7 +75,7 @@ def run_registration_bot(
         print_exception(e)
         return False
     finally:
-        print(f"{datetime.datetime.now().isoformat()}: ENDING REGISTRATION BOT FOR [{activity_url} {activity_date} {activity_time}] ")
+        print(f"{datetime.datetime.now().isoformat()}: ENDING REGISTRATION BOT FOR [{activity_id} {activity_date} {activity_time}] ")
 
 
     return True

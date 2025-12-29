@@ -1,6 +1,6 @@
 import argparse
 import sys
-from uoftbookingbot.automation.constants import ACTIVITY_URLS
+from uoftbookingbot.automation.constants import ACTIVITY_IDS
 from uoftbookingbot.automation.runner import run_registration_bot
 from uoftbookingbot.constants import (
     BYPASS_CODES_PATH,
@@ -18,14 +18,14 @@ def _get_cli_args() -> argparse.Namespace:
         description="UofT Drop-in Activity Booking Bot. Run with no arguments to open the GUI, or with arguments to run the CLI booking script."
     )
     url_group = parser.add_mutually_exclusive_group(required=True)
-    url_group.add_argument("-u", "--url", help="The URL to a drop-in activity.", required=False)
+    url_group.add_argument("-i", "--activity-id", help="The ID of a drop-in activity.", required=False)
     url_group.add_argument(
-        "-a", "--activity", help="The name of a drop-in activity.", required=False
+        "-a", "--activity-name", help="The name of a drop-in activity.", required=False
     )
     parser.add_argument(
         "-d",
         "--date",
-        help="The date of the activity given in YYYY-MM-DD format.",
+        help="The start date of the activity given in YYYY-MM-DD format.",
         required=True,
     )
     parser.add_argument(
@@ -68,17 +68,17 @@ def _get_cli_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--debug",
-        help="Runs debug mode, adds screenshot and log in debug folder where exception occurs ",
+        help="Runs debug mode, adds screenshot in debug folder where exception occurs ",
         action="store_true",
     )
 
     # Get args from command-line
     args = parser.parse_args()
 
-    # Get activity url from known activities if a key name was given instead of a url
-    if args.activity:
-        args.url = ACTIVITY_URLS.get(args.activity)
-        if not args.url:
+    # Get activity id from known activities if a key name was given instead of an id
+    if args.activity_name:
+        args.activity_id = ACTIVITY_IDS.get(args.activity_name)
+        if not args.activity_id:
             raise Exception("Invalid drop-in activity given.")
 
     # Nullify posting offset if no wait flag was given
@@ -100,7 +100,7 @@ def main():
     # Run CLI script
     args = _get_cli_args()
     user_is_registered = run_registration_bot(
-        activity_url=args.url,
+        activity_id=args.activity_id,
         activity_date=args.date,
         activity_time=args.time,
         activity_offset=args.offset,

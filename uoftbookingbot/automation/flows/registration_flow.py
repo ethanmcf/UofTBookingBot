@@ -87,14 +87,14 @@ def _format_date_for_program_timeslot(date_string: str, time_string: str) -> str
 
 
 def _wait_until_time_slot_opens(
-    posting_offset: int, start_date: str, start_time: str, registration_start_buffer_seconds: int
+    activity_offset: int, activity_date: str, activity_time: str, registration_start_buffer_seconds: int
 ) -> bool:
     """Waits until just before the booking slot opens to start the registration process."""
 
-    activity_datetime = datetime.strptime(f"{start_date} {start_time}:00", "%Y-%m-%d %H:%M:%S")
+    activity_datetime = datetime.strptime(f"{activity_date} {activity_time}:00", "%Y-%m-%d %H:%M:%S")
     wakeup_datetime = (
         activity_datetime
-        - timedelta(days=posting_offset)
+        - timedelta(days=activity_offset)
         - timedelta(seconds=registration_start_buffer_seconds)
     )
     diff_time = wakeup_datetime - datetime.now()
@@ -112,15 +112,15 @@ def _wait_until_time_slot_opens(
 
 
 def _compete_for_registration(
-    page: Page, start_date: str, start_time: str, time_limit: int = 60
+    page: Page, activity_date: str, activity_time: str, time_limit: int
 ) -> bool:
     """Continually attempts to register for the specified date and time slot
     until successful or time limit reached."""
 
     # Format date and time strings for initial program registration page
-    programInstanceTextDate = _format_date_for_program_instance_text(start_date)
-    programInstanceRoleDate = _format_date_for_program_instance_role(start_date)
-    programTimeslotDateTime = _format_date_for_program_timeslot(start_date, start_time)
+    programInstanceTextDate = _format_date_for_program_instance_text(activity_date)
+    programInstanceRoleDate = _format_date_for_program_instance_role(activity_date)
+    programTimeslotDateTime = _format_date_for_program_timeslot(activity_date, activity_time)
 
     # Continually try to register until successful or time limit reached
     stopping_datetime = datetime.now() + timedelta(seconds=time_limit)
@@ -186,12 +186,12 @@ def _clear_cart(page: Page) -> None:
 
 
 def run_registration_flow(
-    program_url: str,
-    date: str,
-    time: str,
+    activity_id: str,
+    activity_date: str,
+    activity_time: str,
     login_manager: LoginManager,
     screenshots_path: str,
-    posting_offset: Optional[int] = None,
+    activity_offset: Optional[int] = None,
     time_limit: int = 60,
     user_agent: str | None = None,
     headless: bool = True,
@@ -200,12 +200,12 @@ def run_registration_flow(
     """Runs the main registration automation using Playwright.
 
     Args:
-        program_url: The URL of the drop-in activity registration page.
-        date: The date of the activity in YYYY-MM-DD format.
-        time: The start time of the activity in HH:MM format.
+        activity_id: The ID of the drop-in activity.
+        activity_date: The date of the activity in YYYY-MM-DD format.
+        activity_time: The start time of the activity in HH:MM format.
         login_manager: An instance of LoginManager to handle login credentials and bypass codes.
         screenshots_path: Path to save debug screenshots.
-        posting_offset: Optional number of days before the start time to begin registration.
+        activity_offset: Optional number of days before the start time to begin registration.
         time_limit: The maximum number of seconds to run the bot past the start time without success.
         user_agent: Optional custom user agent string for the browser.
         headless: Whether to run the browser in headless mode.
@@ -242,29 +242,30 @@ def run_registration_flow(
             _clear_cart(page)
 
             # Navigate to the program registration page
-            page.goto(program_url)
+            activity_url = f"https://recreation.utoronto.ca/Program/GetProgramDetails?courseId={activity_id}"
+            page.goto(activity_url)
 
             # Wait for bookings to open if necessary
-            if posting_offset is not None:
+            if activity_offset is not None:
                 _wait_until_time_slot_opens(
-                    posting_offset=posting_offset,
-                    start_date=date,
-                    start_time=time,
+                    activity_offset=activity_offset,
+                    activity_date=activity_date,
+                    activity_time=activity_time,
                     registration_start_buffer_seconds=_REGISTRATION_START_BUFFER_SECONDS,
                 )
 
-            print(f"Registering for drop-in activity on {date} at {time}...")
+            print(f"Registering for drop-in activity on {activity_date} at {activity_time}...")
 
             # Compete for initial registration
             effective_time_limit = (
                 time_limit + _REGISTRATION_START_BUFFER_SECONDS
-                if posting_offset is not None
+                if activity_offset is not None
                 else time_limit
             )
             won_initial_registration = _compete_for_registration(
                 page=page,
-                start_date=date,
-                start_time=time,
+                activity_date=activity_date,
+                activity_time=activity_time,
                 time_limit=effective_time_limit,
             )
             if not won_initial_registration:
@@ -336,10 +337,6 @@ def run_registration_flow(
 
             # Complete checkout page
             expect(page.locator("h1")).to_contain_text("Shopping Cart")
-
-            print("test is done!")
-            return
-
             page.get_by_role("button", name="Checkout").click()
             page.locator("#btnCheckoutCart").click()
 
