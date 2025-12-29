@@ -15,6 +15,37 @@ from uoftbookingbot.utils import is_running_as_bundle
 _BOT_START_BUFFER_SECONDS = 300  # bot starts 5 minutes before booking time
 
 
+class Activity:
+    """Represents a scheduled activity for the booking bot."""
+
+    id: str
+    start_date: str
+    start_time: str
+    posting_offset: Optional[int]
+
+    def __init__(self, id: str, start_date: str, start_time: str, posting_offset: Optional[int] = None) -> None:
+        self.id = id
+        self.start_date = start_date
+        self.start_time = start_time
+        self.posting_offset = posting_offset
+
+        if posting_offset is not None and posting_offset < 0:
+            raise ValueError("Posting offset cannot be negative.")
+
+    def __str__(self):
+        return f"Activity(id={self.id}, date={self.start_date}, time={self.start_time}, offset={self.posting_offset})"
+    
+    def __eq__(self, other):
+        if not isinstance(other, Activity):
+            return False
+        return (
+            self.id == other.id and
+            self.start_date == other.start_date and
+            self.start_time == other.start_time and
+            self.posting_offset == other.posting_offset
+        )
+
+
 class Scheduler:
     """Base class for scheduling the booking bot."""
 
@@ -33,32 +64,40 @@ class Scheduler:
     @abstractmethod
     def schedule_bot(
         self,
-        activity_id: str,
-        activity_date: str,
-        activity_time: str,
-        activity_offset: Optional[int],
+        activity: Activity
     ) -> None: 
         """Schedules the booking bot for a specified activity.
         
         Args:
-            activity_id: The ID of the drop-in activity.
-            activity_date: The start date of the activity in YYYY-MM-DD format.
-            activity_time: The start time of the activity in HH:MM format.
-            activity_offset: The offset in days before the start time when registration opens or None to run immediately.
+            activity: The activity to schedule.
         """
         ...
 
     @abstractmethod
-    def unschedule_bot(self, activity_id: str, activity_date: str, activity_time: str) -> None: 
+    def unschedule_bot(self, activity: Activity) -> None: 
         """Unschedules a previously scheduled activity.
 
         Args:
-            activity_id: The ID of the drop-in activity.
-            activity_date: The start date of the activity in YYYY-MM-DD format.
-            activity_time: The start time of the activity in HH:MM format.
+            activity: The activity to unschedule.
         """
         ...
 
+    @abstractmethod
+    def get_scheduled_activities(self) -> list[Activity]:
+        """Returns a list of scheduled activities.
+        
+        Returns:
+            A list of Activity instances representing the scheduled activities.
+        """
+        ...
+
+    @abstractmethod
+    def is_activity_scheduled(
+        self,
+        activity: Activity
+    ) -> bool:
+        """Checks if a specific activity is already scheduled."""
+        ...
 
 class _MacOSScheduler(Scheduler):
     """Scheduler implementation for macOS using launchd."""
@@ -71,22 +110,19 @@ class _MacOSScheduler(Scheduler):
 
     def schedule_bot(
         self,
-        activity_id: str,
-        activity_date: str,
-        activity_time: str,
-        activity_offset: Optional[int],
+        activity: Activity,
     ) -> None:
-        label = self._get_task_label(activity_id, activity_date, activity_time)
+        label = self._get_task_label(activity)
         plist_path = os.path.join(self.agent_dir, f"{label}.plist")
 
-        offset_args = ["-o", str(activity_offset)] if activity_offset is not None else ["--no-wait"]
+        offset_args = ["-o", str(activity.posting_offset)] if activity.posting_offset is not None else ["--no-wait"]
         activity_args = [
             "-i",
-            activity_id,
+            activity.id,
             "-d",
-            activity_date,
+            activity.start_date,
             "-t",
-            activity_time,
+            activity.start_time,
         ] + offset_args
 
         # Determine the execution path
@@ -99,9 +135,7 @@ class _MacOSScheduler(Scheduler):
             Path(sys.executable).parent if is_running_as_bundle() else Path(__file__).parent.parent
         )
 
-        booking_dt_toronto = self._validate_and_get_booking_datetime(
-            activity_date, activity_time, activity_offset
-        )
+        booking_dt_toronto = self._validate_and_get_booking_datetime(activity)
 
         plist_content = {
             "Label": label,
@@ -129,25 +163,48 @@ class _MacOSScheduler(Scheduler):
 
     def unschedule_bot(
         self,
-        activity_id: str,
-        activity_date: str,
-        activity_time: str,
+        activity: Activity,
     ) -> None:
-        label = self._get_task_label(activity_id, activity_date, activity_time)
+        label = self._get_task_label(activity)
         plist_path = os.path.join(self.agent_dir, f"{label}.plist")
 
         subprocess.run(["launchctl", "bootout", f"gui/{os.getuid()}/{label}"], check=False)
         if os.path.exists(plist_path):
             os.remove(plist_path)
 
+    def get_scheduled_activities(self) -> list[Activity]:
+        activities = []
+        for filename in os.listdir(self.agent_dir):
+            if not filename.startswith(self.label_prefix) or not filename.endswith(".plist"):
+                continue
+
+            label = filename.removeprefix(self.label_prefix + ".").removesuffix(".plist")
+            parts = label.split("--")
+            if len(parts) != 4:
+                continue
+
+            activity_id, activity_date, activity_time, posting_offset_str = parts
+            activity_time = activity_time.replace("-", ":")
+            posting_offset = None if posting_offset_str == "none" else int(posting_offset_str)
+            activities.append(Activity(id=activity_id, start_date=activity_date, start_time=activity_time, posting_offset=posting_offset))
+        return activities
+    
+    def is_activity_scheduled(
+        self,
+        activity: Activity,
+    ) -> bool:
+        scheduled_activities = self.get_scheduled_activities()
+        return activity in scheduled_activities
+
     def _get_task_label(
         self,
-        activity_id: str,
-        activity_date: str,
-        activity_time: str,
+        activity: Activity,
     ) -> str:
+        """Generates a unique label for the scheduled task based on activity details."""
+
+        offset_str = "none" if activity.posting_offset is None else str(activity.posting_offset)
         task_id = (
-            f"{activity_id}--{activity_date}--{activity_time}".replace(
+            f"{activity.id}--{activity.start_date}--{activity.start_time}--{offset_str}".replace(
                 ":", "-"
             )
         )
@@ -155,16 +212,14 @@ class _MacOSScheduler(Scheduler):
 
     def _validate_and_get_booking_datetime(
         self,
-        activity_date: str,
-        activity_time: str,
-        activity_offset: Optional[int],
+        activity: Activity
     ) -> datetime:
-        """Validates the input date and time strings and returns a datetime object for booking."""
+        """Validates the activity's date and time strings and returns a datetime object for booking."""
 
         # Always treat the input datetime as Toronto time
         toronto_tz = ZoneInfo("America/Toronto")
         activity_dt_toronto = datetime.strptime(
-            f"{activity_date} {activity_time}", "%Y-%m-%d %H:%M"
+            f"{activity.start_date} {activity.start_time}", "%Y-%m-%d %H:%M"
         ).replace(tzinfo=toronto_tz)
 
         now_dt_local = datetime.now().astimezone()
@@ -173,9 +228,9 @@ class _MacOSScheduler(Scheduler):
             raise ValueError("Cannot schedule the booking bot for an activity in the past.")
 
         booking_dt_toronto = None
-        if activity_offset is not None:
+        if activity.posting_offset is not None:
             booking_dt_toronto = activity_dt_toronto - timedelta(
-                days=activity_offset, seconds=_BOT_START_BUFFER_SECONDS
+                days=activity.posting_offset, seconds=_BOT_START_BUFFER_SECONDS
             )
 
         # No wait or booking time is in the past, schedule immediately (with 1 minute buffer)
