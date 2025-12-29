@@ -5,7 +5,7 @@ from app.frontend.app import BookingApp
 def main():
     # Create the application instance
     qt_app = QApplication(sys.argv)
-
+    
     # Create and show the main window
     window = BookingApp()
     window.show()

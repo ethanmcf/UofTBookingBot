@@ -11,12 +11,12 @@ class SetupPage(BasePage):
     def __init__(self):
         super().__init__() 
 
-        # Split layout (left: inputs, right: instructions)
+        # Split layout 
         self.split_container = QHBoxLayout()
         self.split_container.setContentsMargins(10, 0, 0, 0)
         self.split_container.setSpacing(0)
 
-        # Left column
+        # Left column (form)
         self.left_box = QWidget()
 
         self.left_col = QVBoxLayout(self.left_box)
@@ -76,7 +76,7 @@ class SetupPage(BasePage):
 
         self.row_layout.addWidget(component, stretch= 1 if stretch else 0)
 
-        # Create the Info Icon/Image
+        # Create the Info image
         self.info_icon = QLabel()
         info_pixmap = QPixmap(icon_path) 
         self.info_icon.setPixmap(info_pixmap.scaled(30, 30, Qt.AspectRatioMode.KeepAspectRatio, 
@@ -84,6 +84,15 @@ class SetupPage(BasePage):
         
         # Add the ToolTip to the icon
         self.info_icon.setToolTip(tooltip)
+        self.info_icon.setStyleSheet("""
+            QToolTip {
+                background-color: white;
+                color: black;
+                padding: 1px;
+                border-radius: 4px;
+                outline: none; 
+            }
+        """)
         self.info_icon.setCursor(Qt.CursorShape.PointingHandCursor) # Feedback on hover
         
         self.row_layout.addWidget(self.info_icon)
@@ -95,8 +104,7 @@ class SetupPage(BasePage):
         self.image_label.setStyleSheet("background: transparent;")
         self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         todo_png = QPixmap("app/frontend/assets/todo.png")
-        todo_png_size = 300
-        self.image_label.setPixmap(todo_png.scaled(todo_png_size, todo_png_size, Qt.AspectRatioMode.KeepAspectRatio,
+        self.image_label.setPixmap(todo_png.scaled(300, 300, Qt.AspectRatioMode.KeepAspectRatio,
                                                   Qt.TransformationMode.SmoothTransformation))
         self.right_col.addStretch()
         self.right_col.addWidget(self.image_label)
@@ -108,7 +116,7 @@ class SetupPage(BasePage):
         INNER_FONT_SIZE = 14
         OUTER_FONT_SIZE = 10
     
-         # Utorid input
+        # Utorid input
         self.username = AnimatedLineEdit('Your utorid', self.left_box)
         self.username.setFixedSize(WIDTH, HEIGHT)
         self.username.setPlaceholderColorOutside(QColor(Colors.TEXT_MAIN))
@@ -143,6 +151,7 @@ class SetupPage(BasePage):
         self.left_col.addWidget(self.bypass)
         self.left_col.addStretch()
 
+        # Save button
         self.save_btn = Button("Save")
         row = self.createInfoBox(self.save_btn, 
                            "app/frontend/assets/lock-icon.png", 

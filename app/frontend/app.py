@@ -11,16 +11,6 @@ class BookingApp(QMainWindow):
         super().__init__()
         self.setFixedSize(900, 600) 
 
-        # Custom QTip styling
-        self.setStyleSheet("""
-            QToolTip {
-                background-color: #8ad4ff;
-                color: black;
-                padding: 1px;
-                border-radius: 4px;
-            }
-        """)
-
         self.main_container = QWidget()
         self.main_container.setStyleSheet("background-color: white;")
         self.setCentralWidget(self.main_container)
