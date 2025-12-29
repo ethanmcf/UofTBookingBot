@@ -33,6 +33,7 @@ class Scheduler:
     @abstractmethod
     def schedule_activity(self, activity: Activity) -> None:
         """Schedules the booking bot for a specified activity.
+        If the activity is already scheduled, overwrite the existing schedule.
 
         Args:
             activity: The activity to schedule.
@@ -76,6 +77,9 @@ class _MacOSScheduler(Scheduler):
         self,
         activity: Activity,
     ) -> None:
+        if self.is_activity_scheduled(activity):
+            self.unschedule_activity(activity)
+
         label = self._get_task_label(activity)
         plist_path = os.path.join(self.agent_dir, f"{label}.plist")
 
@@ -149,22 +153,42 @@ class _MacOSScheduler(Scheduler):
             if not filename.startswith(self.label_prefix) or not filename.endswith(".plist"):
                 continue
 
-            label = filename.removeprefix(self.label_prefix + ".").removesuffix(".plist")
-            parts = label.split("--")
-            if len(parts) != 4:
-                continue
+            with open(os.path.join(self.agent_dir, filename), "rb") as f:
+                plist_content = plistlib.load(f)
+                program_args = plist_content.get("ProgramArguments", [])
 
-            activity_id, activity_date, activity_time, posting_offset_str = parts
-            activity_time = activity_time.replace("-", ":")
-            posting_offset = None if posting_offset_str == "none" else int(posting_offset_str)
-            activities.append(
-                Activity(
-                    id=activity_id,
-                    start_date=activity_date,
-                    start_time=activity_time,
-                    posting_offset=posting_offset,
+                if (
+                    "-i" not in program_args
+                    or "-d" not in program_args
+                    or "-t" not in program_args
+                    or ("--no-wait" not in program_args and "-o" not in program_args)
+                ):
+                    continue
+
+                i_index = program_args.index("-i")
+                activity_id = program_args[i_index + 1]
+
+                d_index = program_args.index("-d")
+                activity_date = program_args[d_index + 1]
+
+                t_index = program_args.index("-t")
+                activity_time = program_args[t_index + 1]
+
+                if "--no-wait" in program_args:
+                    posting_offset = None
+                else:
+                    o_index = program_args.index("-o")
+                    posting_offset = int(program_args[o_index + 1])
+
+                activities.append(
+                    Activity(
+                        id=activity_id,
+                        start_date=activity_date,
+                        start_time=activity_time,
+                        posting_offset=posting_offset,
+                    )
                 )
-            )
+
         return activities
 
     def is_activity_scheduled(
@@ -180,12 +204,7 @@ class _MacOSScheduler(Scheduler):
     ) -> str:
         """Generates a unique label for the scheduled task based on activity details."""
 
-        offset_str = "none" if activity.posting_offset is None else str(activity.posting_offset)
-        task_id = (
-            f"{activity.id}--{activity.start_date}--{activity.start_time}--{offset_str}".replace(
-                ":", "-"
-            )
-        )
+        task_id = f"{activity.id}--{activity.start_date}--{activity.start_time}".replace(":", "-")
         return f"{self.label_prefix}.{task_id}"
 
     def _validate_and_get_booking_datetime(self, activity: Activity) -> datetime:

@@ -30,7 +30,6 @@ class Activity:
             self.id == other.id
             and self.start_date == other.start_date
             and self.start_time == other.start_time
-            and self.posting_offset == other.posting_offset
         )
 
     def get_registration_url(self) -> str:
