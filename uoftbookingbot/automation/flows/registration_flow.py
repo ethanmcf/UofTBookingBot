@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
 import time
-from typing import Optional
 from playwright.sync_api import sync_playwright, expect, Page
 from playwright_stealth import Stealth
+from uoftbookingbot.activity import Activity
 from uoftbookingbot.automation.captcha_solver import CaptchaSolver
 from uoftbookingbot.automation.common import complete_utorid_login
 from uoftbookingbot.automation.login_manager import LoginManager
@@ -186,12 +186,9 @@ def _clear_cart(page: Page) -> None:
 
 
 def run_registration_flow(
-    activity_id: str,
-    activity_date: str,
-    activity_time: str,
+    activity: Activity,
     login_manager: LoginManager,
     screenshots_path: str,
-    activity_offset: Optional[int] = None,
     time_limit: int = 60,
     user_agent: str | None = None,
     headless: bool = True,
@@ -200,12 +197,9 @@ def run_registration_flow(
     """Runs the main registration automation using Playwright.
 
     Args:
-        activity_id: The ID of the drop-in activity.
-        activity_date: The date of the activity in YYYY-MM-DD format.
-        activity_time: The start time of the activity in HH:MM format.
+        activity: The activity to register for.
         login_manager: An instance of LoginManager to handle login credentials and bypass codes.
         screenshots_path: Path to save debug screenshots.
-        activity_offset: Optional number of days before the start time to begin registration.
         time_limit: The maximum number of seconds to run the bot past the start time without success.
         user_agent: Optional custom user agent string for the browser.
         headless: Whether to run the browser in headless mode.
@@ -242,30 +236,28 @@ def run_registration_flow(
             _clear_cart(page)
 
             # Navigate to the program registration page
-            activity_url = f"https://recreation.utoronto.ca/Program/GetProgramDetails?courseId={activity_id}"
-            page.goto(activity_url)
+            page.goto(activity.get_registration_url())
 
             # Wait for bookings to open if necessary
-            if activity_offset is not None:
+            if activity.posting_offset is not None:
                 _wait_until_time_slot_opens(
-                    activity_offset=activity_offset,
-                    activity_date=activity_date,
-                    activity_time=activity_time,
+                    activity_offset=activity.posting_offset,
+                    activity_date=activity.start_date,
+                    activity_time=activity.start_time,
                     registration_start_buffer_seconds=_REGISTRATION_START_BUFFER_SECONDS,
                 )
 
-            print(f"Registering for drop-in activity on {activity_date} at {activity_time}...")
-
+            print(f"Registering for drop-in activity on {activity.start_date} at {activity.start_time}...")
             # Compete for initial registration
             effective_time_limit = (
                 time_limit + _REGISTRATION_START_BUFFER_SECONDS
-                if activity_offset is not None
+                if activity.posting_offset is not None
                 else time_limit
             )
             won_initial_registration = _compete_for_registration(
                 page=page,
-                activity_date=activity_date,
-                activity_time=activity_time,
+                activity_date=activity.start_date,
+                activity_time=activity.start_time,
                 time_limit=effective_time_limit,
             )
             if not won_initial_registration:

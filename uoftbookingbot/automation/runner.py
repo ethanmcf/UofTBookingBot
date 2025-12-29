@@ -1,6 +1,6 @@
 import datetime
 import random
-from typing import Optional
+from uoftbookingbot.activity import Activity
 from uoftbookingbot.automation.constants import USER_AGENTS
 from uoftbookingbot.automation.login_manager import LoginManager
 from uoftbookingbot.automation.debugging import print_exception, get_app_logger
@@ -11,10 +11,7 @@ from uoftbookingbot.automation.flows.registration_flow import run_registration_f
 
 
 def run_registration_bot(
-    activity_id: str,
-    activity_date: str,
-    activity_time: str,
-    activity_offset: Optional[int],
+    activity: Activity,
     time_limit: int,
     codes_threshold: int,
     headless: bool,
@@ -27,10 +24,7 @@ def run_registration_bot(
     """Main entry point for running the registration bot.
 
     Args:
-        activity_id: The ID of the drop-in activity.
-        activity_date: The date of the activity in YYYY-MM-DD format.
-        activity_time: The start time of the activity in HH:MM format.
-        activity_offset: The number of days before the activity that registration opens.
+        activity: The activity to register for.
         time_limit: The maximum number of seconds to attempt registration past the start time.
         codes_threshold: The minimum number of bypass codes before fetching new ones.
         headless: Whether to run the browser in headless mode.
@@ -42,7 +36,7 @@ def run_registration_bot(
         bool: True iff registration completed without unhandled exceptions, False otherwise.
     """
 
-    print(f"{datetime.datetime.now().isoformat()}: STARTING REGISTRATION BOT FOR [{activity_id} {activity_date} {activity_time}] ")
+    print(f"{datetime.datetime.now().isoformat()}: STARTING REGISTRATION BOT FOR {str(activity)} ")
 
     try:
         login_manager = LoginManager(credentials_path, bypass_codes_path)
@@ -58,12 +52,9 @@ def run_registration_bot(
             )
 
         run_registration_flow(
-            activity_id=activity_id,
-            activity_date=activity_date,
-            activity_time=activity_time,
+            activity=activity,
             login_manager=login_manager,
             screenshots_path=screenshots_path,
-            activity_offset=activity_offset,
             time_limit=time_limit,
             user_agent=user_agent,
             headless=headless,
@@ -75,7 +66,7 @@ def run_registration_bot(
         print_exception(e)
         return False
     finally:
-        print(f"{datetime.datetime.now().isoformat()}: ENDING REGISTRATION BOT FOR [{activity_id} {activity_date} {activity_time}] ")
+        print(f"{datetime.datetime.now().isoformat()}: ENDING REGISTRATION BOT FOR {str(activity)} ")
 
 
     return True

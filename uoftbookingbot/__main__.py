@@ -1,5 +1,6 @@
 import argparse
 import sys
+from uoftbookingbot.activity import Activity
 from uoftbookingbot.automation.constants import ACTIVITY_IDS
 from uoftbookingbot.automation.runner import run_registration_bot
 from uoftbookingbot.constants import (
@@ -99,11 +100,14 @@ def main():
 
     # Run CLI script
     args = _get_cli_args()
+    activity_to_book = Activity(
+        id=args.activity_id,
+        start_date=args.date,
+        start_time=args.time,
+        posting_offset=args.offset,
+    )
     user_is_registered = run_registration_bot(
-        activity_id=args.activity_id,
-        activity_date=args.date,
-        activity_time=args.time,
-        activity_offset=args.offset,
+        activity=activity_to_book,
         time_limit=args.time_limit,
         codes_threshold=args.codes_threshold,
         headless=not args.visible,

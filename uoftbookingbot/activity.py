@@ -30,3 +30,8 @@ class Activity:
             self.start_time == other.start_time and
             self.posting_offset == other.posting_offset
         )
+    
+    def get_registration_url(self) -> str:
+        """Returns the booking URL for this activity."""
+
+        return f"https://recreation.utoronto.ca/Program/GetProgramDetails?courseId={self.id}"
