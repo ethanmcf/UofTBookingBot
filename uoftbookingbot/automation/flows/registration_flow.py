@@ -166,12 +166,21 @@ def _clear_cart(page: Page) -> None:
     go_to_cart_button = page.get_by_role("button", name="Go to Cart Page").filter(visible=True)
     empty_cart_link = page.get_by_role("link", name="Your Cart is Empty!").filter(visible=True)
     expect(go_to_cart_button.or_(empty_cart_link)).to_be_visible()
-    if go_to_cart_button.is_visible():
-        # Cart is not empty; proceed to clear it
-        # TODO: Handle multiple items in cart
-        page.get_by_role("button", name="Go to Cart Page").click()
-        page.get_by_role("button", name="Remove").click()
 
+    if empty_cart_link.is_visible():
+        return
+
+    # Cart isn't empty; go to cart page
+    page.get_by_role("button", name="Go to Cart Page").click()
+
+    # Wait for one or more remove buttons to appear, then remove all items one by one
+    remove_button_locator = page.get_by_role("button", name="Remove")
+    removable_items_count = remove_button_locator.count()
+    while removable_items_count > 0:
+        remove_button_locator.first.click()
+        removable_items_count -= 1
+
+    # Wait until cart is confirmed empty
     page.wait_for_url("https://recreation.utoronto.ca/")
 
 
@@ -213,6 +222,14 @@ def run_registration_flow(
         expect.set_options(timeout=DEFAULT_TIMEOUT_MILLISECONDS)
 
         try:
+            page.goto("https://recreation.utoronto.ca/")
+
+            # Acknowledge cookies if it appears
+            page.add_locator_handler(
+                page.get_by_role("button", name="Acknowledge Cookies"),
+                lambda locator: locator.click(),
+            )
+
             # Sign in with UTORID
             complete_utorid_login(
                 login_manager=login_manager,
@@ -225,12 +242,6 @@ def run_registration_flow(
 
             # Navigate to the program registration page
             page.goto(program_url)
-
-            # Acknowledge cookies if it appears
-            page.add_locator_handler(
-                page.get_by_role("button", name="Acknowledge Cookies"),
-                lambda locator: locator.click(),
-            )
 
             # Wait for bookings to open if necessary
             if posting_offset is not None:
