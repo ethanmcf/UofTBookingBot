@@ -1,0 +1,6 @@
+class Colors:
+    PRIMARY_BLUE = "#4D6BE4"  
+    LIGHT_BLUE = "#7FB9F7"      
+    
+    WHITE = "#FFFFFF"
+    TEXT_MAIN = "#2E2E2E"

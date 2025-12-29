@@ -115,6 +115,14 @@ launchctl kickstart -p gui/$(id -u)/<JOB_ID>
 launchctl bootout gui/$(id -u)/<JOB_ID>
 ```
 
+## Frontend
+
+To run just frontend:
+
+```bash
+python -m uoftbookingbot.frontend.app
+```
+
 ## Bundling
 
 To generate a deployable executable (system dependent):
