@@ -16,7 +16,7 @@ from uoftbookingbot.utils import is_running_as_bundle
 _BOT_START_BUFFER_SECONDS = 300  # bot starts 5 minutes before booking time
 
 
-class _BaseScheduler:
+class Scheduler:
     """Base class for schedulers."""
 
     __metaclass__ = ABCMeta
@@ -37,7 +37,7 @@ class _BaseScheduler:
     def unschedule_bot(self, activity_url: str, activity_date: str, activity_time: str): ...
 
 
-class _MacOSScheduler(_BaseScheduler):
+class _MacOSScheduler(Scheduler):
     """Scheduler implementation for macOS using launchd."""
 
     def __init__(self, error_log_path: str, output_log_path: str):
@@ -161,7 +161,7 @@ class _MacOSScheduler(_BaseScheduler):
         return booking_dt_toronto
 
 
-def get_scheduler(error_log_path: str, output_log_path: str) -> _BaseScheduler:
+def get_scheduler(error_log_path: str, output_log_path: str) -> Scheduler:
     """Factory function to get the appropriate scheduler based on the OS."""
 
     os_name = platform.system()
