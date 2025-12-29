@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-import re
 import time
 from typing import Optional
 from playwright.sync_api import sync_playwright, expect, Page
@@ -175,8 +174,10 @@ def _clear_cart(page: Page) -> None:
 
     # Wait for one or more remove buttons to appear, then remove all items one by one
     remove_button_locator = page.get_by_role("button", name="Remove")
+    expect(remove_button_locator.first).to_be_visible()
     removable_items_count = remove_button_locator.count()
     while removable_items_count > 0:
+        expect(remove_button_locator.first).to_be_visible()
         remove_button_locator.first.click()
         removable_items_count -= 1
 
