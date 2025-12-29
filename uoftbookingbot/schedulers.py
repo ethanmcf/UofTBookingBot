@@ -31,7 +31,7 @@ class Scheduler:
         ...
 
     @abstractmethod
-    def schedule_bot(self, activity: Activity) -> None:
+    def schedule_activity(self, activity: Activity) -> None:
         """Schedules the booking bot for a specified activity.
 
         Args:
@@ -40,8 +40,8 @@ class Scheduler:
         ...
 
     @abstractmethod
-    def unschedule_bot(self, activity: Activity) -> None:
-        """Unschedules a previously scheduled activity.
+    def unschedule_activity(self, activity: Activity) -> None:
+        """Unschedules a previously scheduled activity. Unscheduling a non-scheduled activity is a no-op.
 
         Args:
             activity: The activity to unschedule.
@@ -59,7 +59,7 @@ class Scheduler:
 
     @abstractmethod
     def is_activity_scheduled(self, activity: Activity) -> bool:
-        """Checks if a specific activity is already scheduled."""
+        """Returns True iff the activity is already scheduled."""
         ...
 
 
@@ -72,7 +72,7 @@ class _MacOSScheduler(Scheduler):
         self.agent_dir = os.path.expanduser("~/Library/LaunchAgents")
         self.label_prefix = "com.uoftbookingbot"
 
-    def schedule_bot(
+    def schedule_activity(
         self,
         activity: Activity,
     ) -> None:
@@ -129,10 +129,13 @@ class _MacOSScheduler(Scheduler):
         subprocess.run(["launchctl", "bootstrap", f"gui/{os.getuid()}", plist_path], check=False)
         subprocess.run(["launchctl", "enable", f"gui/{os.getuid()}/{label}"], check=False)
 
-    def unschedule_bot(
+    def unschedule_activity(
         self,
         activity: Activity,
     ) -> None:
+        if not self.is_activity_scheduled(activity):
+            return
+
         label = self._get_task_label(activity)
         plist_path = os.path.join(self.agent_dir, f"{label}.plist")
 
