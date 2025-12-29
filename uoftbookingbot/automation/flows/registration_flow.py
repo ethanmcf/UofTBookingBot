@@ -87,14 +87,17 @@ def _format_date_for_program_timeslot(date_string: str, time_string: str) -> str
 
 
 def _wait_until_time_slot_opens(
-    activity_offset: int, activity_date: str, activity_time: str, registration_start_buffer_seconds: int
+    activity: Activity,
+    registration_start_buffer_seconds: int,
 ) -> bool:
     """Waits until just before the booking slot opens to start the registration process."""
 
-    activity_datetime = datetime.strptime(f"{activity_date} {activity_time}:00", "%Y-%m-%d %H:%M:%S")
+    activity_datetime = datetime.strptime(
+        f"{activity.start_date} {activity.start_time}:00", "%Y-%m-%d %H:%M:%S"
+    )
     wakeup_datetime = (
         activity_datetime
-        - timedelta(days=activity_offset)
+        - timedelta(days=activity.posting_offset)
         - timedelta(seconds=registration_start_buffer_seconds)
     )
     diff_time = wakeup_datetime - datetime.now()
@@ -111,16 +114,16 @@ def _wait_until_time_slot_opens(
     time.sleep(sleep_seconds)
 
 
-def _compete_for_registration(
-    page: Page, activity_date: str, activity_time: str, time_limit: int
-) -> bool:
+def _compete_for_registration(page: Page, activity: Activity, time_limit: int) -> bool:
     """Continually attempts to register for the specified date and time slot
     until successful or time limit reached."""
 
     # Format date and time strings for initial program registration page
-    programInstanceTextDate = _format_date_for_program_instance_text(activity_date)
-    programInstanceRoleDate = _format_date_for_program_instance_role(activity_date)
-    programTimeslotDateTime = _format_date_for_program_timeslot(activity_date, activity_time)
+    programInstanceTextDate = _format_date_for_program_instance_text(activity.start_date)
+    programInstanceRoleDate = _format_date_for_program_instance_role(activity.start_date)
+    programTimeslotDateTime = _format_date_for_program_timeslot(
+        activity.start_date, activity.start_time
+    )
 
     # Continually try to register until successful or time limit reached
     stopping_datetime = datetime.now() + timedelta(seconds=time_limit)
@@ -241,13 +244,13 @@ def run_registration_flow(
             # Wait for bookings to open if necessary
             if activity.posting_offset is not None:
                 _wait_until_time_slot_opens(
-                    activity_offset=activity.posting_offset,
-                    activity_date=activity.start_date,
-                    activity_time=activity.start_time,
+                    activity=activity,
                     registration_start_buffer_seconds=_REGISTRATION_START_BUFFER_SECONDS,
                 )
 
-            print(f"Registering for drop-in activity on {activity.start_date} at {activity.start_time}...")
+            print(
+                f"Registering for drop-in activity on {activity.start_date} at {activity.start_time}..."
+            )
             # Compete for initial registration
             effective_time_limit = (
                 time_limit + _REGISTRATION_START_BUFFER_SECONDS
@@ -256,8 +259,7 @@ def run_registration_flow(
             )
             won_initial_registration = _compete_for_registration(
                 page=page,
-                activity_date=activity.start_date,
-                activity_time=activity.start_time,
+                activity=activity,
                 time_limit=effective_time_limit,
             )
             if not won_initial_registration:

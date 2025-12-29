@@ -66,7 +66,8 @@ def run_registration_bot(
         print_exception(e)
         return False
     finally:
-        print(f"{datetime.datetime.now().isoformat()}: ENDING REGISTRATION BOT FOR {str(activity)} ")
-
+        print(
+            f"{datetime.datetime.now().isoformat()}: ENDING REGISTRATION BOT FOR {str(activity)} "
+        )
 
     return True

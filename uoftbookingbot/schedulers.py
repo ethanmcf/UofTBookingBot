@@ -21,9 +21,9 @@ class Scheduler:
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def __init__(self, error_log_path: str, output_log_path: str) -> None: 
+    def __init__(self, error_log_path: str, output_log_path: str) -> None:
         """Initializes the scheduler with paths for error and output logs.
-        
+
         Args:
             error_log_path: Path to the error log file.
             output_log_path: Path to the output log file.
@@ -31,19 +31,16 @@ class Scheduler:
         ...
 
     @abstractmethod
-    def schedule_bot(
-        self,
-        activity: Activity
-    ) -> None: 
+    def schedule_bot(self, activity: Activity) -> None:
         """Schedules the booking bot for a specified activity.
-        
+
         Args:
             activity: The activity to schedule.
         """
         ...
 
     @abstractmethod
-    def unschedule_bot(self, activity: Activity) -> None: 
+    def unschedule_bot(self, activity: Activity) -> None:
         """Unschedules a previously scheduled activity.
 
         Args:
@@ -54,19 +51,17 @@ class Scheduler:
     @abstractmethod
     def get_scheduled_activities(self) -> list[Activity]:
         """Returns a list of scheduled activities.
-        
+
         Returns:
             A list of Activity instances representing the scheduled activities.
         """
         ...
 
     @abstractmethod
-    def is_activity_scheduled(
-        self,
-        activity: Activity
-    ) -> bool:
+    def is_activity_scheduled(self, activity: Activity) -> bool:
         """Checks if a specific activity is already scheduled."""
         ...
+
 
 class _MacOSScheduler(Scheduler):
     """Scheduler implementation for macOS using launchd."""
@@ -84,7 +79,11 @@ class _MacOSScheduler(Scheduler):
         label = self._get_task_label(activity)
         plist_path = os.path.join(self.agent_dir, f"{label}.plist")
 
-        offset_args = ["-o", str(activity.posting_offset)] if activity.posting_offset is not None else ["--no-wait"]
+        offset_args = (
+            ["-o", str(activity.posting_offset)]
+            if activity.posting_offset is not None
+            else ["--no-wait"]
+        )
         activity_args = [
             "-i",
             activity.id,
@@ -155,9 +154,16 @@ class _MacOSScheduler(Scheduler):
             activity_id, activity_date, activity_time, posting_offset_str = parts
             activity_time = activity_time.replace("-", ":")
             posting_offset = None if posting_offset_str == "none" else int(posting_offset_str)
-            activities.append(Activity(id=activity_id, start_date=activity_date, start_time=activity_time, posting_offset=posting_offset))
+            activities.append(
+                Activity(
+                    id=activity_id,
+                    start_date=activity_date,
+                    start_time=activity_time,
+                    posting_offset=posting_offset,
+                )
+            )
         return activities
-    
+
     def is_activity_scheduled(
         self,
         activity: Activity,
@@ -179,10 +185,7 @@ class _MacOSScheduler(Scheduler):
         )
         return f"{self.label_prefix}.{task_id}"
 
-    def _validate_and_get_booking_datetime(
-        self,
-        activity: Activity
-    ) -> datetime:
+    def _validate_and_get_booking_datetime(self, activity: Activity) -> datetime:
         """Validates the activity's date and time strings and returns a datetime object for booking."""
 
         # Always treat the input datetime as Toronto time

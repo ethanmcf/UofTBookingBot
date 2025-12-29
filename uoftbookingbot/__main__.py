@@ -19,7 +19,9 @@ def _get_cli_args() -> argparse.Namespace:
         description="UofT Drop-in Activity Booking Bot. Run with no arguments to open the GUI, or with arguments to run the CLI booking script."
     )
     url_group = parser.add_mutually_exclusive_group(required=True)
-    url_group.add_argument("-i", "--activity-id", help="The ID of a drop-in activity.", required=False)
+    url_group.add_argument(
+        "-i", "--activity-id", help="The ID of a drop-in activity.", required=False
+    )
     url_group.add_argument(
         "-a", "--activity-name", help="The name of a drop-in activity.", required=False
     )
