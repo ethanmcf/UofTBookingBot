@@ -16,12 +16,19 @@ _BOT_START_BUFFER_SECONDS = 300  # bot starts 5 minutes before booking time
 
 
 class Scheduler:
-    """Base class for schedulers."""
+    """Base class for scheduling the booking bot."""
 
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def __init__(self, error_log_path: str, output_log_path: str): ...
+    def __init__(self, error_log_path: str, output_log_path: str) -> None: 
+        """Initializes the scheduler with paths for error and output logs.
+        
+        Args:
+            error_log_path: Path to the error log file.
+            output_log_path: Path to the output log file.
+        """
+        ...
 
     @abstractmethod
     def schedule_bot(
@@ -30,16 +37,33 @@ class Scheduler:
         activity_date: str,
         activity_time: str,
         activity_offset: Optional[int],
-    ): ...
+    ) -> None: 
+        """Schedules the booking bot for a specified activity.
+        
+        Args:
+            activity_id: The ID of the drop-in activity.
+            activity_date: The start date of the activity in YYYY-MM-DD format.
+            activity_time: The start time of the activity in HH:MM format.
+            activity_offset: The offset in days before the start time when registration opens or None to run immediately.
+        """
+        ...
 
     @abstractmethod
-    def unschedule_bot(self, activity_id: str, activity_date: str, activity_time: str): ...
+    def unschedule_bot(self, activity_id: str, activity_date: str, activity_time: str) -> None: 
+        """Unschedules a previously scheduled activity.
+
+        Args:
+            activity_id: The ID of the drop-in activity.
+            activity_date: The start date of the activity in YYYY-MM-DD format.
+            activity_time: The start time of the activity in HH:MM format.
+        """
+        ...
 
 
 class _MacOSScheduler(Scheduler):
     """Scheduler implementation for macOS using launchd."""
 
-    def __init__(self, error_log_path: str, output_log_path: str):
+    def __init__(self, error_log_path: str, output_log_path: str) -> None:
         self.error_log_path = error_log_path
         self.output_log_path = output_log_path
         self.agent_dir = os.path.expanduser("~/Library/LaunchAgents")
@@ -51,7 +75,7 @@ class _MacOSScheduler(Scheduler):
         activity_date: str,
         activity_time: str,
         activity_offset: Optional[int],
-    ):
+    ) -> None:
         label = self._get_task_label(activity_id, activity_date, activity_time)
         plist_path = os.path.join(self.agent_dir, f"{label}.plist")
 
@@ -108,7 +132,7 @@ class _MacOSScheduler(Scheduler):
         activity_id: str,
         activity_date: str,
         activity_time: str,
-    ):
+    ) -> None:
         label = self._get_task_label(activity_id, activity_date, activity_time)
         plist_path = os.path.join(self.agent_dir, f"{label}.plist")
 
