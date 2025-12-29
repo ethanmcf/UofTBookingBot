@@ -96,3 +96,21 @@ Although a pytest test exists for the CAPTCHA handler, visual verification can b
 ```bash
 python -m tests.utils.test_captcha_handler
 ```
+
+## Setup Instructions for Frontend
+
+### Set up
+
+Create virtual env in root director if not already created (`python3 -m venv .venv`) and run following commands:
+
+```bash
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r app/frontend/requirements.txt
+```
+
+### Usage
+
+```bash
+python app/frontend/main.py
+```
