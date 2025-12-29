@@ -1,4 +1,4 @@
-import os
+import datetime
 import random
 from typing import Optional
 from uoftbookingbot.automation.constants import USER_AGENTS
@@ -42,6 +42,8 @@ def run_registration_bot(
         bool: True iff registration completed without unhandled exceptions, False otherwise.
     """
 
+    print(f"{datetime.datetime.now().isoformat()}: STARTING REGISTRATION BOT FOR [{activity_url} {activity_date} {activity_time}] ")
+
     try:
         login_manager = LoginManager(credentials_path, bypass_codes_path)
         user_agent = random.choice(USER_AGENTS)
@@ -72,5 +74,8 @@ def run_registration_bot(
         logger.exception("An unexpected error occurred.")
         print_exception(e)
         return False
+    finally:
+        print(f"{datetime.datetime.now().isoformat()}: ENDING REGISTRATION BOT FOR [{activity_url} {activity_date} {activity_time}] ")
+
 
     return True
