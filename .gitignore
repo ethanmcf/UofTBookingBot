@@ -2,9 +2,9 @@
 .DS_Store
 __pycache__/
 tests/resources/
-Debug/
 secrets/
-debug/
+tests/screenshots
+tests/logs
 .env
 node_modules/
 package-lock.json

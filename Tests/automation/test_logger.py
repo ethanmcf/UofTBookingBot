@@ -1,48 +1,62 @@
 import pytest
-import os
-from uoftbookingbot.constants import LOG_DIR_PATH, SCREENSHOTS_DIR_PATH
-
+from unittest.mock import MagicMock
+from pathlib import Path
 from uoftbookingbot.automation.logger import Logger
 
 
 @pytest.fixture
-def logger() -> Logger:
-    return Logger()
+def magic_mock_page():
+    """Simulates a Playwright Page object."""
+    mock_page = MagicMock()
+    def side_effect(path):
+        with open(path, 'w') as f:
+            f.write("fake image data")
+            
+    mock_page.screenshot.side_effect = side_effect
+    return mock_page
+
+@pytest.fixture
+def logger_setup() -> Logger:
+    folder_dir = "./tests/logs"
+    screenshot_dir = "./tests/screenshots"
+    return Logger(folder_dir, screenshot_dir), folder_dir, screenshot_dir
 
 
-class TestLoginManager:
+class TestLogger:
     """Unit tests for the Logger class."""
+    def test_info_log(self, logger_setup):
+        logger, log_dir, _ = logger_setup
+        msg = "Test messsage"
+        logger.log_info(msg)
 
-    # def test_get_credentials(self, login_manager: LoginManager):
-    #     username, password = login_manager.get_credentials()
-    #     assert username == "test_user", f"Expected 'test_user' but got '{username}'"
-    #     assert password == "test_pass", f"Expected 'test_pass' but got '{password}'"
+        info_file = Path(log_dir) / "info.log"
+        assert info_file.exists()
+        assert msg in info_file.read_text()
+    
+    def test_error_log(self, logger_setup):
+        logger, log_dir, _ = logger_setup
+        error_message = "Test error"
+        
+        try:
+            raise ValueError(error_message)
+        except ValueError as e:
+            logger.log_error(e)
+        
+        error_file = Path(log_dir) / "error.log"
+        info_file = Path(log_dir) / "info.log"
+        
+        # Check if error exists in BOTH files
+        assert error_file.exists()
+        assert error_message in error_file.read_text()
+        assert error_message in info_file.read_text()
+        
+    def test_screenshot(self, logger_setup, magic_mock_page):
+        logger, _, screenshot_dir = logger_setup
+        expected_num_screenshots = len(list(Path(screenshot_dir).glob("*.png"))) + 1
 
-    # def test_get_code(self, login_manager: LoginManager):
-    #     code = login_manager.get_code()
-    #     assert code == "123456789", f"Expected '123456789' but got '{code}'"
-    #     assert (
-    #         login_manager.num_codes_left() == 2
-    #     ), f"Expected 2 codes left, but got {login_manager.num_codes_left()}"
-
-    # def test_remove_code(self, login_manager: LoginManager):
-    #     login_manager.get_code()  # Retrieves and removes the first code
-    #     assert login_manager.num_codes_left() == 2, "Code removal failed: Expected 2 codes left"
-
-    #     login_manager.get_code()  # Retrieves and removes the next code
-    #     assert login_manager.num_codes_left() == 1, "Code removal failed: Expected 1 code left"
-
-    # def test_num_codes_left(self, login_manager: LoginManager):
-    #     assert login_manager.num_codes_left() == 3, "Initial code count should be 3"
-
-    #     login_manager.get_code()  # Removes one code
-    #     assert login_manager.num_codes_left() == 2, "Code count mismatch: Expected 2 codes left"
-
-    # def test_save_codes(self, login_manager: LoginManager):
-    #     new_codes = ["999999999", "888888888"]
-    #     login_manager.save_codes(new_codes)
-
-    #     assert (
-    #         login_manager.num_codes_left() == 2
-    #     ), f"Expected 2 codes left after saving, but got {login_manager.num_codes_left()}"
-    #     assert login_manager.get_code() == "999999999", "First saved code mismatch"
+        logger.screenshot(magic_mock_page)
+    
+        # Check if a .png file was created in the screenshot directory
+        screenshots = list(Path(screenshot_dir).glob("*.png"))
+        assert len(screenshots) == expected_num_screenshots
+        assert "error_screenshot_" in screenshots[0].name
