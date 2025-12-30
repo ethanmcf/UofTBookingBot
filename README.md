@@ -111,3 +111,11 @@ launchctl kickstart -p gui/$(id -u)/<JOB_ID>
 # unschedules a job
 launchctl bootout gui/$(id -u)/<JOB_ID>
 ```
+
+## Frontend
+
+To run just frontend:
+
+```bash
+python -m uoftbookingbot.frontend.app
+```
