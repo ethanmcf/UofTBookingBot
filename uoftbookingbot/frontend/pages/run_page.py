@@ -1,7 +1,7 @@
 from uoftbookingbot.frontend.pages.base_page import BasePage
 from uoftbookingbot.frontend.components.button import Button
 from uoftbookingbot.frontend.theme import Colors
-from uoftbookingbot.automation.constants import ACTIVITY_URLS
+from uoftbookingbot.automation.constants import ACTIVITY_IDS
 from PyQt6.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QGridLayout, 
                              QCalendarWidget, QTimeEdit, QComboBox, QPushButton, QLabel)
 from PyQt6 import QtGui
@@ -232,7 +232,7 @@ class RunPage(BasePage):
     def createDropDown(self):
         self.sport_dropdown = QComboBox()
         self.sport_dropdown.setMinimumHeight(45)
-        sports = ["Select ..."] + list(ACTIVITY_URLS.keys())
+        sports = ["Select ..."] + list(ACTIVITY_IDS.keys())
         self.sport_dropdown.addItems(sports)
 
         self.sport_dropdown.setStyleSheet(f"""

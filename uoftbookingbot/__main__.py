@@ -9,6 +9,7 @@ from uoftbookingbot.constants import (
     ERROR_LOG_PATH,
     SCREENSHOTS_PATH,
 )
+from uoftbookingbot.frontend.app import run_app
 
 
 def _get_cli_args() -> argparse.Namespace:
@@ -97,8 +98,8 @@ def main():
 
     if len(sys.argv) == 1:
         # Run GUI for desktop app
-        print("Run GUI here...")
-        sys.exit(0)
+        run_app()
+        return
 
     # Run CLI script
     args = _get_cli_args()

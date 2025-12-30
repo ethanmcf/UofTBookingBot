@@ -117,10 +117,10 @@ launchctl bootout gui/$(id -u)/<JOB_ID>
 
 ## Frontend
 
-To run just frontend:
+To run the frontend:
 
 ```bash
-python -m uoftbookingbot.frontend.app
+python -m uoftbookingbot
 ```
 
 ## Bundling
