@@ -74,33 +74,7 @@ class Logger:
 
         msg = f"Debug screenshot saved to: {screenshot_path}"
         self.logger.info(msg) 
-        print(msg)   
-
-    def log_countdown(self, seconds: int):
-        """Logs a ticking count down"""
-
-        # Log every second
-        while seconds > 0:
-            # Format the time remaining (HH:MM:SS)
-            td = timedelta(seconds=seconds)
-            parts = []
-            
-            # Extract hours, minutes, seconds
-            hours, remainder = divmod(td.seconds, 3600)
-            minutes, seconds_only = divmod(remainder, 60)
-
-            if hours > 0: parts.append(f"{hours} hours")
-            if minutes > 0: parts.append(f"{minutes} minutes")
-            parts.append(f"{seconds_only} seconds")
-
-            wait_str = ", ".join(parts)
-            print(wait_str)
-            self.log_info(f"Waiting {wait_str} until registration opens... ")
-
-            time.sleep(1)
-            seconds -= 1
-
-        self.log_info("Wakeup time reached...")        
+        print(msg)         
 
     def _clear_on_disk(self):
         """Internal method to wipe the folders before the logger starts writing."""

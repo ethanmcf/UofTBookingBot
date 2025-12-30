@@ -102,7 +102,28 @@ def _wait_until_time_slot_opens(
 
     if sleep_seconds > 0:
         logger.log_info("Registration not open yet, waiting until it opens...")
-        logger.log_countdown(sleep_seconds)
+
+        # Log every second
+        while sleep_seconds > 0:
+            # Format the time remaining (HH:MM:SS)
+            td = timedelta(seconds=sleep_seconds)
+            parts = []
+            
+            # Extract hours, minutes, seconds
+            hours, remainder = divmod(td.seconds, 3600)
+            minutes, seconds_only = divmod(remainder, 60)
+
+            if hours > 0: parts.append(f"{hours} hours")
+            if minutes > 0: parts.append(f"{minutes} minutes")
+            parts.append(f"{seconds_only} seconds")
+
+            wait_str = ", ".join(parts)
+            logger.log_info(f"Waiting {wait_str} until registration opens... ")
+
+            time.sleep(1)
+            sleep_seconds -= 1
+
+        logger.log_info("Wakeup time reached...")  
 
 
 def _compete_for_registration(
