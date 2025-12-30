@@ -24,7 +24,7 @@ def run_bypass_codes_retrieval_flow(
         debug: Whether to save debug screenshots on failure.
     """
 
-    print("Starting bypass codes retrieval flow...")
+    logger.log_info("Starting bypass codes retrieval flow...")
 
     with Stealth().use_sync(sync_playwright()) as playwright:
         # Launch browser
@@ -38,6 +38,7 @@ def run_bypass_codes_retrieval_flow(
             page.goto("https://bypass.utormfa.utoronto.ca/index.php")
 
             # Sign in with UTORID
+            logger.log_info("Signing in...")
             utorid, password = login_manager.get_credentials()
             page.get_by_role("textbox", name="UTORid / JOINid").click()
             page.get_by_role("textbox", name="UTORid / JOINid").fill(utorid)
@@ -46,6 +47,7 @@ def run_bypass_codes_retrieval_flow(
             page.get_by_role("button", name="log in").click()
 
             # Complete multi-factor authentication (MFA)
+            logger.log_info("Completing multi-factor authentication...")
             bypass_code = login_manager.get_code()
             page.get_by_role("link", name="Other options").click()
             page.get_by_role("link", name="Bypass code Enter a code from").click()
@@ -54,17 +56,20 @@ def run_bypass_codes_retrieval_flow(
             page.get_by_test_id("verify-button").click()
 
             # Generate new bypass codes
+            logger.log_info("Generating bypass codes...")
             page.get_by_role("button", name="Generate Bypass Codes").click()
             expect(page.locator("h2")).to_contain_text("UTORMFA Bypass Codes")
 
             # Extract and save bypass codes
+            logger.log_info("Saving bypass codes...")
             content = page.locator("main > .site-container").text_content()
             codes = re.findall(r"\d{9}", content)
             if not codes:
                 raise Exception("No codes found during bypass code extraction.")
             login_manager.save_codes(codes)
 
-            print("Bypass codes retrieval flow completed successfully.")
+            logger.log_info("Bypass codes retrieval flow completed successfully.")
+            
         except Exception as e:
             if debug:
                 logger.screenshot(page)

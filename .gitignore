@@ -3,9 +3,10 @@
 __pycache__/
 tests/resources/
 secrets/
-tests/screenshots
-tests/logs
 .env
 node_modules/
 package-lock.json
 package.json
+*/logs
+*/screenshots
+

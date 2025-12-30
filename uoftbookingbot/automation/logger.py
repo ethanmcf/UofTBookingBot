@@ -1,7 +1,5 @@
-import logging
-import os
-import textwrap
-from datetime import datetime
+import logging, os, textwrap, time, sys
+from datetime import datetime, timedelta
 
 class Logger:
     def __init__(self, log_dir: str, screenshot_dir: str):
@@ -73,4 +71,30 @@ class Logger:
 
         msg = f"Debug screenshot saved to: {screenshot_path}"
         self.logger.info(msg) 
-        print(msg)           
+        print(msg)   
+
+    def log_countdown(self, seconds: int, wakeup_datetime):
+        """Logs a ticking count down"""
+
+        # Log every second
+        while seconds > 0:
+            # Format the time remaining (HH:MM:SS)
+            td = timedelta(seconds=seconds)
+            parts = []
+            
+            # Extract hours, minutes, seconds
+            hours, remainder = divmod(td.seconds, 3600)
+            minutes, seconds_only = divmod(remainder, 60)
+
+            if hours > 0: parts.append(f"{hours} hours")
+            if minutes > 0: parts.append(f"{minutes} minutes")
+            parts.append(f"{seconds_only} seconds")
+
+            wait_str = ", ".join(parts)
+            
+            self.logger.info(f"[INFO]: Waiting {wait_str} until registration opens... ")
+
+            time.sleep(1)
+            seconds -= 1
+
+        self.logger.info("[INFO]: Wakeup time reached...")        

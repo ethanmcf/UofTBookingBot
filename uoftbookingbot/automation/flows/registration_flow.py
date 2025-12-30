@@ -87,7 +87,7 @@ def _format_date_for_program_timeslot(date_string: str, time_string: str) -> str
 
 
 def _wait_until_time_slot_opens(
-    posting_offset: int, start_date: str, start_time: str, registration_start_buffer_seconds: int
+    posting_offset: int, start_date: str, start_time: str, registration_start_buffer_seconds: int, logger: Logger
 ) -> bool:
     """Waits until just before the booking slot opens to start the registration process."""
 
@@ -100,15 +100,9 @@ def _wait_until_time_slot_opens(
     diff_time = wakeup_datetime - datetime.now()
     sleep_seconds = max(0, diff_time.total_seconds())
 
-    print(f"Waiting for {sleep_seconds} second(s)", end="")
     if sleep_seconds > 0:
-        print(
-            f" until {wakeup_datetime.strftime('%A, %B %d, %Y at %-I:%M:%S %p')}",
-            end="",
-        )
-    print("...")
-
-    time.sleep(sleep_seconds)
+        logger.log_info("Registration not open yet, waiting until it opens...")
+        logger.log_countdown(sleep_seconds)
 
 
 def _compete_for_registration(
@@ -183,7 +177,7 @@ def run_registration_flow(
         debug: Whether to save debug screenshots on failure.
     """
 
-    print("Starting registration flow...")
+    logger.log_info("Starting registration flow...")
 
     with Stealth().use_sync(sync_playwright()) as playwright:
         # Launch browser
@@ -203,6 +197,7 @@ def run_registration_flow(
             )
 
             # Sign in with UTORID
+            logger.log_info("Signing in...")
             utorid, password = login_manager.get_credentials()
             page.get_by_role("button", name="Sign In").click()
             page.get_by_role("button", name="school Log in with UTORID").click()
@@ -213,6 +208,7 @@ def run_registration_flow(
             page.get_by_role("button", name="log in").click()
 
             # Complete multi-factor authentication (MFA)
+            logger.log_info("Completing multi-factor authentication...")
             bypass_code = login_manager.get_code()
             page.get_by_role("link", name="Other options").click()
             page.get_by_role("link", name="Bypass code Enter a code from").click()
@@ -235,7 +231,7 @@ def run_registration_flow(
                 re.compile(r"^https:\/\/recreation\.utoronto\.ca\/program\/getprogramdetails"),
             )
 
-            print(f"Registering for drop-in activity on {date} at {time}...")
+            logger.log_info(f"Registering for drop-in activity on {date} at {time}...")
 
             # Compete for initial registration
             effective_time_limit = (
@@ -273,13 +269,13 @@ def run_registration_flow(
 
             # Solve CAPTCHA if it appears
             if captcha_locator.is_visible():
-                print("CAPTCHA detected, starting to solve...")
+                logger.log_info("CAPTCHA detected, starting to solve...")
 
                 solver = CaptchaSolver(page)
                 solver.solve_captcha()
                 page.locator("#btnReCaptchaConfirm").click()
 
-                print("CAPTCHA solved.")
+                logger.log_info("CAPTCHA solved.")
 
             # CAPTCHA handled (if needed); proceed with registration flow depending on whether user has family members
             expect(family_member_section_locator.or_(payment_page_locator)).to_be_visible()
@@ -294,7 +290,7 @@ def run_registration_flow(
             # Complete payment options page (assumes no payment required)
             # Note: Getting here means registration was successful
             expect(payment_page_locator).to_be_visible()
-            print("Successfully registered for the activity. Completing checkout...")
+            logger.log_info("Successfully registered for the activity. Completing checkout...")
 
             # Click Next or Proceed to Checkout button (depends on whether waivers are needed)
             next_button_locator = page.get_by_role("button", name="Next")
@@ -324,7 +320,7 @@ def run_registration_flow(
             # Confirm successful checkout on receipt page
             expect(page.get_by_role("heading", name="Payment was Successful")).to_be_visible()
 
-            print("Registration flow completed successfully.")
+            logger.log_info("Registration flow completed successfully.")
         except Exception as e:
             if debug:
                 logger.screenshot(page)
