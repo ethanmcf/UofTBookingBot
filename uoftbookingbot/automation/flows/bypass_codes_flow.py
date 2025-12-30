@@ -4,12 +4,12 @@ from playwright.sync_api import sync_playwright, expect
 from playwright_stealth import Stealth
 from uoftbookingbot.automation.login_manager import LoginManager
 from uoftbookingbot.automation.constants import DEFAULT_TIMEOUT_MILLISECONDS
-from uoftbookingbot.automation.debugging import save_debug_screenshot
+from uoftbookingbot.automation.logger import Logger
 
 
 def run_bypass_codes_retrieval_flow(
     login_manager: LoginManager,
-    screenshots_path: str,
+    logger: Logger,
     user_agent: Optional[str] = None,
     headless: bool = True,
     debug: bool = False,
@@ -67,7 +67,7 @@ def run_bypass_codes_retrieval_flow(
             print("Bypass codes retrieval flow completed successfully.")
         except Exception as e:
             if debug:
-                save_debug_screenshot(page, screenshots_path)
+                logger.screenshot(page)
             raise e from None
         finally:
             context.close()

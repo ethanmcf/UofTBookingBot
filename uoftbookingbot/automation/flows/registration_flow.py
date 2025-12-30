@@ -6,7 +6,7 @@ from playwright.sync_api import sync_playwright, expect, Page
 from playwright_stealth import Stealth
 from uoftbookingbot.automation.captcha_solver import CaptchaSolver
 from uoftbookingbot.automation.login_manager import LoginManager
-from uoftbookingbot.automation.debugging import save_debug_screenshot
+from uoftbookingbot.automation.logger import Logger
 from uoftbookingbot.automation.constants import DEFAULT_TIMEOUT_MILLISECONDS
 
 
@@ -161,7 +161,7 @@ def run_registration_flow(
     date: str,
     time: str,
     login_manager: LoginManager,
-    screenshots_path: str,
+    logger: Logger,
     posting_offset: Optional[int] = None,
     time_limit: int = 60,
     user_agent: str | None = None,
@@ -327,7 +327,7 @@ def run_registration_flow(
             print("Registration flow completed successfully.")
         except Exception as e:
             if debug:
-                save_debug_screenshot(page, screenshots_path)
+                logger.screenshot(page)
             raise e from None
         finally:
             context.close()

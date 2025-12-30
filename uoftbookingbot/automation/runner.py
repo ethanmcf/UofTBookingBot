@@ -2,8 +2,9 @@ import os
 import random
 from typing import Optional
 from uoftbookingbot.automation.constants import USER_AGENTS
+from uoftbookingbot.constants import LOG_DIR_PATH, SCREENSHOTS_DIR_PATH
 from uoftbookingbot.automation.login_manager import LoginManager
-from uoftbookingbot.automation.debugging import print_exception, get_app_logger
+from uoftbookingbot.automation.logger import Logger
 from uoftbookingbot.automation.flows.bypass_codes_flow import (
     run_bypass_codes_retrieval_flow,
 )
@@ -42,6 +43,7 @@ def run_registration_bot(
         bool: True iff registration completed without unhandled exceptions, False otherwise.
     """
 
+    logger = Logger(LOG_DIR_PATH, SCREENSHOTS_DIR_PATH)
     try:
         login_manager = LoginManager(credentials_path, bypass_codes_path)
         user_agent = random.choice(USER_AGENTS)
@@ -49,7 +51,7 @@ def run_registration_bot(
         if login_manager.num_codes_left() < codes_threshold:
             run_bypass_codes_retrieval_flow(
                 login_manager=login_manager,
-                screenshots_path=screenshots_path,
+                logger=logger,
                 user_agent=user_agent,
                 headless=headless,
                 debug=debug,
@@ -68,9 +70,7 @@ def run_registration_bot(
             debug=debug,
         )
     except Exception as e:
-        logger = get_app_logger(error_log_path)
-        logger.exception("An unexpected error occurred.")
-        print_exception(e)
+        logger.log_error(e)
         return False
 
     return True

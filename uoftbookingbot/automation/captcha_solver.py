@@ -3,6 +3,7 @@ import urllib.request
 import pydub
 import speech_recognition
 from playwright.sync_api import Page, Locator, expect
+from uoftbookingbot.automation.logger import Logger
 
 
 class CaptchaSolverFailedError(Exception):
@@ -20,13 +21,14 @@ class CaptchaSolver:
     TIMEOUT_IS_DETECTED = 500
     TIMEOUT_IS_SOLVED = 100
 
-    def __init__(self, page: Page) -> None:
+    def __init__(self, page: Page, logger: Logger) -> None:
         """Initialize the solver with a page.
 
         Args:
             page: Page instance for browser interaction
         """
         self.page = page
+        self.logger = logger
 
     def humanize_click(self, locator: Locator) -> None:
         """Perform a human-like click: random mouse movement, hover, short wait, then click."""
