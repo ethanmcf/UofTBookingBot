@@ -32,7 +32,7 @@ class Scheduler:
 
     @abstractmethod
     def schedule_activity(self, activity: Activity) -> None:
-        """Schedules the booking bot for a specified activity.
+        """Schedules the booking bot to book the specified activity.
         If the activity is already scheduled, overwrite the existing schedule.
 
         Args:
@@ -42,7 +42,8 @@ class Scheduler:
 
     @abstractmethod
     def unschedule_activity(self, activity: Activity) -> None:
-        """Unschedules a previously scheduled activity. Unscheduling a non-scheduled activity is a no-op.
+        """Unschedules an activity previously scheduled for booking.
+        Unscheduling a non-scheduled activity is a no-op.
 
         Args:
             activity: The activity to unschedule.
@@ -51,7 +52,7 @@ class Scheduler:
 
     @abstractmethod
     def get_scheduled_activities(self) -> list[Activity]:
-        """Returns a list of scheduled activities.
+        """Returns a list of activities scheduled for booking.
 
         Returns:
             A list of Activity instances representing the scheduled activities.
@@ -60,7 +61,7 @@ class Scheduler:
 
     @abstractmethod
     def is_activity_scheduled(self, activity: Activity) -> bool:
-        """Returns True iff the activity is already scheduled."""
+        """Returns True iff the activity is already scheduled for booking."""
         ...
 
 
