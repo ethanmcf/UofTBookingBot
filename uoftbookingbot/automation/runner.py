@@ -2,12 +2,9 @@ import os
 import random
 from typing import Optional
 from uoftbookingbot.automation.constants import USER_AGENTS
-from uoftbookingbot.constants import LOG_DIR_PATH, SCREENSHOTS_DIR_PATH
 from uoftbookingbot.automation.login_manager import LoginManager
 from uoftbookingbot.automation.logger import Logger
-from uoftbookingbot.automation.flows.bypass_codes_flow import (
-    run_bypass_codes_retrieval_flow,
-)
+from uoftbookingbot.automation.flows.bypass_codes_flow import run_bypass_codes_retrieval_flow
 from uoftbookingbot.automation.flows.registration_flow import run_registration_flow
 
 
@@ -22,7 +19,7 @@ def run_registration_bot(
     debug: bool,
     credentials_path: str,
     bypass_codes_path: str,
-    error_log_path: str,
+    log_path: str,
     screenshots_path: str,
 ) -> bool:
     """Main entry point for running the registration bot.
@@ -43,7 +40,7 @@ def run_registration_bot(
         bool: True iff registration completed without unhandled exceptions, False otherwise.
     """
 
-    logger = Logger(LOG_DIR_PATH, SCREENSHOTS_DIR_PATH)
+    logger = Logger(log_path, screenshots_path)
     try:
         login_manager = LoginManager(credentials_path, bypass_codes_path)
         user_agent = random.choice(USER_AGENTS)
@@ -62,15 +59,17 @@ def run_registration_bot(
             date=activity_date,
             time=activity_time,
             login_manager=login_manager,
-            screenshots_path=screenshots_path,
             posting_offset=activity_offset,
             time_limit=time_limit,
             user_agent=user_agent,
             headless=headless,
+            logger=logger,
             debug=debug,
         )
     except Exception as e:
         logger.log_error(e)
         return False
+    finally: 
+        logger.shutdown()
 
     return True

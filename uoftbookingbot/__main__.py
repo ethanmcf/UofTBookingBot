@@ -5,8 +5,8 @@ from uoftbookingbot.automation.runner import run_registration_bot
 from uoftbookingbot.constants import (
     BYPASS_CODES_PATH,
     CREDENTIALS_PATH,
-    ERROR_LOG_PATH,
-    SCREENSHOTS_PATH,
+    LOG_DIR_PATH,
+    SCREENSHOTS_DIR_PATH,
 )
 
 
@@ -110,8 +110,8 @@ def main():
         debug=args.debug,
         credentials_path=CREDENTIALS_PATH,
         bypass_codes_path=BYPASS_CODES_PATH,
-        error_log_path=ERROR_LOG_PATH,
-        screenshots_path=SCREENSHOTS_PATH,
+        log_path=LOG_DIR_PATH,
+        screenshots_path=SCREENSHOTS_DIR_PATH,
     )
     exit(0 if user_is_registered else 1)
 

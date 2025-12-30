@@ -224,6 +224,7 @@ def run_registration_flow(
                     start_date=date,
                     start_time=time,
                     registration_start_buffer_seconds=_REGISTRATION_START_BUFFER_SECONDS,
+                    logger=logger,
                 )
 
             # Ensure we are on the initial registration page
@@ -271,7 +272,7 @@ def run_registration_flow(
             if captcha_locator.is_visible():
                 logger.log_info("CAPTCHA detected, starting to solve...")
 
-                solver = CaptchaSolver(page)
+                solver = CaptchaSolver(page, logger)
                 solver.solve_captcha()
                 page.locator("#btnReCaptchaConfirm").click()
 

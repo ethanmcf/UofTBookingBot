@@ -1,4 +1,4 @@
-import logging, os, textwrap, time, sys
+import logging, os, textwrap, time, shutil
 from datetime import datetime, timedelta
 
 class Logger:
@@ -6,6 +6,9 @@ class Logger:
         self.log_dir = log_dir
         self.screenshot_dir = screenshot_dir
         
+        # Clear logs to ensure fresh logs
+        self._clear_on_disk()
+
         # Ensure directories exist
         for directory in [self.log_dir, self.screenshot_dir]:
             if not os.path.exists(directory):
@@ -73,7 +76,7 @@ class Logger:
         self.logger.info(msg) 
         print(msg)   
 
-    def log_countdown(self, seconds: int, wakeup_datetime):
+    def log_countdown(self, seconds: int):
         """Logs a ticking count down"""
 
         # Log every second
@@ -91,10 +94,37 @@ class Logger:
             parts.append(f"{seconds_only} seconds")
 
             wait_str = ", ".join(parts)
-            
-            self.logger.info(f"[INFO]: Waiting {wait_str} until registration opens... ")
+            print(wait_str)
+            self.log_info(f"Waiting {wait_str} until registration opens... ")
 
             time.sleep(1)
             seconds -= 1
 
-        self.logger.info("[INFO]: Wakeup time reached...")        
+        self.log_info("Wakeup time reached...")        
+
+    def _clear_on_disk(self):
+        """Internal method to wipe the folders before the logger starts writing."""
+        for directory in [self.log_dir, self.screenshot_dir]:
+            if os.path.exists(directory):
+                for filename in os.listdir(directory):
+                    file_path = os.path.join(directory, filename)
+                    try:
+                        if os.path.isfile(file_path) or os.path.islink(file_path):
+                            os.unlink(file_path)
+                        elif os.path.isdir(file_path):
+                            shutil.rmtree(file_path)
+                    except Exception as e:
+                        print(f"Cleanup Warning: Could not delete {file_path}: {e}")
+
+    def shutdown(self):
+        """
+        Flushes all buffers and closes all file handlers.
+        Call this when the bot is finished or an exception occurs.
+        """
+        # Clsoe handlers
+        handlers = self.logger.handlers[:]
+        for handler in handlers:
+            handler.close()
+            self.logger.removeHandler(handler)
+            
+        logging.shutdown()
