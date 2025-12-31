@@ -2,9 +2,12 @@ import logging, os, textwrap, shutil
 from datetime import datetime
 from PyQt6.QtCore import pyqtSignal, QObject
 
+
 class LogSignaler(QObject):
     """Bridge for the Logger to talk to the PyQt UI"""
+
     log_signal = pyqtSignal(str)
+
 
 class Logger:
 
@@ -12,7 +15,7 @@ class Logger:
         self.log_dir = log_dir
         self.screenshot_dir = screenshot_dir
         self.ui_signaler = ui_signaler
-        
+
         # Clear logs to ensure fresh logs
         self._clear_on_disk()
 
@@ -35,7 +38,7 @@ class Logger:
         info_handler.setLevel(logging.INFO)
         info_handler.setFormatter(formatter)
 
-        # ERROR File 
+        # ERROR File
         error_handler = logging.FileHandler(os.path.join(self.log_dir, "error.log"))
         error_handler.setLevel(logging.ERROR)
         error_handler.setFormatter(formatter)
@@ -50,10 +53,9 @@ class Logger:
         if self.ui_signaler:
             self.ui_signaler.log_signal.emit(message)
 
-
     def log_error(self, e: Exception):
         """Logs traceback to log & error file, prints pretty box to console."""
-        # Log full traceback 
+        # Log full traceback
         self.logger.exception(str(e))
 
         # Pretty print box for the terminal
@@ -63,12 +65,20 @@ class Logger:
         f_c, title_len = " ", len(title)
         f_len = (title_width - title_len - 2) // 2
         ex = (title_width - title_len - 2) % 2
-        
+
         box = (
-            "-" * title_width + "\n" +
-            f_c * f_len + " " + title + " " + f_c * (f_len + ex) + "\n" +
-            "-" * title_width + "\n" +
-            textwrap.fill(str(e), width=message_width) + "\n"
+            "-" * title_width
+            + "\n"
+            + f_c * f_len
+            + " "
+            + title
+            + " "
+            + f_c * (f_len + ex)
+            + "\n"
+            + "-" * title_width
+            + "\n"
+            + textwrap.fill(str(e), width=message_width)
+            + "\n"
         )
         print(box)
 
@@ -82,8 +92,8 @@ class Logger:
         page.screenshot(path=screenshot_path)
 
         msg = f"Debug screenshot saved to: {screenshot_path}"
-        self.logger.info(msg) 
-        print(msg)         
+        self.logger.info(msg)
+        print(msg)
 
     def _clear_on_disk(self):
         """Internal method to wipe the folders before the logger starts writing."""
@@ -109,5 +119,5 @@ class Logger:
         for handler in handlers:
             handler.close()
             self.logger.removeHandler(handler)
-            
+
         logging.shutdown()

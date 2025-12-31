@@ -7,23 +7,25 @@ from PyQt6.QtCore import Qt, QThread
 from uoftbookingbot.automation.bot_worker import BotWorker
 from uoftbookingbot.automation.logger import LogSignaler
 
+
 class BookingApp(QMainWindow):
     """Main window to handle navigation of pages"""
+
     def __init__(self):
         super().__init__()
-        self.setFixedSize(900, 600) 
+        self.setFixedSize(900, 600)
 
         self.main_container = QWidget()
         self.main_container.setStyleSheet("background-color: white;")
         self.setCentralWidget(self.main_container)
-        
+
         # Grid layout for overlapping content and header
         self.layout = QGridLayout(self.main_container)
         self.layout.setContentsMargins(0, 0, 0, 0)
 
         # Page stack and header
         self.page_stack = QStackedWidget()
-        self.header = Header(False) 
+        self.header = Header(False)
 
         # Overlay header with page stack
         self.layout.addWidget(self.page_stack, 0, 0)
@@ -34,9 +36,9 @@ class BookingApp(QMainWindow):
         self.setup_page = SetupPage()
         self.run_page = RunPage()
 
-        self.page_stack.addWidget(self.landing_page) 
-        self.page_stack.addWidget(self.setup_page)  
-        self.page_stack.addWidget(self.run_page)   
+        self.page_stack.addWidget(self.landing_page)
+        self.page_stack.addWidget(self.setup_page)
+        self.page_stack.addWidget(self.run_page)
 
         # Connect navigation buttons
         self.landing_page.start_btn.clicked.connect(self.go_to_setup)
@@ -50,6 +52,7 @@ class BookingApp(QMainWindow):
         self.ui_log_signaler = LogSignaler()
         self.ui_log_signaler.log_signal.connect(self.run_page.on_log_update)
 
+    # --- Navigation functions ---
     def go_to_home(self):
         self.header.should_paint = False
         self.page_stack.setCurrentIndex(0)
@@ -62,6 +65,7 @@ class BookingApp(QMainWindow):
         self.header.should_paint = True
         self.page_stack.setCurrentIndex(2)
 
+    # --- Bot functions ---
     def handle_bot_execution(self, bot_args):
         """Runs bot as a background thread so it doesn't block UI"""
         # Create Thread and Worker
@@ -89,7 +93,7 @@ class BookingApp(QMainWindow):
 
         # Connect thread
         self.thread.started.connect(self.worker.run)
-        
+
         # 3Handle Completion
         self.worker.finished.connect(self.run_page.on_execution_complete)
         self.worker.finished.connect(self.thread.quit)
@@ -102,12 +106,12 @@ class BookingApp(QMainWindow):
     def closeEvent(self, event):
         """Triggered when the window is closed to cleanly shutdown bot thread if running"""
         # Close thread if running
-        if hasattr(self, 'thread') and self.thread.isRunning():
+        if hasattr(self, "thread") and self.thread.isRunning():
 
             # Signal to stop worker
-            if hasattr(self, 'worker'):
+            if hasattr(self, "worker"):
                 self.worker.stop()
-            
+
             # Stop thread and force if needed
             self.thread.quit()
             if not self.thread.wait(2000):

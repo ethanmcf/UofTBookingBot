@@ -2,11 +2,20 @@ from uoftbookingbot.frontend.pages.base_page import BasePage
 from uoftbookingbot.frontend.components.button import Button
 from uoftbookingbot.frontend.theme import Colors
 from uoftbookingbot.automation.constants import ACTIVITY_URLS
-from PyQt6.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QGridLayout, 
-                             QCalendarWidget, QTimeEdit, QComboBox, QLabel)
+from PyQt6.QtWidgets import (
+    QWidget,
+    QHBoxLayout,
+    QVBoxLayout,
+    QGridLayout,
+    QCalendarWidget,
+    QTimeEdit,
+    QComboBox,
+    QLabel,
+)
 from PyQt6 import QtGui
 from PyQt6.QtCore import QTime, Qt, pyqtSignal
 from PyQt6.QtGui import QTextCharFormat, QColor, QMovie
+
 
 class RunPage(BasePage):
     start_run_signal = pyqtSignal(dict)
@@ -15,16 +24,16 @@ class RunPage(BasePage):
         super().__init__()
         # Grid layout
         self.master_layout = QGridLayout()
-        
+
         # Content widget
         self.content_widget = QWidget()
         self.content_layout = QHBoxLayout(self.content_widget)
-        self.content_layout.setSpacing(40) 
+        self.content_layout.setSpacing(40)
         self.content_layout.setContentsMargins(20, 50, 20, 20)
 
         # Left side (calendar)
         self.createCalendar()
-        self.calendar.setFixedWidth(350) 
+        self.calendar.setFixedWidth(350)
         self.content_layout.addWidget(self.calendar)
 
         # Right side (variables)
@@ -50,7 +59,7 @@ class RunPage(BasePage):
         self.form_layout.addWidget(self.sport_dropdown)
 
         # Run Button
-        self.form_layout.addStretch() 
+        self.form_layout.addStretch()
         self.run_btn = Button("Run")
         self.form_layout.addWidget(self.run_btn)
 
@@ -59,72 +68,55 @@ class RunPage(BasePage):
         # Add to center of grid
         self.master_layout.addWidget(self.content_widget, 1, 1)
 
-        # Loading 
+        # Loading
         loading_view = self.createLoading()
         self.master_layout.addWidget(loading_view, 2, 1, alignment=Qt.AlignmentFlag.AlignHCenter)
 
-        
-        # Center and add spacing 
-        self.master_layout.setRowStretch(0, 1)   
-        self.master_layout.setRowStretch(1, 0)    
-        self.master_layout.setRowStretch(2, 0)   
-        self.master_layout.setRowStretch(3, 1)  
-        self.master_layout.setColumnStretch(0, 1) 
+        # Center and add spacing
+        self.master_layout.setRowStretch(0, 1)
+        self.master_layout.setRowStretch(1, 0)
+        self.master_layout.setRowStretch(2, 0)
+        self.master_layout.setRowStretch(3, 1)
+        self.master_layout.setColumnStretch(0, 1)
         self.master_layout.setColumnStretch(2, 1)
         self.page_layout.addLayout(self.master_layout)
 
         # Hanlde interaction
         self.run_btn.btn.clicked.connect(self.on_run_click)
 
-    def on_run_click(self):
-        self.loading_container.show()
-        self.start_run_signal.emit(dict())
-
-    def on_log_update(self, message):
-        self.loading_label.setText(message)
-
-    def on_execution_complete(self, success):
-        if success:
-            self.loading_label.setText("Success: Activity Booked!")
-            self.loading_label.setStyleSheet("color: green;")
-        else:
-            self.loading_label.setText("Error: Registration Failed.")
-            self.loading_label.setStyleSheet("color: red;")
-        
+    # --- Component functions ---
     def createLoading(self):
         # The container widget
         self.loading_container = QWidget()
         self.loading_container.setStyleSheet("background: transparent;")
-        self.loading_container.setFixedHeight(80) # Pre-allocate this space
+        self.loading_container.setFixedHeight(80)
         sp_retain = self.loading_container.sizePolicy()
         sp_retain.setRetainSizeWhenHidden(True)
         self.loading_container.setSizePolicy(sp_retain)
         layout = QVBoxLayout(self.loading_container)
-        
-        # 1. The Animation (Spinner)
+
+        # Loading animation
         self.animation_label = QLabel()
         self.animation_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.movie = QMovie('uoftbookingbot/frontend/assets/loading.gif')
+        self.movie = QMovie("uoftbookingbot/frontend/assets/loading.gif")
         self.animation_label.setMovie(self.movie)
-        
-        # 2. The Text Label
-        self.loading_label = QLabel("Loading availability…")
+
+        # Log loading label
+        self.loading_label = QLabel("Running...")
         self.loading_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.loading_label.setStyleSheet("color: #64748b; font-size: 12px; border: none;")
 
-        # Add to the internal layout
         layout.addWidget(self.loading_label)
         layout.addWidget(self.animation_label)
-        
+
         self.movie.start()
         self.loading_container.hide()
         return self.loading_container
-    
+
     def createCalendar(self):
         self.calendar = QCalendarWidget()
-        
-        # 2. Styling to prevent the "Black Box" effect
-        self.calendar.setStyleSheet(f"""
+        self.calendar.setStyleSheet(
+            f"""
             /* The main calendar area */
             QCalendarWidget QWidget {{
                 background-color: {Colors.LIGHT_BLUE };
@@ -176,13 +168,14 @@ class RunPage(BasePage):
                 height: 10px;
                 padding: 12px;
             }}
-        """)
-        
+        """
+        )
+
         # Header format
         header_fmt = self.calendar.headerTextFormat()
-        header_fmt.setForeground(QtGui.QColor('white'))
+        header_fmt.setForeground(QtGui.QColor("white"))
         background_color = QtGui.QColor(Colors.LIGHT_BLUE)
-        background_color.setAlphaF(0.5) 
+        background_color.setAlphaF(0.5)
         header_fmt.setBackground(background_color)
         self.calendar.setHeaderTextFormat(header_fmt)
 
@@ -193,14 +186,15 @@ class RunPage(BasePage):
         self.calendar.setWeekdayTextFormat(Qt.DayOfWeek.Sunday, weekend_format)
 
         # Hides week numbers on left
-        self.calendar.setVerticalHeaderFormat(QCalendarWidget.VerticalHeaderFormat.NoVerticalHeader) 
+        self.calendar.setVerticalHeaderFormat(QCalendarWidget.VerticalHeaderFormat.NoVerticalHeader)
         return self.calendar
-    
+
     def createTimePicker(self):
         self.time_picker = QTimeEdit()
         self.time_picker.setMinimumHeight(45)
         self.time_picker.setTime(QTime.currentTime())
-        self.time_picker.setStyleSheet(f"""
+        self.time_picker.setStyleSheet(
+            f"""
             QTimeEdit {{
                 background-color: white;
                 color: black;
@@ -239,7 +233,8 @@ class RunPage(BasePage):
                 height: 12px;
                 left: 0px;
             }}   
-        """)
+        """
+        )
 
     def createDropDown(self):
         self.sport_dropdown = QComboBox()
@@ -247,7 +242,8 @@ class RunPage(BasePage):
         sports = ["Select ..."] + list(ACTIVITY_URLS.keys())
         self.sport_dropdown.addItems(sports)
 
-        self.sport_dropdown.setStyleSheet(f"""
+        self.sport_dropdown.setStyleSheet(
+            f"""
             QComboBox {{
                 background-color: white;
                 color: {Colors.TEXT_MAIN};
@@ -279,4 +275,24 @@ class RunPage(BasePage):
                 selection-color: white;
                 outline: none;
             }}
-        """)
+        """
+        )
+
+    # --- Bot functions ---
+    def on_run_click(self):
+        """Shows logging text and signals to start bot"""
+        self.loading_container.show()
+        self.start_run_signal.emit(dict())
+
+    def on_log_update(self, message):
+        """Updates loading message when bot logs new info"""
+        self.loading_label.setText(message)
+
+    def on_execution_complete(self, success):
+        """Handles when bot sends failure or success"""
+        if success:
+            self.loading_label.setText("Success: Activity Booked!")
+            self.loading_label.setStyleSheet("color: green;")
+        else:
+            self.loading_label.setText("Error: Registration Failed.")
+            self.loading_label.setStyleSheet("color: red;")

@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout
 
+
 class BasePage(QWidget):
     HEADER_HEIGHT = 160
 

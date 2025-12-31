@@ -1,8 +1,10 @@
 from uoftbookingbot.automation.runner import run_registration_bot
 from PyQt6.QtCore import QObject, pyqtSignal
 
+
 class BotWorker(QObject):
     """Bridge used by the frontend to execute the backend bot in a background thread."""
+
     finished = pyqtSignal(bool)
 
     def __init__(self, bot_args):

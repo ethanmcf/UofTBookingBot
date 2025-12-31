@@ -10,6 +10,7 @@ from uoftbookingbot.constants import (
 )
 from uoftbookingbot.frontend.app import BookingApp
 
+
 def _get_cli_args() -> argparse.Namespace:
     """Parses and returns command-line arguments."""
 
