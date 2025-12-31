@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta
-import re
 import time
-from typing import Optional
 from playwright.sync_api import sync_playwright, expect, Page
 from playwright_stealth import Stealth
+from uoftbookingbot.activity import Activity
 from uoftbookingbot.automation.captcha_solver import CaptchaSolver
+from uoftbookingbot.automation.common import complete_utorid_login
 from uoftbookingbot.automation.login_manager import LoginManager
 from uoftbookingbot.automation.debugging import save_debug_screenshot
 from uoftbookingbot.automation.constants import DEFAULT_TIMEOUT_MILLISECONDS
@@ -87,14 +87,17 @@ def _format_date_for_program_timeslot(date_string: str, time_string: str) -> str
 
 
 def _wait_until_time_slot_opens(
-    posting_offset: int, start_date: str, start_time: str, registration_start_buffer_seconds: int
+    activity: Activity,
+    registration_start_buffer_seconds: int,
 ) -> bool:
     """Waits until just before the booking slot opens to start the registration process."""
 
-    activity_datetime = datetime.strptime(f"{start_date} {start_time}:00", "%Y-%m-%d %H:%M:%S")
+    activity_datetime = datetime.strptime(
+        f"{activity.start_date} {activity.start_time}:00", "%Y-%m-%d %H:%M:%S"
+    )
     wakeup_datetime = (
         activity_datetime
-        - timedelta(days=posting_offset)
+        - timedelta(days=activity.posting_offset)
         - timedelta(seconds=registration_start_buffer_seconds)
     )
     diff_time = wakeup_datetime - datetime.now()
@@ -111,16 +114,16 @@ def _wait_until_time_slot_opens(
     time.sleep(sleep_seconds)
 
 
-def _compete_for_registration(
-    page: Page, start_date: str, start_time: str, time_limit: int = 60
-) -> bool:
+def _compete_for_registration(page: Page, activity: Activity, time_limit: int) -> bool:
     """Continually attempts to register for the specified date and time slot
     until successful or time limit reached."""
 
     # Format date and time strings for initial program registration page
-    programInstanceTextDate = _format_date_for_program_instance_text(start_date)
-    programInstanceRoleDate = _format_date_for_program_instance_role(start_date)
-    programTimeslotDateTime = _format_date_for_program_timeslot(start_date, start_time)
+    programInstanceTextDate = _format_date_for_program_instance_text(activity.start_date)
+    programInstanceRoleDate = _format_date_for_program_instance_role(activity.start_date)
+    programTimeslotDateTime = _format_date_for_program_timeslot(
+        activity.start_date, activity.start_time
+    )
 
     # Continually try to register until successful or time limit reached
     stopping_datetime = datetime.now() + timedelta(seconds=time_limit)
@@ -156,13 +159,39 @@ def _compete_for_registration(
     return won_registration
 
 
+def _clear_cart(page: Page) -> None:
+    """Clears the shopping cart if it contains any items."""
+    page.goto("https://recreation.utoronto.ca/")
+
+    # Check if cart is empty
+    page.get_by_role("button", name="Shopping Cart Notfications Area").click()
+    go_to_cart_button = page.get_by_role("button", name="Go to Cart Page").filter(visible=True)
+    empty_cart_link = page.get_by_role("link", name="Your Cart is Empty!").filter(visible=True)
+    expect(go_to_cart_button.or_(empty_cart_link)).to_be_visible()
+
+    if empty_cart_link.is_visible():
+        return
+
+    # Cart isn't empty; go to cart page
+    page.get_by_role("button", name="Go to Cart Page").click()
+
+    # Wait for one or more remove buttons to appear, then remove all items one by one
+    remove_button_locator = page.get_by_role("button", name="Remove")
+    expect(remove_button_locator.first).to_be_visible()
+    removable_items_count = remove_button_locator.count()
+    while removable_items_count > 0:
+        expect(remove_button_locator.first).to_be_visible()
+        remove_button_locator.first.click()
+        removable_items_count -= 1
+
+    # Wait until cart is confirmed empty
+    page.wait_for_url("https://recreation.utoronto.ca/")
+
+
 def run_registration_flow(
-    program_url: str,
-    date: str,
-    time: str,
+    activity: Activity,
     login_manager: LoginManager,
     screenshots_path: str,
-    posting_offset: Optional[int] = None,
     time_limit: int = 60,
     user_agent: str | None = None,
     headless: bool = True,
@@ -171,12 +200,9 @@ def run_registration_flow(
     """Runs the main registration automation using Playwright.
 
     Args:
-        program_url: The URL of the drop-in activity registration page.
-        date: The date of the activity in YYYY-MM-DD format.
-        time: The start time of the activity in HH:MM format.
+        activity: The activity to register for.
         login_manager: An instance of LoginManager to handle login credentials and bypass codes.
         screenshots_path: Path to save debug screenshots.
-        posting_offset: Optional number of days before the start time to begin registration.
         time_limit: The maximum number of seconds to run the bot past the start time without success.
         user_agent: Optional custom user agent string for the browser.
         headless: Whether to run the browser in headless mode.
@@ -191,10 +217,10 @@ def run_registration_flow(
         context = browser.new_context(user_agent=user_agent)
         page = context.new_page()
         page.set_default_timeout(DEFAULT_TIMEOUT_MILLISECONDS)
+        expect.set_options(timeout=DEFAULT_TIMEOUT_MILLISECONDS)
 
         try:
-            # Navigate to the program registration page
-            page.goto(program_url)
+            page.goto("https://recreation.utoronto.ca/")
 
             # Acknowledge cookies if it appears
             page.add_locator_handler(
@@ -203,50 +229,37 @@ def run_registration_flow(
             )
 
             # Sign in with UTORID
-            utorid, password = login_manager.get_credentials()
-            page.get_by_role("button", name="Sign In").click()
-            page.get_by_role("button", name="school Log in with UTORID").click()
-            page.get_by_role("textbox", name="UTORid / JOINid").click()
-            page.get_by_role("textbox", name="UTORid / JOINid").fill(utorid)
-            page.locator("#password").click()
-            page.locator("#password").fill(password)
-            page.get_by_role("button", name="log in").click()
+            complete_utorid_login(
+                login_manager=login_manager,
+                page=page,
+                recreation_login=True,
+            )
 
-            # Complete multi-factor authentication (MFA)
-            bypass_code = login_manager.get_code()
-            page.get_by_role("link", name="Other options").click()
-            page.get_by_role("link", name="Bypass code Enter a code from").click()
-            page.get_by_role("textbox", name="Bypass code").click()
-            page.get_by_role("textbox", name="Bypass code").fill(bypass_code)
-            page.get_by_test_id("verify-button").click()
-            page.get_by_role("button", name="Yes, this is my device").click()
+            # Clear cart (if necessary) before starting registration
+            _clear_cart(page)
+
+            # Navigate to the program registration page
+            page.goto(activity.get_registration_url())
 
             # Wait for bookings to open if necessary
-            if posting_offset is not None:
+            if activity.posting_offset is not None:
                 _wait_until_time_slot_opens(
-                    posting_offset=posting_offset,
-                    start_date=date,
-                    start_time=time,
+                    activity=activity,
                     registration_start_buffer_seconds=_REGISTRATION_START_BUFFER_SECONDS,
                 )
 
-            # Ensure we are on the initial registration page
-            expect(page).to_have_url(
-                re.compile(r"^https:\/\/recreation\.utoronto\.ca\/program\/getprogramdetails"),
+            print(
+                f"Registering for drop-in activity on {activity.start_date} at {activity.start_time}..."
             )
-
-            print(f"Registering for drop-in activity on {date} at {time}...")
-
             # Compete for initial registration
             effective_time_limit = (
                 time_limit + _REGISTRATION_START_BUFFER_SECONDS
-                if posting_offset is not None
+                if activity.posting_offset is not None
                 else time_limit
             )
             won_initial_registration = _compete_for_registration(
                 page=page,
-                start_date=date,
-                start_time=time,
+                activity=activity,
                 time_limit=effective_time_limit,
             )
             if not won_initial_registration:

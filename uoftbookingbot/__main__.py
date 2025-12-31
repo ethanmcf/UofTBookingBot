@@ -1,6 +1,7 @@
 import argparse
 import sys
-from uoftbookingbot.automation.constants import ACTIVITY_URLS
+from uoftbookingbot.activity import Activity
+from uoftbookingbot.automation.constants import ACTIVITY_IDS
 from uoftbookingbot.automation.runner import run_registration_bot
 from uoftbookingbot.constants import (
     BYPASS_CODES_PATH,
@@ -8,6 +9,7 @@ from uoftbookingbot.constants import (
     ERROR_LOG_PATH,
     SCREENSHOTS_PATH,
 )
+from uoftbookingbot.frontend.app import run_app
 
 
 def _get_cli_args() -> argparse.Namespace:
@@ -18,14 +20,16 @@ def _get_cli_args() -> argparse.Namespace:
         description="UofT Drop-in Activity Booking Bot. Run with no arguments to open the GUI, or with arguments to run the CLI booking script."
     )
     url_group = parser.add_mutually_exclusive_group(required=True)
-    url_group.add_argument("-u", "--url", help="The URL to a drop-in activity.", required=False)
     url_group.add_argument(
-        "-a", "--activity", help="The name of a drop-in activity.", required=False
+        "-i", "--activity-id", help="The ID of a drop-in activity.", required=False
+    )
+    url_group.add_argument(
+        "-a", "--activity-name", help="The name of a drop-in activity.", required=False
     )
     parser.add_argument(
         "-d",
         "--date",
-        help="The date of the activity given in YYYY-MM-DD format.",
+        help="The start date of the activity given in YYYY-MM-DD format.",
         required=True,
     )
     parser.add_argument(
@@ -68,17 +72,17 @@ def _get_cli_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--debug",
-        help="Runs debug mode, adds screenshot and log in debug folder where exception occurs ",
+        help="Runs debug mode, adds screenshot in debug folder where exception occurs ",
         action="store_true",
     )
 
     # Get args from command-line
     args = parser.parse_args()
 
-    # Get activity url from known activities if a key name was given instead of a url
-    if args.activity:
-        args.url = ACTIVITY_URLS.get(args.activity)
-        if not args.url:
+    # Get activity id from known activities if a key name was given instead of an id
+    if args.activity_name:
+        args.activity_id = ACTIVITY_IDS.get(args.activity_name)
+        if not args.activity_id:
             raise Exception("Invalid drop-in activity given.")
 
     # Nullify posting offset if no wait flag was given
@@ -94,16 +98,19 @@ def main():
 
     if len(sys.argv) == 1:
         # Run GUI for desktop app
-        print("Run GUI here...")
-        exit(0)
+        run_app()
+        return
 
     # Run CLI script
     args = _get_cli_args()
+    activity_to_book = Activity(
+        id=args.activity_id,
+        start_date=args.date,
+        start_time=args.time,
+        posting_offset=args.offset,
+    )
     user_is_registered = run_registration_bot(
-        activity_url=args.url,
-        activity_date=args.date,
-        activity_time=args.time,
-        activity_offset=args.offset,
+        activity=activity_to_book,
         time_limit=args.time_limit,
         codes_threshold=args.codes_threshold,
         headless=not args.visible,
@@ -113,7 +120,7 @@ def main():
         error_log_path=ERROR_LOG_PATH,
         screenshots_path=SCREENSHOTS_PATH,
     )
-    exit(0 if user_is_registered else 1)
+    sys.exit(0 if user_is_registered else 1)
 
 
 if __name__ == "__main__":

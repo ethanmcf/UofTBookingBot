@@ -1,5 +1,5 @@
 import logging
-import os
+from pathlib import Path
 import textwrap
 from playwright.sync_api import Page
 from datetime import datetime
@@ -8,8 +8,7 @@ from datetime import datetime
 def get_app_logger(log_path: str) -> logging.Logger:
     """Configures and returns the application logger."""
 
-    if not os.path.exists(log_path):
-        os.makedirs(log_path)
+    Path(log_path).parent.mkdir(parents=True, exist_ok=True)
 
     logging.basicConfig(
         level=logging.ERROR,
@@ -24,11 +23,11 @@ def get_app_logger(log_path: str) -> logging.Logger:
 def save_debug_screenshot(page: Page, path: str) -> None:
     """Saves a screenshot of the current page state for debugging."""
 
-    if not os.path.exists(path):
-        os.makedirs(path)
+    screenshots_path = Path(path)
+    screenshots_path.mkdir(parents=True, exist_ok=True)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    screenshot_path = os.path.join(path, f"error_screenshot_{timestamp}.png")
+    screenshot_path = str(screenshots_path / f"error_screenshot_{timestamp}.png")
     page.screenshot(path=screenshot_path)
     print(f"Debug screenshot saved to: {screenshot_path}")
 

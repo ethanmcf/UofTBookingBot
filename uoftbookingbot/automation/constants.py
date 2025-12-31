@@ -1,6 +1,6 @@
-ACTIVITY_URLS = {
-    "golf": "https://recreation.utoronto.ca/program/GetProgramDetails?courseId=5904837f-6aa4-4707-bcfb-2ece4049bae0",
-    "volleyball": "https://recreation.utoronto.ca/Program/GetProgramDetails?courseId=ca92214b-0334-4e97-a60e-2144af28e435",
+ACTIVITY_IDS = {
+    "golf": "5904837f-6aa4-4707-bcfb-2ece4049bae0",
+    "volleyball": "ca92214b-0334-4e97-a60e-2144af28e435",
 }
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 4.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36",

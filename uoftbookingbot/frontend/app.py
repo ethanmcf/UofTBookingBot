@@ -6,6 +6,7 @@ import sys
 from PyQt6.QtWidgets import QMainWindow, QStackedWidget, QWidget, QGridLayout, QApplication
 from PyQt6.QtCore import Qt
 
+
 class BookingApp(QMainWindow):
     """Main window to handle navigation of pages"""
     def __init__(self):
@@ -54,7 +55,8 @@ class BookingApp(QMainWindow):
         self.header.should_paint = True
         self.page_stack.setCurrentIndex(2)
 
-if __name__ == "__main__":
+
+def run_app():
     # Create the application instance
     qt_app = QApplication(sys.argv)
     
