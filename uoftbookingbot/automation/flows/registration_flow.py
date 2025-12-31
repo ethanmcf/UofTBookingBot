@@ -6,7 +6,7 @@ from uoftbookingbot.activity import Activity
 from uoftbookingbot.automation.captcha_solver import CaptchaSolver
 from uoftbookingbot.automation.common import complete_utorid_login
 from uoftbookingbot.automation.login_manager import LoginManager
-from uoftbookingbot.automation.debugging import save_debug_screenshot
+from uoftbookingbot.automation.logger import Logger
 from uoftbookingbot.automation.constants import DEFAULT_TIMEOUT_MILLISECONDS
 
 
@@ -87,8 +87,7 @@ def _format_date_for_program_timeslot(date_string: str, time_string: str) -> str
 
 
 def _wait_until_time_slot_opens(
-    activity: Activity,
-    registration_start_buffer_seconds: int,
+    activity: Activity, registration_start_buffer_seconds: int, logger: Logger
 ) -> bool:
     """Waits until just before the booking slot opens to start the registration process."""
 
@@ -103,15 +102,32 @@ def _wait_until_time_slot_opens(
     diff_time = wakeup_datetime - datetime.now()
     sleep_seconds = max(0, diff_time.total_seconds())
 
-    print(f"Waiting for {sleep_seconds} second(s)", end="")
     if sleep_seconds > 0:
-        print(
-            f" until {wakeup_datetime.strftime('%A, %B %d, %Y at %-I:%M:%S %p')}",
-            end="",
-        )
-    print("...")
+        logger.log_info("Registration not open yet, waiting until it opens...")
 
-    time.sleep(sleep_seconds)
+        # Log every second
+        while sleep_seconds > 0:
+            # Format the time remaining (HH:MM:SS)
+            td = timedelta(seconds=sleep_seconds)
+            parts = []
+
+            # Extract hours, minutes, seconds
+            hours, remainder = divmod(td.seconds, 3600)
+            minutes, seconds_only = divmod(remainder, 60)
+
+            if hours > 0:
+                parts.append(f"{hours} hours")
+            if minutes > 0:
+                parts.append(f"{minutes} minutes")
+            parts.append(f"{seconds_only} seconds")
+
+            wait_str = ", ".join(parts)
+            logger.log_info(f"Waiting {wait_str} until registration opens... ")
+
+            time.sleep(1)
+            sleep_seconds -= 1
+
+        logger.log_info("Wakeup time reached...")
 
 
 def _compete_for_registration(page: Page, activity: Activity, time_limit: int) -> bool:
@@ -191,7 +207,8 @@ def _clear_cart(page: Page) -> None:
 def run_registration_flow(
     activity: Activity,
     login_manager: LoginManager,
-    screenshots_path: str,
+    logger: Logger,
+    # posting_offset: Optional[int] = None,
     time_limit: int = 60,
     user_agent: str | None = None,
     headless: bool = True,
@@ -202,14 +219,14 @@ def run_registration_flow(
     Args:
         activity: The activity to register for.
         login_manager: An instance of LoginManager to handle login credentials and bypass codes.
-        screenshots_path: Path to save debug screenshots.
+        logger: Instance of Logger to handle logging
         time_limit: The maximum number of seconds to run the bot past the start time without success.
         user_agent: Optional custom user agent string for the browser.
         headless: Whether to run the browser in headless mode.
         debug: Whether to save debug screenshots on failure.
     """
 
-    print("Starting registration flow...")
+    logger.log_info("Starting registration flow...")
 
     with Stealth().use_sync(sync_playwright()) as playwright:
         # Launch browser
@@ -233,6 +250,7 @@ def run_registration_flow(
                 login_manager=login_manager,
                 page=page,
                 recreation_login=True,
+                logger=logger,
             )
 
             # Clear cart (if necessary) before starting registration
@@ -246,11 +264,13 @@ def run_registration_flow(
                 _wait_until_time_slot_opens(
                     activity=activity,
                     registration_start_buffer_seconds=_REGISTRATION_START_BUFFER_SECONDS,
+                    logger=logger,
                 )
 
-            print(
+            logger.log_info(
                 f"Registering for drop-in activity on {activity.start_date} at {activity.start_time}..."
             )
+
             # Compete for initial registration
             effective_time_limit = (
                 time_limit + _REGISTRATION_START_BUFFER_SECONDS
@@ -286,13 +306,13 @@ def run_registration_flow(
 
             # Solve CAPTCHA if it appears
             if captcha_locator.is_visible():
-                print("CAPTCHA detected, starting to solve...")
+                logger.log_info("CAPTCHA detected, starting to solve...")
 
-                solver = CaptchaSolver(page)
+                solver = CaptchaSolver(page, logger)
                 solver.solve_captcha()
                 page.locator("#btnReCaptchaConfirm").click()
 
-                print("CAPTCHA solved.")
+                logger.log_info("CAPTCHA solved.")
 
             # CAPTCHA handled (if needed); proceed with registration flow depending on whether user has family members
             expect(family_member_section_locator.or_(payment_page_locator)).to_be_visible()
@@ -307,7 +327,7 @@ def run_registration_flow(
             # Complete payment options page (assumes no payment required)
             # Note: Getting here means registration was successful
             expect(payment_page_locator).to_be_visible()
-            print("Successfully registered for the activity. Completing checkout...")
+            logger.log_info("Successfully registered for the activity. Completing checkout...")
 
             # Click Next or Proceed to Checkout button (depends on whether waivers are needed)
             next_button_locator = page.get_by_role("button", name="Next")
@@ -337,10 +357,10 @@ def run_registration_flow(
             # Confirm successful checkout on receipt page
             expect(page.get_by_role("heading", name="Payment was Successful")).to_be_visible()
 
-            print("Registration flow completed successfully.")
+            logger.log_info("Registration flow completed successfully.")
         except Exception as e:
             if debug:
-                save_debug_screenshot(page, screenshots_path)
+                logger.screenshot(page)
             raise e from None
         finally:
             context.close()

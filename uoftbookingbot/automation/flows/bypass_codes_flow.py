@@ -5,12 +5,12 @@ from playwright_stealth import Stealth
 from uoftbookingbot.automation.common import complete_utorid_login
 from uoftbookingbot.automation.login_manager import LoginManager
 from uoftbookingbot.automation.constants import DEFAULT_TIMEOUT_MILLISECONDS
-from uoftbookingbot.automation.debugging import save_debug_screenshot
+from uoftbookingbot.automation.logger import Logger
 
 
 def run_bypass_codes_retrieval_flow(
     login_manager: LoginManager,
-    screenshots_path: str,
+    logger: Logger,
     user_agent: Optional[str] = None,
     headless: bool = True,
     debug: bool = False,
@@ -19,13 +19,13 @@ def run_bypass_codes_retrieval_flow(
 
     Args:
         login_manager: An instance of LoginManager to handle login credentials and bypass codes.
-        screenshots_path: Path to save debug screenshots.
+        logger: Instance of Logger to handle logging.
         user_agent: Optional custom user agent string for the browser.
         headless: Whether to run the browser in headless mode.
         debug: Whether to save debug screenshots on failure.
     """
 
-    print("Starting bypass codes retrieval flow...")
+    logger.log_info("Starting bypass codes retrieval flow...")
 
     with Stealth().use_sync(sync_playwright()) as playwright:
         # Launch browser
@@ -44,23 +44,27 @@ def run_bypass_codes_retrieval_flow(
                 login_manager=login_manager,
                 page=page,
                 recreation_login=False,
+                logger=logger,
             )
 
             # Generate new bypass codes
+            logger.log_info("Generating bypass codes...")
             page.get_by_role("button", name="Generate Bypass Codes").click()
             expect(page.locator("h2")).to_contain_text("UTORMFA Bypass Codes")
 
             # Extract and save bypass codes
+            logger.log_info("Saving bypass codes...")
             content = page.locator("main > .site-container").text_content()
             codes = re.findall(r"\d{9}", content)
             if not codes:
                 raise Exception("No codes found during bypass code extraction.")
             login_manager.save_codes(codes)
 
-            print("Bypass codes retrieval flow completed successfully.")
+            logger.log_info("Bypass codes retrieval flow completed successfully.")
+
         except Exception as e:
             if debug:
-                save_debug_screenshot(page, screenshots_path)
+                logger.screenshot(page)
             raise e from None
         finally:
             context.close()

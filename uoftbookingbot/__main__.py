@@ -1,15 +1,14 @@
-import argparse
-import sys
+import argparse, sys
 from uoftbookingbot.activity import Activity
 from uoftbookingbot.automation.constants import ACTIVITY_IDS
 from uoftbookingbot.automation.runner import run_registration_bot
+from uoftbookingbot.frontend.app import run_app
 from uoftbookingbot.constants import (
     BYPASS_CODES_PATH,
     CREDENTIALS_PATH,
-    ERROR_LOG_PATH,
-    SCREENSHOTS_PATH,
+    LOG_DIR_PATH,
+    SCREENSHOTS_DIR_PATH,
 )
-from uoftbookingbot.frontend.app import run_app
 
 
 def _get_cli_args() -> argparse.Namespace:
@@ -109,6 +108,7 @@ def main():
         start_time=args.time,
         posting_offset=args.offset,
     )
+
     user_is_registered = run_registration_bot(
         activity=activity_to_book,
         time_limit=args.time_limit,
@@ -117,8 +117,9 @@ def main():
         debug=args.debug,
         credentials_path=CREDENTIALS_PATH,
         bypass_codes_path=BYPASS_CODES_PATH,
-        error_log_path=ERROR_LOG_PATH,
-        screenshots_path=SCREENSHOTS_PATH,
+        log_path=LOG_DIR_PATH,
+        screenshots_path=SCREENSHOTS_DIR_PATH,
+        ui_signaler=None,
     )
     sys.exit(0 if user_is_registered else 1)
 

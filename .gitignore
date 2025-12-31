@@ -2,12 +2,12 @@
 .DS_Store
 __pycache__/
 tests/resources/
-Debug/
 secrets/
-debug/
 .env
 node_modules/
 package-lock.json
 package.json
 dist/
 build/
+*/logs
+*/screenshots
