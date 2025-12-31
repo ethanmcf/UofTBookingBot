@@ -3,12 +3,14 @@ from uoftbookingbot.frontend.components.button import Button
 from uoftbookingbot.frontend.theme import Colors
 from uoftbookingbot.automation.constants import ACTIVITY_URLS
 from PyQt6.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QGridLayout, 
-                             QCalendarWidget, QTimeEdit, QComboBox, QPushButton, QLabel)
+                             QCalendarWidget, QTimeEdit, QComboBox, QLabel)
 from PyQt6 import QtGui
-from PyQt6.QtCore import QTime, Qt
+from PyQt6.QtCore import QTime, Qt, pyqtSignal
 from PyQt6.QtGui import QTextCharFormat, QColor, QMovie
 
 class RunPage(BasePage):
+    start_run_signal = pyqtSignal(dict)
+
     def __init__(self):
         super().__init__()
         # Grid layout
@@ -75,9 +77,17 @@ class RunPage(BasePage):
         self.run_btn.btn.clicked.connect(self.on_run_click)
 
     def on_run_click(self):
-
         self.loading_container.show()
+        self.start_run_signal.emit(dict())
 
+    def on_execution_complete(self, success):
+        if success:
+            self.loading_label.setText("Success: Activity Booked!")
+            self.loading_label.setStyleSheet("color: green;")
+        else:
+            self.loading_label.setText("Error: Registration Failed.")
+            self.loading_label.setStyleSheet("color: red;")
+        
     def createLoading(self):
         # The container widget
         self.loading_container = QWidget()
@@ -87,7 +97,6 @@ class RunPage(BasePage):
         sp_retain.setRetainSizeWhenHidden(True)
         self.loading_container.setSizePolicy(sp_retain)
         layout = QVBoxLayout(self.loading_container)
-        # layout.setSpacing(5) # Space between spinner and text
         
         # 1. The Animation (Spinner)
         self.animation_label = QLabel()

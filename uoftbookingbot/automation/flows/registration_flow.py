@@ -190,7 +190,7 @@ def run_registration_flow(
         date: The date of the activity in YYYY-MM-DD format.
         time: The start time of the activity in HH:MM format.
         login_manager: An instance of LoginManager to handle login credentials and bypass codes.
-        screenshots_path: Path to save debug screenshots.
+        logger: Instance of Logger to handle logging
         posting_offset: Optional number of days before the start time to begin registration.
         time_limit: The maximum number of seconds to run the bot past the start time without success.
         user_agent: Optional custom user agent string for the browser.

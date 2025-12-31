@@ -123,3 +123,11 @@ To run just frontend:
 ```bash
 python -m uoftbookingbot.frontend.app
 ```
+
+## Run Main Application
+
+Run the following command:
+
+```bash
+python -m uoftbookingbot
+```

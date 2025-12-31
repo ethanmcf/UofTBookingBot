@@ -18,7 +18,7 @@ def run_bypass_codes_retrieval_flow(
 
     Args:
         login_manager: An instance of LoginManager to handle login credentials and bypass codes.
-        screenshots_path: Path to save debug screenshots.
+        logger: Instance of Logger to handle logging.
         user_agent: Optional custom user agent string for the browser.
         headless: Whether to run the browser in headless mode.
         debug: Whether to save debug screenshots on failure.

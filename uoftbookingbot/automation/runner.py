@@ -35,11 +35,11 @@ def run_registration_bot(
         debug: Whether to run in debug mode.
         credentials_path: Path to the login credentials file.
         bypass_codes_path: Path to the bypass codes file.
-        error_log_path: Path to print error logs.
+        log_path: Path to log directory
+        screenshots_path: Path to screenshots directory
     Returns:
         bool: True iff registration completed without unhandled exceptions, False otherwise.
     """
-
     logger = Logger(log_path, screenshots_path)
     try:
         login_manager = LoginManager(credentials_path, bypass_codes_path)
@@ -53,7 +53,6 @@ def run_registration_bot(
                 headless=headless,
                 debug=debug,
             )
-
         run_registration_flow(
             program_url=activity_url,
             date=activity_date,

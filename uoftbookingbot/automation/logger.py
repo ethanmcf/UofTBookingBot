@@ -33,17 +33,25 @@ class Logger:
         error_handler.setLevel(logging.ERROR)
         error_handler.setFormatter(formatter)
 
+        # if ui_signaler:
+        #     # The UI Sink gets a raw version or its own special style
+        #     ui_h = QtUiSink(ui_signaler)
+        #     ui_h.setFormatter(logging.Formatter("%(message)s")) # No timestamps in UI
+        # self.logger.addHandler(ui_h)
+
         self.logger.addHandler(info_handler)
         self.logger.addHandler(error_handler)
 
     def log_info(self, message: str):
-        """Logs info to file and prints to console."""
+        """Logs info to terminal, log file and emits signal to UI."""
         self.logger.info(message)
         print(f"[INFO]: {message}")
+        # if self.ui_signaler:
+        #     self.ui_signaler.new_record.emit("INFO", ui_msg)
 
 
     def log_error(self, e: Exception):
-        """Logs traceback to file and prints pretty box to console."""
+        """Logs traceback to log & error file, prints pretty box to console."""
         # Log full traceback 
         self.logger.exception(str(e))
 

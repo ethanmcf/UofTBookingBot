@@ -1,5 +1,5 @@
-import argparse
-import sys
+import argparse, sys
+from PyQt6.QtWidgets import QApplication
 from uoftbookingbot.automation.constants import ACTIVITY_URLS
 from uoftbookingbot.automation.runner import run_registration_bot
 from uoftbookingbot.constants import (
@@ -8,7 +8,7 @@ from uoftbookingbot.constants import (
     LOG_DIR_PATH,
     SCREENSHOTS_DIR_PATH,
 )
-
+from uoftbookingbot.frontend.app import BookingApp
 
 def _get_cli_args() -> argparse.Namespace:
     """Parses and returns command-line arguments."""
@@ -94,11 +94,21 @@ def main():
 
     if len(sys.argv) == 1:
         # Run GUI for desktop app
-        print("Run GUI here...")
+        qt_app = QApplication(sys.argv)
+
+        # Create and show the main window
+        window = BookingApp()
+        window.setWindowTitle("UofT Booking Bot")
+        window.show()
+
+        # Run the event loop
+        sys.exit(qt_app.exec())
+
         exit(0)
 
     # Run CLI script
     args = _get_cli_args()
+
     user_is_registered = run_registration_bot(
         activity_url=args.url,
         activity_date=args.date,
