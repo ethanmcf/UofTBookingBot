@@ -5,6 +5,7 @@ from uoftbookingbot.frontend.components.header import Header
 from PyQt6.QtWidgets import QMainWindow, QStackedWidget, QWidget, QGridLayout
 from PyQt6.QtCore import Qt, QThread
 from uoftbookingbot.automation.bot_worker import BotWorker
+from uoftbookingbot.automation.logger import LogSignaler
 
 class BookingApp(QMainWindow):
     """Main window to handle navigation of pages"""
@@ -45,6 +46,10 @@ class BookingApp(QMainWindow):
         # Connect run btn
         self.run_page.start_run_signal.connect(self.handle_bot_execution)
 
+        # Connect log signaler
+        self.ui_log_signaler = LogSignaler()
+        self.ui_log_signaler.log_signal.connect(self.run_page.on_log_update)
+
     def go_to_home(self):
         self.header.should_paint = False
         self.page_stack.setCurrentIndex(0)
@@ -76,6 +81,7 @@ class BookingApp(QMainWindow):
             "bypass_codes_path": "./secrets/bypass_codes.txt",
             "log_path": "./uoftbookingbot/logs",
             "screenshots_path": "./uoftbookingbot/screenshots",
+            "ui_signaler": self.ui_log_signaler,
         }
 
         self.worker = BotWorker(bot_args)
@@ -92,3 +98,19 @@ class BookingApp(QMainWindow):
 
         # Start bot
         self.thread.start()
+
+    def closeEvent(self, event):
+        """Triggered when the window is closed to cleanly shutdown bot thread if running"""
+        # Close thread if running
+        if hasattr(self, 'thread') and self.thread.isRunning():
+
+            # Signal to stop worker
+            if hasattr(self, 'worker'):
+                self.worker.stop()
+            
+            # Stop thread and force if needed
+            self.thread.quit()
+            if not self.thread.wait(2000):
+                self.thread.terminate()
+        # Accept and close event
+        event.accept()

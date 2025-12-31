@@ -3,10 +3,9 @@ import random
 from typing import Optional
 from uoftbookingbot.automation.constants import USER_AGENTS
 from uoftbookingbot.automation.login_manager import LoginManager
-from uoftbookingbot.automation.logger import Logger
+from uoftbookingbot.automation.logger import Logger, LogSignaler
 from uoftbookingbot.automation.flows.bypass_codes_flow import run_bypass_codes_retrieval_flow
 from uoftbookingbot.automation.flows.registration_flow import run_registration_flow
-
 
 def run_registration_bot(
     activity_url: str,
@@ -21,6 +20,7 @@ def run_registration_bot(
     bypass_codes_path: str,
     log_path: str,
     screenshots_path: str,
+    ui_signaler: Optional[LogSignaler],
 ) -> bool:
     """Main entry point for running the registration bot.
 
@@ -40,7 +40,7 @@ def run_registration_bot(
     Returns:
         bool: True iff registration completed without unhandled exceptions, False otherwise.
     """
-    logger = Logger(log_path, screenshots_path)
+    logger = Logger(log_path, screenshots_path, ui_signaler)
     try:
         login_manager = LoginManager(credentials_path, bypass_codes_path)
         user_agent = random.choice(USER_AGENTS)

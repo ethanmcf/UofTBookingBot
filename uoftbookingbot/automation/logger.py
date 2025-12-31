@@ -1,10 +1,17 @@
-import logging, os, textwrap, time, shutil
-from datetime import datetime, timedelta
+import logging, os, textwrap, shutil
+from datetime import datetime
+from PyQt6.QtCore import pyqtSignal, QObject
+
+class LogSignaler(QObject):
+    """Bridge for the Logger to talk to the PyQt UI"""
+    log_signal = pyqtSignal(str)
 
 class Logger:
-    def __init__(self, log_dir: str, screenshot_dir: str):
+
+    def __init__(self, log_dir: str, screenshot_dir: str, ui_signaler: LogSignaler = None):
         self.log_dir = log_dir
         self.screenshot_dir = screenshot_dir
+        self.ui_signaler = ui_signaler
         
         # Clear logs to ensure fresh logs
         self._clear_on_disk()
@@ -33,12 +40,6 @@ class Logger:
         error_handler.setLevel(logging.ERROR)
         error_handler.setFormatter(formatter)
 
-        # if ui_signaler:
-        #     # The UI Sink gets a raw version or its own special style
-        #     ui_h = QtUiSink(ui_signaler)
-        #     ui_h.setFormatter(logging.Formatter("%(message)s")) # No timestamps in UI
-        # self.logger.addHandler(ui_h)
-
         self.logger.addHandler(info_handler)
         self.logger.addHandler(error_handler)
 
@@ -46,8 +47,8 @@ class Logger:
         """Logs info to terminal, log file and emits signal to UI."""
         self.logger.info(message)
         print(f"[INFO]: {message}")
-        # if self.ui_signaler:
-        #     self.ui_signaler.new_record.emit("INFO", ui_msg)
+        if self.ui_signaler:
+            self.ui_signaler.log_signal.emit(message)
 
 
     def log_error(self, e: Exception):

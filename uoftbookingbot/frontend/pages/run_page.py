@@ -80,6 +80,9 @@ class RunPage(BasePage):
         self.loading_container.show()
         self.start_run_signal.emit(dict())
 
+    def on_log_update(self, message):
+        self.loading_label.setText(message)
+
     def on_execution_complete(self, success):
         if success:
             self.loading_label.setText("Success: Activity Booked!")
