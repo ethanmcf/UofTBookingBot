@@ -101,7 +101,6 @@ def _wait_until_time_slot_opens(
     )
     diff_time = wakeup_datetime - datetime.now()
     sleep_seconds = max(0, diff_time.total_seconds())
-    print(activity_datetime, wakeup_datetime, diff_time, sleep_seconds)
     if sleep_seconds > 0:
         logger.log_info("Registration not open yet, waiting until it opens...")
 
