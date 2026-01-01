@@ -1,6 +1,6 @@
 from uoftbookingbot.frontend.theme import Colors
 from uoftbookingbot.frontend.pages.base_page import BasePage
-from uoftbookingbot.frontend.components.button import Button
+from uoftbookingbot.frontend.components.primary_button import PrimaryButton
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QLineEdit
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QPalette, QPixmap
@@ -171,7 +171,7 @@ class SetupPage(BasePage):
         self.left_col.addStretch()
 
         # Save button
-        self.save_btn = Button("Save")
+        self.save_btn = PrimaryButton("Save")
         row = self.createInfoBox(
             self.save_btn,
             "uoftbookingbot/frontend/assets/lock-icon.png",

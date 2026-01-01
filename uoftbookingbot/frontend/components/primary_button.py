@@ -4,15 +4,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
 
 
-def _adjust_hex(hex_color: str, delta: int) -> str:
-    hex_color = hex_color.lstrip("#")
-    r = max(0, min(255, int(hex_color[0:2], 16) + delta))
-    g = max(0, min(255, int(hex_color[2:4], 16) + delta))
-    b = max(0, min(255, int(hex_color[4:6], 16) + delta))
-    return f"#{r:02x}{g:02x}{b:02x}"
-
-
-class Button(QWidget):
+class PrimaryButton(QWidget):
     def __init__(self, text: str, parent=None):
         super().__init__(parent)
 
