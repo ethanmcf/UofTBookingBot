@@ -17,13 +17,14 @@ cd UoftBookingBot
 
 ### Setup
 
-Run the following commands to create a virtual env, install dependencies and create secrets files. Secret files
+Run the following commands to create a virtual env, install dependencies, and create secrets files. Secret files
 are in gitignore so they will not be commited.
 
 ```bash
-python
-python -m venv venv # create virtual environment
+python3 -m venv .venv # create virtual environment
 source .venv/bin/activate # activate virtual environment
+pip install requirements.txt # install dependencies
+playwright install chromium # install playwright browser dependencies
 mkdir secrets # creates secrets folder
 touch secrets/bypass_codes.txt # creates bypass codes file
 echo -e "YOUR_UTORID\nYOUR_PASSWORD" > secrets/login_credentials.txt # Creates credentials file
@@ -93,7 +94,7 @@ To run tests:
 pytest
 ```
 
-Tests can be found in the `Tests` folder.
+Tests can be found in the `tests` folder.
 
 Although a pytest test exists for the CAPTCHA solver, visual verification can be done via the following command:
 

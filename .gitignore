@@ -9,5 +9,7 @@ package-lock.json
 package.json
 dist/
 build/
+debug/
+logs/
 */logs
 */screenshots
