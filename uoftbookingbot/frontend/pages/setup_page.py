@@ -1,4 +1,4 @@
-from uoftbookingbot.frontend.theme import Colors 
+from uoftbookingbot.frontend.theme import Colors
 from uoftbookingbot.frontend.pages.base_page import BasePage
 from uoftbookingbot.frontend.components.button import Button
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QLineEdit
@@ -7,11 +7,12 @@ from PyQt6.QtGui import QColor, QPalette, QPixmap
 from PyQt6.QtCore import QMargins
 from pyqt_animated_line_edit import AnimatedLineEdit
 
+
 class SetupPage(BasePage):
     def __init__(self):
-        super().__init__() 
+        super().__init__()
 
-        # Split layout 
+        # Split layout
         self.split_container = QHBoxLayout()
         self.split_container.setContentsMargins(10, 0, 0, 0)
         self.split_container.setSpacing(0)
@@ -29,7 +30,7 @@ class SetupPage(BasePage):
         # Right column (instructions)
         self.right_box = QWidget()
         self.right_col = QVBoxLayout(self.right_box)
-        self.right_col.setContentsMargins(70, 0, 10, 0) 
+        self.right_col.setContentsMargins(70, 0, 10, 0)
         self.right_col.setSpacing(22)
 
         # Todo image
@@ -37,7 +38,9 @@ class SetupPage(BasePage):
 
         # Instructions
         instruction_title = QLabel("Setup Instructions")
-        instruction_title.setStyleSheet(f"color: {Colors.TEXT_MAIN}; font-weight: bold; font-size: 16px;")
+        instruction_title.setStyleSheet(
+            f"color: {Colors.TEXT_MAIN}; font-weight: bold; font-size: 16px;"
+        )
         instruction_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.right_col.addWidget(instruction_title)
 
@@ -50,16 +53,18 @@ class SetupPage(BasePage):
         password_label.setStyleSheet(label_style)
         self.right_col.addWidget(password_label)
 
-        bypass_label = QLabel("Enter BYPASS CODE") 
+        bypass_label = QLabel("Enter BYPASS CODE")
         bypass_label.setStyleSheet(label_style)
-        bypass_row = self.createInfoBox(bypass_label, 
-                           "uoftbookingbot/frontend/assets/info-icon.png", 
-                           "1) Login to https://bypass.utormfa.utoronto.ca/index.php\n" \
-                           "2) Click ‘Generate Bypass Codes’ button\n" \
-                           "3) Copy any one code into text field",
-                           stretch=False)
+        bypass_row = self.createInfoBox(
+            bypass_label,
+            "uoftbookingbot/frontend/assets/info-icon.png",
+            "1) Login to https://bypass.utormfa.utoronto.ca/index.php\n"
+            "2) Click ‘Generate Bypass Codes’ button\n"
+            "3) Copy any one code into text field",
+            stretch=False,
+        )
         self.right_col.addLayout(bypass_row)
-        
+
         self.right_col.addStretch()
 
         # Add columns to split layout
@@ -72,19 +77,26 @@ class SetupPage(BasePage):
 
     def createInfoBox(self, component, icon_path, tooltip, stretch=True):
         self.row_layout = QHBoxLayout()
-        self.row_layout.setSpacing(10) 
+        self.row_layout.setSpacing(10)
 
-        self.row_layout.addWidget(component, stretch= 1 if stretch else 0)
+        self.row_layout.addWidget(component, stretch=1 if stretch else 0)
 
         # Create the Info image
         self.info_icon = QLabel()
-        info_pixmap = QPixmap(icon_path) 
-        self.info_icon.setPixmap(info_pixmap.scaled(30, 30, Qt.AspectRatioMode.KeepAspectRatio, 
-                                                   Qt.TransformationMode.SmoothTransformation))
-        
+        info_pixmap = QPixmap(icon_path)
+        self.info_icon.setPixmap(
+            info_pixmap.scaled(
+                30,
+                30,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+        )
+
         # Add the ToolTip to the icon
         self.info_icon.setToolTip(tooltip)
-        self.info_icon.setStyleSheet("""
+        self.info_icon.setStyleSheet(
+            """
             QToolTip {
                 background-color: white;
                 color: black;
@@ -92,20 +104,27 @@ class SetupPage(BasePage):
                 border-radius: 4px;
                 outline: none; 
             }
-        """)
-        self.info_icon.setCursor(Qt.CursorShape.PointingHandCursor) # Feedback on hover
-        
+        """
+        )
+        self.info_icon.setCursor(Qt.CursorShape.PointingHandCursor)  # Feedback on hover
+
         self.row_layout.addWidget(self.info_icon)
-        
+
         return self.row_layout
-    
+
     def createTodoImage(self):
         self.image_label = QLabel(self.right_box)
         self.image_label.setStyleSheet("background: transparent;")
         self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         todo_png = QPixmap("uoftbookingbot/frontend/assets/todo.png")
-        self.image_label.setPixmap(todo_png.scaled(300, 300, Qt.AspectRatioMode.KeepAspectRatio,
-                                                  Qt.TransformationMode.SmoothTransformation))
+        self.image_label.setPixmap(
+            todo_png.scaled(
+                300,
+                300,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+        )
         self.right_col.addStretch()
         self.right_col.addWidget(self.image_label)
 
@@ -115,9 +134,9 @@ class SetupPage(BasePage):
         HEIGHT = 50
         INNER_FONT_SIZE = 14
         OUTER_FONT_SIZE = 10
-    
+
         # Utorid input
-        self.username = AnimatedLineEdit('Your utorid', self.left_box)
+        self.username = AnimatedLineEdit("Your utorid", self.left_box)
         self.username.setFixedSize(WIDTH, HEIGHT)
         self.username.setPlaceholderColorOutside(QColor(Colors.TEXT_MAIN))
         self.username.setBorderRadius(BORDER_RADIUS)
@@ -128,7 +147,7 @@ class SetupPage(BasePage):
         self.left_col.addWidget(self.username)
 
         # Password input
-        self.password = AnimatedLineEdit('Your password', self.left_box)
+        self.password = AnimatedLineEdit("Your password", self.left_box)
         self.password.setFixedSize(WIDTH, HEIGHT)
         self.password.setPlaceholderColorOutside(QColor(Colors.TEXT_MAIN))
         self.password.setBorderRadius(BORDER_RADIUS)
@@ -140,7 +159,7 @@ class SetupPage(BasePage):
         self.left_col.addWidget(self.password)
 
         # Bypass input
-        self.bypass = AnimatedLineEdit('Current bypass code', self.left_box)
+        self.bypass = AnimatedLineEdit("Current bypass code", self.left_box)
         self.bypass.setFixedSize(WIDTH, HEIGHT)
         self.bypass.setPlaceholderColorOutside(QColor(Colors.TEXT_MAIN))
         self.bypass.setBorderRadius(BORDER_RADIUS)
@@ -153,11 +172,12 @@ class SetupPage(BasePage):
 
         # Save button
         self.save_btn = Button("Save")
-        row = self.createInfoBox(self.save_btn, 
-                           "uoftbookingbot/frontend/assets/lock-icon.png", 
-                           "End-to-end local encryption ensures your data stays private.\n" \
-                           "Because your info is stored only on your machine,\n" \
-                           "we have zero access to your sensitive credentials")
+        row = self.createInfoBox(
+            self.save_btn,
+            "uoftbookingbot/frontend/assets/lock-icon.png",
+            "End-to-end local encryption ensures your data stays private.\n"
+            "Because your info is stored only on your machine,\n"
+            "we have zero access to your sensitive credentials",
+        )
         self.left_col.addLayout(row, 1)
         self.left_col.addStretch()
-       

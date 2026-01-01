@@ -1,17 +1,14 @@
-import os
 import pytest
 import os
-from dotenv import load_dotenv
 
 from uoftbookingbot.automation.login_manager import LoginManager
 
 
 @pytest.fixture
 def login_manager() -> LoginManager:
-    load_dotenv()
 
     # Create folder and files if they do not exist
-    folder_path = "./Tests/resources"
+    folder_path = "./tests/resources"
     if not os.path.exists(folder_path):
         # Folder doesn't exist, create it
         os.makedirs(folder_path)
