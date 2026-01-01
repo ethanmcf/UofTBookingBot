@@ -101,7 +101,6 @@ def _wait_until_time_slot_opens(
     )
     diff_time = wakeup_datetime - datetime.now()
     sleep_seconds = max(0, diff_time.total_seconds())
-
     if sleep_seconds > 0:
         logger.log_info("Registration not open yet, waiting until it opens...")
 
@@ -111,10 +110,11 @@ def _wait_until_time_slot_opens(
             td = timedelta(seconds=sleep_seconds)
             parts = []
 
-            # Extract hours, minutes, seconds
+            # Extract days, hours, minutes, seconds
             hours, remainder = divmod(td.seconds, 3600)
             minutes, seconds_only = divmod(remainder, 60)
-
+            if td.days > 0:
+                parts.append(f"{td.days} days")
             if hours > 0:
                 parts.append(f"{hours} hours")
             if minutes > 0:
