@@ -103,7 +103,6 @@ class BookingApp(QMainWindow):
         self.worker.finished.connect(self.run_page.on_execution_complete)
         self.worker.finished.connect(self.bot_thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
-        # self.bot_thread.finished.connect(self.bot_thread.deleteLater)
 
         # Start bot
         self.bot_thread.start()
