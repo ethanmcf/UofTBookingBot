@@ -1,17 +1,19 @@
+import time, random
 from playwright.sync_api import sync_playwright
 from playwright_stealth import Stealth
-import time, random
-
 from uoftbookingbot.automation.captcha_solver import CaptchaSolver
 from uoftbookingbot.automation.constants import (
     DEFAULT_TIMEOUT_MILLISECONDS,
     USER_AGENTS,
 )
+from uoftbookingbot.automation.logger import Logger
 
 
 def test_captcha_solver(headless: bool = True) -> None:
     """Test the captcha handling functionality."""
-
+    folder_dir = "./tests/logs"
+    screenshot_dir = "./tests/screenshots"
+    logger = Logger(folder_dir, screenshot_dir, name="TestLogger")
     captcha_url = "https://www.google.com/recaptcha/api2/demo"
 
     with Stealth().use_sync(sync_playwright()) as playwright:
@@ -24,7 +26,7 @@ def test_captcha_solver(headless: bool = True) -> None:
         page.goto(captcha_url)
 
         # Solve captcha
-        solver = CaptchaSolver(page)
+        solver = CaptchaSolver(page, logger)
         solver.solve_captcha()
 
         if not headless:

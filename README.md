@@ -98,7 +98,7 @@ Tests can be found in the `Tests` folder.
 Although a pytest test exists for the CAPTCHA solver, visual verification can be done via the following command:
 
 ```bash
-python -m Tests.automation.test_captcha_solver
+python -m tests.automation.test_captcha_solver
 ```
 
 ## Scheduler

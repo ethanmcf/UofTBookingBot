@@ -11,7 +11,9 @@ class LogSignaler(QObject):
 
 class Logger:
 
-    def __init__(self, log_dir: str, screenshot_dir: str, ui_signaler: LogSignaler = None):
+    def __init__(
+        self, log_dir: str, screenshot_dir: str, ui_signaler: LogSignaler = None, name="Logger"
+    ):
         self.log_dir = log_dir
         self.screenshot_dir = screenshot_dir
         self.ui_signaler = ui_signaler
@@ -24,8 +26,17 @@ class Logger:
             if not os.path.exists(directory):
                 os.makedirs(directory)
 
-        self.logger = logging.getLogger("Logger")
+        self.logger = logging.getLogger(name)
         self.logger.setLevel(logging.DEBUG)
+
+        # Reset existing handles
+        for handler in self.logger.handlers[:]:
+            try:
+                handler.flush()
+                handler.close()
+            except Exception:
+                pass
+            self.logger.removeHandler(handler)
 
         if not self.logger.handlers:
             self._setup_handlers()
