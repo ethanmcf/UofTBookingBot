@@ -59,20 +59,22 @@ class RunPage(BasePage):
         self.createDropDown()
         self.form_layout.addWidget(self.sport_dropdown)
 
-        # Run Button
+        # Action Buttons
         self.form_layout.addStretch()
         self.run_btn = PrimaryButton("Run")
+        self.run_btn.btn.clicked.connect(self.on_run_click)
+
         self.schedule_btn = SecondaryButton("Schedule")
+        self.schedule_btn.btn.clicked.connect(self.on_schedule_click)
 
         self.form_layout.addWidget(self.schedule_btn)
         self.form_layout.addWidget(self.run_btn)
 
-        self.content_layout.addWidget(self.form_container)
-
         # Add to center of grid
+        self.content_layout.addWidget(self.form_container)
         self.master_layout.addWidget(self.content_widget, 1, 1)
 
-        # Loading
+        # Loading content
         loading_view = self.createLoading()
         self.master_layout.addWidget(loading_view, 2, 1, alignment=Qt.AlignmentFlag.AlignHCenter)
 
@@ -84,9 +86,6 @@ class RunPage(BasePage):
         self.master_layout.setColumnStretch(0, 1)
         self.master_layout.setColumnStretch(2, 1)
         self.page_layout.addLayout(self.master_layout)
-
-        # Hanlde interaction
-        self.run_btn.btn.clicked.connect(self.on_run_click)
 
     # --- Component functions ---
     def createLoading(self):
@@ -291,6 +290,10 @@ class RunPage(BasePage):
         self.movie.start()
         self.start_run_signal.emit(dict())
         self.run_btn.btn.setEnabled(False)
+
+    def on_schedule_click(self):
+        """Handle schedlue log/signaling here"""
+        pass
 
     def on_log_update(self, message):
         """Updates loading message when bot logs new info"""
