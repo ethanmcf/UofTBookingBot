@@ -5,7 +5,7 @@ from PyQt6.QtCore import QObject, pyqtSignal
 class BotWorker(QObject):
     """Bridge used by the frontend to execute the backend bot in a background thread."""
 
-    finished = pyqtSignal(bool)
+    finished = pyqtSignal(bool, str)
 
     def __init__(self, bot_args):
         super().__init__()
@@ -17,7 +17,9 @@ class BotWorker(QObject):
 
     def run(self):
         try:
-            success = run_registration_bot(**self.bot_args)
-            self.finished.emit(success)
+            run_registration_bot(**self.bot_args)
+            self.finished.emit(
+                True, "Successfully booked! You should receive a confirmation email soon."
+            )
         except Exception as e:
-            self.finished.emit(False)
+            self.finished.emit(False, f"'{str(e)}'. Try again.")

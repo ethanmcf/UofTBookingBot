@@ -178,7 +178,6 @@ def _compete_for_registration(page: Page, activity: Activity, time_limit: int) -
 def _clear_cart(page: Page) -> None:
     """Clears the shopping cart if it contains any items."""
     page.goto("https://recreation.utoronto.ca/")
-
     # Check if cart is empty
     page.get_by_role("button", name="Shopping Cart Notfications Area").click()
     go_to_cart_button = page.get_by_role("button", name="Go to Cart Page").filter(visible=True)
@@ -237,6 +236,9 @@ def run_registration_flow(
         expect.set_options(timeout=DEFAULT_TIMEOUT_MILLISECONDS)
 
         try:
+            # raise Exception("TESTING")
+            # return True
+
             page.goto("https://recreation.utoronto.ca/")
 
             # Acknowledge cookies if it appears

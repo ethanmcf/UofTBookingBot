@@ -14,7 +14,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6 import QtGui
 from PyQt6.QtCore import QTime, Qt, pyqtSignal
-from PyQt6.QtGui import QTextCharFormat, QColor, QMovie
+from PyQt6.QtGui import QTextCharFormat, QColor, QMovie, QPixmap
 
 
 class RunPage(BasePage):
@@ -96,10 +96,10 @@ class RunPage(BasePage):
         layout = QVBoxLayout(self.loading_container)
 
         # Loading animation
-        self.animation_label = QLabel()
-        self.animation_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.loading_visual = QLabel()
+        self.loading_visual.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.movie = QMovie("uoftbookingbot/frontend/assets/loading.gif")
-        self.animation_label.setMovie(self.movie)
+        self.loading_visual.setMovie(self.movie)
 
         # Log loading label
         self.loading_label = QLabel("Running...")
@@ -107,7 +107,7 @@ class RunPage(BasePage):
         self.loading_label.setStyleSheet("color: #64748b; font-size: 12px; border: none;")
 
         layout.addWidget(self.loading_label)
-        layout.addWidget(self.animation_label)
+        layout.addWidget(self.loading_visual)
 
         self.movie.start()
         self.loading_container.hide()
@@ -282,17 +282,33 @@ class RunPage(BasePage):
     def on_run_click(self):
         """Shows logging text and signals to start bot"""
         self.loading_container.show()
+        self.movie = QMovie("uoftbookingbot/frontend/assets/loading.gif")
+        self.loading_visual.setMovie(self.movie)
+        self.movie.start()
         self.start_run_signal.emit(dict())
 
     def on_log_update(self, message):
         """Updates loading message when bot logs new info"""
         self.loading_label.setText(message)
 
-    def on_execution_complete(self, success):
-        """Handles when bot sends failure or success"""
-        if success:
-            self.loading_label.setText("Success: Activity Booked!")
-            self.loading_label.setStyleSheet("color: green;")
-        else:
-            self.loading_label.setText("Error: Registration Failed.")
-            self.loading_label.setStyleSheet("color: red;")
+    def on_execution_complete(self, success, message):
+        """Handles visual update when bot sends failure or success"""
+
+        # Stop loading spinner
+        self.movie.stop()
+        self.loading_visual.setMovie(None)
+
+        # Paths for success/failure icons
+        self.success_icon_path = "uoftbookingbot/frontend/assets/success-icon.png"
+        self.error_icon_path = "uoftbookingbot/frontend/assets/error-icon.png"
+
+        icon_path = self.success_icon_path if success else self.error_icon_path
+        pix = QPixmap(icon_path)
+        pix = pix.scaled(
+            24,
+            24,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+        self.loading_visual.setPixmap(pix)
+        self.loading_label.setText(message)

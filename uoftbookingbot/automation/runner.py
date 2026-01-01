@@ -53,10 +53,6 @@ def run_registration_bot(
         run_registration_flow(
             activity=activity,
             login_manager=login_manager,
-            # <<<<<<< HEAD
-            # =======
-            # posting_offset=activity_offset,
-            # >>>>>>> feature/logger
             time_limit=time_limit,
             user_agent=user_agent,
             headless=headless,
@@ -65,7 +61,7 @@ def run_registration_bot(
         )
     except Exception as e:
         logger.log_error(e)
-        return False
+        raise e from None
     finally:
         logger.shutdown()
 
