@@ -1,5 +1,6 @@
 from uoftbookingbot.frontend.pages.base_page import BasePage
-from uoftbookingbot.frontend.components.button import Button
+from uoftbookingbot.frontend.components.primary_button import PrimaryButton
+from uoftbookingbot.frontend.components.secondary_button import SecondaryButton
 from uoftbookingbot.frontend.theme import Colors
 from uoftbookingbot.automation.constants import ACTIVITY_IDS
 from PyQt6.QtWidgets import (
@@ -60,7 +61,10 @@ class RunPage(BasePage):
 
         # Run Button
         self.form_layout.addStretch()
-        self.run_btn = Button("Run")
+        self.run_btn = PrimaryButton("Run")
+        self.schedule_btn = SecondaryButton("Schedule")
+
+        self.form_layout.addWidget(self.schedule_btn)
         self.form_layout.addWidget(self.run_btn)
 
         self.content_layout.addWidget(self.form_container)
@@ -286,6 +290,7 @@ class RunPage(BasePage):
         self.loading_visual.setMovie(self.movie)
         self.movie.start()
         self.start_run_signal.emit(dict())
+        self.run_btn.btn.setEnabled(False)
 
     def on_log_update(self, message):
         """Updates loading message when bot logs new info"""
@@ -312,3 +317,6 @@ class RunPage(BasePage):
         )
         self.loading_visual.setPixmap(pix)
         self.loading_label.setText(message)
+
+        # Renable run button
+        self.run_btn.btn.setEnabled(True)
