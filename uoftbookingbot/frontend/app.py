@@ -71,7 +71,7 @@ class BookingApp(QMainWindow):
     def handle_bot_execution(self, bot_args):
         """Runs bot as a background thread so it doesn't block UI"""
         # Create Thread and Worker
-        self.thread = QThread()
+        self.bot_thread = QThread()
 
         # TEMPRORARY ARGS FOR TESTING
         activity_to_book = Activity(
@@ -94,34 +94,39 @@ class BookingApp(QMainWindow):
         }
 
         self.worker = BotWorker(bot_args)
-        self.worker.moveToThread(self.thread)
+        self.worker.moveToThread(self.bot_thread)
 
         # Connect thread
-        self.thread.started.connect(self.worker.run)
+        self.bot_thread.started.connect(self.worker.run)
 
         # 3Handle Completion
         self.worker.finished.connect(self.run_page.on_execution_complete)
-        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.bot_thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
-        self.thread.finished.connect(self.thread.deleteLater)
+        # self.bot_thread.finished.connect(self.bot_thread.deleteLater)
 
         # Start bot
-        self.thread.start()
+        self.bot_thread.start()
 
     def closeEvent(self, event):
         """Triggered when the window is closed to cleanly shutdown bot thread if running"""
-        # Close thread if running
-        if hasattr(self, "thread") and self.thread.isRunning():
 
-            # Signal to stop worker
-            if hasattr(self, "worker"):
-                self.worker.stop()
+        try:
+            # Check if thread is alive & running
+            if hasattr(self, "bot_thread") and self.bot_thread is not None:
+                try:
+                    if self.bot_thread.isRunning():
+                        if hasattr(self, "worker") and self.worker:
+                            self.worker.stop()
 
-            # Stop thread and force if needed
-            self.thread.quit()
-            if not self.thread.wait(2000):
-                self.thread.terminate()
-        # Accept and close event
+                        self.bot_thread.quit()
+                        if not self.bot_thread.wait(2000):
+                            self.bot_thread.terminate()
+                except RuntimeError:
+                    pass  # Thread has already been cleaned up by Qt
+        except Exception as e:
+            print(f"Shutdown error: {e}")
+
         event.accept()
 
 

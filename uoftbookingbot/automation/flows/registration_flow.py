@@ -236,9 +236,6 @@ def run_registration_flow(
         expect.set_options(timeout=DEFAULT_TIMEOUT_MILLISECONDS)
 
         try:
-            # raise Exception("TESTING")
-            # return True
-
             page.goto("https://recreation.utoronto.ca/")
 
             # Acknowledge cookies if it appears

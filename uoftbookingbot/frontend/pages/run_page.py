@@ -305,8 +305,8 @@ class RunPage(BasePage):
         icon_path = self.success_icon_path if success else self.error_icon_path
         pix = QPixmap(icon_path)
         pix = pix.scaled(
-            24,
-            24,
+            32,
+            32,
             Qt.AspectRatioMode.KeepAspectRatio,
             Qt.TransformationMode.SmoothTransformation,
         )
