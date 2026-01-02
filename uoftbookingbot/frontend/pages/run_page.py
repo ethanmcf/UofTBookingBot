@@ -370,14 +370,26 @@ class RunPage(BasePage):
             if activity.posting_offset is not None:
                 booking_datetime = datetime.strptime(
                     f"{selected_date} {selected_time}", "%Y-%m-%d %H:%M"
-                ) - timedelta(days=activity.posting_offset)
+                ) - timedelta(days=activity.posting_offset, seconds=300)
 
             # Show success message
-            success_message = f"Successfully scheduled the bot to book the following activity: \n\n {selected_sport} at {selected_date} {selected_time}\n\n"
+            success_message = (
+                f"Successfully scheduled the bot to book the following activity:"
+                f"\n\n"
+                f"{selected_sport} at {selected_date} {selected_time}"
+                f"\n\n"
+            )
             if booking_datetime is None or booking_datetime <= datetime.now():
-                success_message += f"The bot will attempt to run within the next minute. Please ensure your computer is on and connected to the internet."
+                success_message += (
+                    f"The booking period appears to be open, so the bot will attempt to run within"
+                    f" the next minute. Please ensure your computer is on and connected to the internet."
+                )
             else:
-                success_message += f"Please ensure your computer is on and connected to the internet by {booking_datetime.strftime('%Y-%m-%d %H:%M')} to allow the bot to run successfully."
+                success_message += (
+                    f"The bot will attempt to run on {booking_datetime.strftime('%Y-%m-%d')} at"
+                    f" {booking_datetime.strftime('%H:%M')}. Please ensure your computer is on and"
+                    f" connected to the internet at this time."
+                )
             QMessageBox.information(self, "Success", success_message)
         except ValueError as e:
             QMessageBox.critical(
