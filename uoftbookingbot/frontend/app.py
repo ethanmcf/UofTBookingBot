@@ -13,8 +13,36 @@ import sys
 class BookingApp(QMainWindow):
     """Main window to handle navigation of pages"""
 
-    def __init__(self):
+    activities: dict[str, dict[str, str]]
+    credentials_path: str
+    bypass_codes_path: str
+    log_path: str
+    screenshots_path: str
+
+    def __init__(
+        self,
+        activities: dict[str, dict[str, str]],
+        credentials_path: str,
+        bypass_codes_path: str,
+        log_path: str,
+        screenshots_path: str,
+    ):
+        """Initializes the main booking app window.
+
+        Args:
+            activities (dict[str, dict[str, str]]): Mapping of activity names to their details.
+            credentials_path (str): Path to the credentials file.
+            bypass_codes_path (str): Path to the bypass codes file.
+            log_path (str): Path to the log directory.
+            screenshots_path (str): Path to the screenshots directory.
+        """
         super().__init__()
+        self.activities = activities
+        self.credentials_path = credentials_path
+        self.bypass_codes_path = bypass_codes_path
+        self.log_path = log_path
+        self.screenshots_path = screenshots_path
+
         self.setFixedSize(900, 600)
 
         self.main_container = QWidget()
@@ -36,7 +64,7 @@ class BookingApp(QMainWindow):
         # Create pages and add to stack
         self.landing_page = LandingPage()
         self.setup_page = SetupPage()
-        self.run_page = RunPage()
+        self.run_page = RunPage(activities=self.activities)
 
         self.page_stack.addWidget(self.landing_page)
         self.page_stack.addWidget(self.setup_page)
@@ -68,17 +96,20 @@ class BookingApp(QMainWindow):
         self.page_stack.setCurrentIndex(2)
 
     # --- Bot functions ---
-    def handle_bot_execution(self, bot_args):
-        """Runs bot as a background thread so it doesn't block UI"""
+    def handle_bot_execution(self, activity_args: dict[str, str]):
+        """Runs bot as a background thread so it doesn't block UI
+
+        Args:
+            activity_args (dict[str, str]): Arguments for the activity to book.
+        """
         # Create Thread and Worker
         self.bot_thread = QThread()
 
-        # TEMPRORARY ARGS FOR TESTING
         activity_to_book = Activity(
-            id="5904837f-6aa4-4707-bcfb-2ece4049bae0",
-            start_date="2026-01-08",
-            start_time="13:30",
-            posting_offset=2,
+            id=activity_args["id"],
+            start_date=activity_args["start_date"],
+            start_time=activity_args["start_time"],
+            posting_offset=activity_args["posting_offset"],
         )
         bot_args = {
             "activity": activity_to_book,
@@ -86,10 +117,10 @@ class BookingApp(QMainWindow):
             "codes_threshold": 3,
             "headless": True,
             "debug": False,
-            "credentials_path": "./secrets/login_credentials.txt",
-            "bypass_codes_path": "./secrets/bypass_codes.txt",
-            "log_path": "./uoftbookingbot/logs",
-            "screenshots_path": "./uoftbookingbot/screenshots",
+            "credentials_path": self.credentials_path,
+            "bypass_codes_path": self.bypass_codes_path,
+            "log_path": self.log_path,
+            "screenshots_path": self.screenshots_path,
             "ui_signaler": self.ui_log_signaler,
         }
 
@@ -129,12 +160,32 @@ class BookingApp(QMainWindow):
         event.accept()
 
 
-def run_app():
+def run_app(
+    activities: dict[str, dict[str, str]],
+    credentials_path: str,
+    bypass_codes_path: str,
+    log_path: str,
+    screenshots_path: str,
+):
+    """Runs the PyQt application for the booking bot GUI.
+    Args:
+        activities (dict[str, dict[str, str]]): Mapping of activity names to their details.
+        credentials_path (str): Path to the credentials file.
+        bypass_codes_path (str): Path to the bypass codes file.
+        log_path (str): Path to the log directory.
+        screenshots_path (str): Path to the screenshots directory.
+    """
     # Create app
     qt_app = QApplication(sys.argv)
 
     # Create and show the main window
-    window = BookingApp()
+    window = BookingApp(
+        activities=activities,
+        credentials_path=credentials_path,
+        bypass_codes_path=bypass_codes_path,
+        log_path=log_path,
+        screenshots_path=screenshots_path,
+    )
     window.setWindowTitle("UofT Booking Bot")
     window.show()
 

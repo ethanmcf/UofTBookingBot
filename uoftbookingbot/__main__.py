@@ -1,6 +1,6 @@
 import argparse, sys
 from uoftbookingbot.activity import Activity
-from uoftbookingbot.automation.constants import ACTIVITY_IDS
+from uoftbookingbot.constants import ACTIVITIES
 from uoftbookingbot.automation.runner import run_registration_bot
 from uoftbookingbot.frontend.app import run_app
 from uoftbookingbot.constants import (
@@ -37,13 +37,12 @@ def _get_cli_args() -> argparse.Namespace:
         help="The start time of the activity given in 24-hour HH:MM format.",
         required=True,
     )
-    offset_group = parser.add_mutually_exclusive_group()
+    offset_group = parser.add_mutually_exclusive_group(required=False)
     offset_group.add_argument(
         "-o",
         "--offset",
-        help="The offset of how early registration opens up given in days before the start time. Defaults to 2.",
+        help="The offset of how early registration opens up given in days before the start time.",
         type=int,
-        default=2,
     )
     offset_group.add_argument(
         "--no-wait",
@@ -78,15 +77,41 @@ def _get_cli_args() -> argparse.Namespace:
     # Get args from command-line
     args = parser.parse_args()
 
-    # Get activity id from known activities if a key name was given instead of an id
+    # Validate activity id and posting offset args:
+    #  - Must ensure that activity id is given either directly or via known activity name
+    #  - Must ensure that posting offset is given either directly, via known activity, or no-wait flag
+    #  - Posting offset cannot be negative if given
+    offset = None
     if args.activity_name:
-        args.activity_id = ACTIVITY_IDS.get(args.activity_name)
-        if not args.activity_id:
+        # Get desired activity from known activities
+        desired_activity = ACTIVITIES.get(args.activity_name)
+        if desired_activity is None:
             raise Exception("Invalid drop-in activity given.")
 
-    # Nullify posting offset if no wait flag was given
-    if args.no_wait:
-        args.offset = None
+        # Use activity id from known activity
+        args.activity_id = desired_activity.get("id")
+        if args.activity_id is None:
+            raise Exception("No activity ID found for given activity name.")
+
+        # Use saved offset for activity if no offset given
+        if args.offset is None and not args.no_wait:
+            if "posting_offset" not in desired_activity:
+                raise Exception(
+                    "No offset given and no saved offset for activity. Please provide a posting offset or use the --no-wait flag."
+                )
+            offset = desired_activity.get("posting_offset")
+    elif args.offset is None and not args.no_wait:
+        # No activity name given to look up offset, and no offset or no-wait flag given
+        raise Exception(
+            "No offset given. Please provide a posting offset or use the --no-wait flag."
+        )
+    elif args.offset is not None and args.offset < 0:
+        raise Exception("Offset cannot be negative.")
+
+    # Set the final posting offset value to use
+    if args.offset is not None:
+        offset = args.offset
+    args.offset = offset
 
     return args
 
@@ -97,7 +122,13 @@ def main():
 
     if len(sys.argv) == 1:
         # Run GUI for desktop app
-        run_app()
+        run_app(
+            activities=ACTIVITIES,
+            credentials_path=CREDENTIALS_PATH,
+            bypass_codes_path=BYPASS_CODES_PATH,
+            log_path=LOG_DIR_PATH,
+            screenshots_path=SCREENSHOTS_DIR_PATH,
+        )
         return
 
     # Run CLI script
