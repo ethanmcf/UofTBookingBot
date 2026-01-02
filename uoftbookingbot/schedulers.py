@@ -219,8 +219,10 @@ class _MacOSScheduler(Scheduler):
 
         now_dt_local = datetime.now().astimezone()
         now_dt_toronto = now_dt_local.astimezone(toronto_tz)
-        if activity_dt_toronto - timedelta(seconds=_BOT_START_BUFFER_SECONDS) < now_dt_toronto:
-            raise ValueError("Cannot schedule the booking bot for an activity in the past.")
+        if activity_dt_toronto < now_dt_toronto:
+            raise ValueError(
+                "Cannot schedule the bot for an activity that has already started or completed."
+            )
 
         booking_dt_toronto = None
         if activity.posting_offset is not None:

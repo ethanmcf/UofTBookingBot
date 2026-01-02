@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import os
 from uoftbookingbot.activity import Activity
 from uoftbookingbot.constants import LOG_DIR_PATH
@@ -14,6 +15,7 @@ from PyQt6.QtWidgets import (
     QTimeEdit,
     QComboBox,
     QLabel,
+    QMessageBox,
 )
 from PyQt6 import QtGui
 from PyQt6.QtCore import QTime, Qt, pyqtSignal
@@ -57,7 +59,7 @@ class RunPage(BasePage):
 
         label_style = f"color: {Colors.TEXT_MAIN}"
 
-        # Time Sectection
+        # Time Section
         time_label = QLabel("Time")
         time_label.setStyleSheet(label_style)
         self.form_layout.addWidget(time_label)
@@ -98,6 +100,23 @@ class RunPage(BasePage):
         self.master_layout.setColumnStretch(0, 1)
         self.master_layout.setColumnStretch(2, 1)
         self.page_layout.addLayout(self.master_layout)
+
+        # Style message boxes
+        self.setStyleSheet(
+            f"""
+            QMessageBox QLabel {{ 
+                color: {Colors.TEXT_MAIN}; 
+            }} 
+            QMessageBox QPushButton {{
+                color: {Colors.TEXT_MAIN};
+                background-color: #eeeeee;
+                border: 1px solid #aaaaaa;
+                border-radius: 4px;
+                padding: 5px 15px;
+                min-width: 70px;
+            }}
+            """
+        )
 
     # --- Component functions ---
     def createLoading(self):
@@ -310,6 +329,7 @@ class RunPage(BasePage):
         """Shows logging text and signals to start bot"""
         selected_date, selected_time, selected_sport = self._get_form_data()
         if selected_sport not in self.activities:
+            QMessageBox.warning(self, "Selection Error", "Please select a sport.")
             return
 
         self.loading_container.show()
@@ -330,11 +350,8 @@ class RunPage(BasePage):
     def on_schedule_click(self):
         selected_date, selected_time, selected_sport = self._get_form_data()
         if selected_sport not in self.activities:
+            QMessageBox.warning(self, "Selection Error", "Please select a sport.")
             return
-
-        error_log_path = os.path.join(LOG_DIR_PATH, "error.log")
-        output_log_path = os.path.join(LOG_DIR_PATH, "info.log")
-        scheduler = get_scheduler(error_log_path, output_log_path)
 
         activity = Activity(
             id=self.activities[selected_sport]["id"],
@@ -342,11 +359,38 @@ class RunPage(BasePage):
             start_time=selected_time,
             posting_offset=self.activities[selected_sport].get("posting_offset"),
         )
+        error_log_path = os.path.join(LOG_DIR_PATH, "error.log")
+        output_log_path = os.path.join(LOG_DIR_PATH, "info.log")
+        scheduler = get_scheduler(error_log_path, output_log_path)
         try:
             scheduler.schedule_activity(activity)
+
+            # Calculate booking datetime for user info
+            booking_datetime = None
+            if activity.posting_offset is not None:
+                booking_datetime = datetime.strptime(
+                    f"{selected_date} {selected_time}", "%Y-%m-%d %H:%M"
+                ) - timedelta(days=activity.posting_offset)
+
+            # Show success message
+            success_message = f"Successfully scheduled the bot to book the following activity: \n\n {selected_sport} at {selected_date} {selected_time}\n\n"
+            if booking_datetime is None or booking_datetime <= datetime.now():
+                success_message += f"The bot will attempt to run within the next minute. Please ensure your computer is on and connected to the internet."
+            else:
+                success_message += f"Please ensure your computer is on and connected to the internet by {booking_datetime.strftime('%Y-%m-%d %H:%M')} to allow the bot to run successfully."
+            QMessageBox.information(self, "Success", success_message)
+        except ValueError as e:
+            QMessageBox.critical(
+                self,
+                "Scheduling Failed",
+                str(e),
+            )
         except Exception as e:
-            # TODO: handle scheduling errors
-            pass
+            QMessageBox.critical(
+                self,
+                "Scheduling Failed",
+                "An unexpected error occurred while scheduling the activity. Please try again.",
+            )
 
     def on_log_update(self, message):
         """Updates loading message when bot logs new info"""
