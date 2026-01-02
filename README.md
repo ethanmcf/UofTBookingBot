@@ -150,3 +150,10 @@ This generates a standalone folder in `dist` named `UofTBookingBot` that can be 
 >  --collect-data playwright_stealth \
 >  entry.py
 > ```
+
+### Run download website
+
+```bash
+cd web
+npm run dev
+```
