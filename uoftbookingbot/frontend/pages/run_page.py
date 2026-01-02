@@ -1,3 +1,6 @@
+import os
+from uoftbookingbot.activity import Activity
+from uoftbookingbot.constants import LOG_DIR_PATH
 from uoftbookingbot.frontend.pages.base_page import BasePage
 from uoftbookingbot.frontend.components.primary_button import PrimaryButton
 from uoftbookingbot.frontend.components.secondary_button import SecondaryButton
@@ -15,6 +18,8 @@ from PyQt6.QtWidgets import (
 from PyQt6 import QtGui
 from PyQt6.QtCore import QTime, Qt, pyqtSignal
 from PyQt6.QtGui import QTextCharFormat, QColor, QMovie, QPixmap
+
+from uoftbookingbot.schedulers import get_scheduler
 
 
 class RunPage(BasePage):
@@ -323,8 +328,25 @@ class RunPage(BasePage):
         self.run_btn.btn.setEnabled(False)
 
     def on_schedule_click(self):
-        """Handle schedlue log/signaling here"""
-        pass
+        selected_date, selected_time, selected_sport = self._get_form_data()
+        if selected_sport not in self.activities:
+            return
+
+        error_log_path = os.path.join(LOG_DIR_PATH, "error.log")
+        output_log_path = os.path.join(LOG_DIR_PATH, "info.log")
+        scheduler = get_scheduler(error_log_path, output_log_path)
+
+        activity = Activity(
+            id=self.activities[selected_sport]["id"],
+            start_date=selected_date,
+            start_time=selected_time,
+            posting_offset=self.activities[selected_sport].get("posting_offset"),
+        )
+        try:
+            scheduler.schedule_activity(activity)
+        except Exception as e:
+            # TODO: handle scheduling errors
+            pass
 
     def on_log_update(self, message):
         """Updates loading message when bot logs new info"""
