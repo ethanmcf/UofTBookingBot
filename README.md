@@ -105,7 +105,7 @@ python -m tests.automation.test_captcha_solver
 
 ## Scheduler
 
-Useful commands for debugging MacOS scheduling:
+Useful bash commands for debugging MacOS scheduling:
 
 ```bash
 # finds the job ID of a previously scheduled activity
@@ -119,6 +119,11 @@ launchctl kickstart -p gui/$(id -u)/<JOB_ID>
 
 # unschedules a job
 launchctl bootout gui/$(id -u)/<JOB_ID>
+
+# unschedules all uoft related jobs
+for job in $(launchctl list | grep "com.uoftbookingbot" | awk '{print $3}'); do
+  launchctl bootout gui/$(id -u)/$job
+done
 ```
 
 ## Run Main Application from terminal
