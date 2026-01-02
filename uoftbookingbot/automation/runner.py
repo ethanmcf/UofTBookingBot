@@ -19,7 +19,7 @@ def run_registration_bot(
     log_path: str,
     screenshots_path: str,
     ui_signaler: Optional[LogSignaler],
-) -> bool:
+) -> None:
     """Main entry point for running the registration bot.
 
     Args:
@@ -61,8 +61,6 @@ def run_registration_bot(
         )
     except Exception as e:
         logger.log_error(e)
-        raise e from None
+        raise
     finally:
         logger.shutdown()
-
-    return True

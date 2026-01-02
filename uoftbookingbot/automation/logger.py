@@ -89,7 +89,6 @@ class Logger:
             + "-" * title_width
             + "\n"
             + textwrap.fill(str(e), width=message_width)
-            + "\n"
         )
         print(box)
 

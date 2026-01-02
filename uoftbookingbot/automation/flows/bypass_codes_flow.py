@@ -65,7 +65,7 @@ def run_bypass_codes_retrieval_flow(
         except Exception as e:
             if debug:
                 logger.screenshot(page)
-            raise e from None
+            raise
         finally:
             context.close()
             browser.close()

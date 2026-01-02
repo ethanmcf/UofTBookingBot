@@ -140,19 +140,23 @@ def main():
         posting_offset=args.offset,
     )
 
-    user_is_registered = run_registration_bot(
-        activity=activity_to_book,
-        time_limit=args.time_limit,
-        codes_threshold=args.codes_threshold,
-        headless=not args.visible,
-        debug=args.debug,
-        credentials_path=CREDENTIALS_PATH,
-        bypass_codes_path=BYPASS_CODES_PATH,
-        log_path=LOG_DIR_PATH,
-        screenshots_path=SCREENSHOTS_DIR_PATH,
-        ui_signaler=None,
-    )
-    sys.exit(0 if user_is_registered else 1)
+    try:
+        run_registration_bot(
+            activity=activity_to_book,
+            time_limit=args.time_limit,
+            codes_threshold=args.codes_threshold,
+            headless=not args.visible,
+            debug=args.debug,
+            credentials_path=CREDENTIALS_PATH,
+            bypass_codes_path=BYPASS_CODES_PATH,
+            log_path=LOG_DIR_PATH,
+            screenshots_path=SCREENSHOTS_DIR_PATH,
+            ui_signaler=None,
+        )
+    except Exception:
+        sys.exit(1)
+
+    sys.exit(0)
 
 
 if __name__ == "__main__":
