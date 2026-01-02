@@ -21,16 +21,6 @@ class Scheduler:
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def __init__(self, error_log_path: str, output_log_path: str) -> None:
-        """Initializes the scheduler with paths for error and output logs.
-
-        Args:
-            error_log_path: Path to the error log file.
-            output_log_path: Path to the output log file.
-        """
-        ...
-
-    @abstractmethod
     def schedule_activity(self, activity: Activity) -> None:
         """Schedules the booking bot to book the specified activity.
         If the activity is already scheduled, overwrite the existing schedule.
@@ -68,9 +58,7 @@ class Scheduler:
 class _MacOSScheduler(Scheduler):
     """Scheduler implementation for macOS using launchd."""
 
-    def __init__(self, error_log_path: str, output_log_path: str) -> None:
-        self.error_log_path = error_log_path
-        self.output_log_path = output_log_path
+    def __init__(self) -> None:
         self.agent_dir = os.path.expanduser("~/Library/LaunchAgents")
         self.label_prefix = "com.uoftbookingbot"
 
@@ -123,8 +111,6 @@ class _MacOSScheduler(Scheduler):
                 "Hour": booking_dt_toronto.hour,
                 "Minute": booking_dt_toronto.minute,
             },
-            "StandardOutPath": self.output_log_path,
-            "StandardErrorPath": self.error_log_path,
             "RunAtLoad": False,
         }
 
@@ -237,12 +223,12 @@ class _MacOSScheduler(Scheduler):
         return booking_dt_toronto
 
 
-def get_scheduler(error_log_path: str, output_log_path: str) -> Scheduler:
+def get_scheduler() -> Scheduler:
     """Factory function to get the appropriate scheduler based on the OS."""
 
     os_name = platform.system()
     if os_name == "Darwin":
-        return _MacOSScheduler(error_log_path=error_log_path, output_log_path=output_log_path)
+        return _MacOSScheduler()
     elif os_name == "Windows":
         raise NotImplementedError("Windows Task Scheduler support coming soon.")
     else:

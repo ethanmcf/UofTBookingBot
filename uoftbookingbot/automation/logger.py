@@ -1,4 +1,4 @@
-import logging, os, textwrap, shutil
+import logging, os, shutil
 from datetime import datetime
 from PyQt6.QtCore import pyqtSignal, QObject
 
@@ -72,7 +72,6 @@ class Logger:
         # Pretty print box for the terminal
         title = "ERROR"
         title_width = 20
-        message_width = 80
         f_c, title_len = " ", len(title)
         f_len = (title_width - title_len - 2) // 2
         ex = (title_width - title_len - 2) % 2
@@ -88,7 +87,7 @@ class Logger:
             + "\n"
             + "-" * title_width
             + "\n"
-            + textwrap.fill(str(e), width=message_width)
+            + str(e)
         )
         print(box)
 

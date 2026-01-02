@@ -1,7 +1,5 @@
 from datetime import datetime, timedelta
-import os
 from uoftbookingbot.activity import Activity
-from uoftbookingbot.constants import LOG_DIR_PATH
 from uoftbookingbot.frontend.pages.base_page import BasePage
 from uoftbookingbot.frontend.components.primary_button import PrimaryButton
 from uoftbookingbot.frontend.components.secondary_button import SecondaryButton
@@ -359,9 +357,7 @@ class RunPage(BasePage):
             start_time=selected_time,
             posting_offset=self.activities[selected_sport].get("posting_offset"),
         )
-        error_log_path = os.path.join(LOG_DIR_PATH, "error.log")
-        output_log_path = os.path.join(LOG_DIR_PATH, "info.log")
-        scheduler = get_scheduler(error_log_path, output_log_path)
+        scheduler = get_scheduler()
         try:
             scheduler.schedule_activity(activity)
 
