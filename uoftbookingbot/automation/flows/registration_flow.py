@@ -207,7 +207,6 @@ def run_registration_flow(
     activity: Activity,
     login_manager: LoginManager,
     logger: Logger,
-    # posting_offset: Optional[int] = None,
     time_limit: int = 60,
     user_agent: str | None = None,
     headless: bool = True,
@@ -360,7 +359,7 @@ def run_registration_flow(
         except Exception as e:
             if debug:
                 logger.screenshot(page)
-            raise e from None
+            raise
         finally:
             context.close()
             browser.close()

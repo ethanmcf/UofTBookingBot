@@ -63,7 +63,8 @@ python -m uoftbookingbot -a golf -d 2025-03-26 -t 11:00
 There are multiple customizations available that I don't feel like explaining right now, so here is the help menu instead (found by running `python -m uoftbookingbot -h`).
 
 ```
-usage: __main__.py [-h] (-i ACTIVITY_ID | -a ACTIVITY_NAME) -d DATE -t TIME [-o OFFSET | --no-wait] [-c CODES_THRESHOLD] [-l TIME_LIMIT] [--visible] [--debug]
+usage: __main__.py [-h] (-i ACTIVITY_ID | -a ACTIVITY_NAME) -d DATE -t TIME [-o OFFSET | --no-wait] [-c CODES_THRESHOLD] [-l TIME_LIMIT] [--visible]
+                   [--debug]
 
 UofT Drop-in Activity Booking Bot. Run with no arguments to open the GUI, or with arguments to run the CLI booking script.
 
@@ -76,7 +77,7 @@ options:
   -d DATE, --date DATE  The start date of the activity given in YYYY-MM-DD format.
   -t TIME, --time TIME  The start time of the activity given in 24-hour HH:MM format.
   -o OFFSET, --offset OFFSET
-                        The offset of how early registration opens up given in days before the start time. Defaults to 2.
+                        The offset of how early registration opens up given in days before the start time.
   --no-wait             Runs bot immediately rather than waiting until posting date.
   -c CODES_THRESHOLD, --codes-threshold CODES_THRESHOLD
                         The minimum number of codes needed before fetching new ones. Defaults to 3.
@@ -104,7 +105,7 @@ python -m tests.automation.test_captcha_solver
 
 ## Scheduler
 
-Useful commands for debugging MacOS scheduling:
+Useful bash commands for debugging MacOS scheduling:
 
 ```bash
 # finds the job ID of a previously scheduled activity
@@ -118,6 +119,11 @@ launchctl kickstart -p gui/$(id -u)/<JOB_ID>
 
 # unschedules a job
 launchctl bootout gui/$(id -u)/<JOB_ID>
+
+# unschedules all uoft related jobs
+for job in $(launchctl list | grep "com.uoftbookingbot" | awk '{print $3}'); do
+  launchctl bootout gui/$(id -u)/$job
+done
 ```
 
 ## Run Main Application from terminal

@@ -1,8 +1,9 @@
+from datetime import datetime, timedelta
+from uoftbookingbot.activity import Activity
 from uoftbookingbot.frontend.pages.base_page import BasePage
 from uoftbookingbot.frontend.components.primary_button import PrimaryButton
 from uoftbookingbot.frontend.components.secondary_button import SecondaryButton
 from uoftbookingbot.frontend.theme import Colors
-from uoftbookingbot.automation.constants import ACTIVITY_IDS
 from PyQt6.QtWidgets import (
     QWidget,
     QHBoxLayout,
@@ -12,17 +13,28 @@ from PyQt6.QtWidgets import (
     QTimeEdit,
     QComboBox,
     QLabel,
+    QMessageBox,
 )
 from PyQt6 import QtGui
 from PyQt6.QtCore import QTime, Qt, pyqtSignal
 from PyQt6.QtGui import QTextCharFormat, QColor, QMovie, QPixmap
 
+from uoftbookingbot.schedulers import get_scheduler
+
 
 class RunPage(BasePage):
     start_run_signal = pyqtSignal(dict)
+    activities: dict[str, dict[str, str]]
 
-    def __init__(self):
+    def __init__(self, activities: dict[str, dict[str, str]]):
+        """Page to run and schedule the bot.
+
+        Args:
+            activities (dict[str, dict[str, str]]): Mapping of activity names to their details.
+        """
         super().__init__()
+        self.activities = activities
+
         # Grid layout
         self.master_layout = QGridLayout()
 
@@ -45,7 +57,7 @@ class RunPage(BasePage):
 
         label_style = f"color: {Colors.TEXT_MAIN}"
 
-        # Time Sectection
+        # Time Section
         time_label = QLabel("Time")
         time_label.setStyleSheet(label_style)
         self.form_layout.addWidget(time_label)
@@ -86,6 +98,23 @@ class RunPage(BasePage):
         self.master_layout.setColumnStretch(0, 1)
         self.master_layout.setColumnStretch(2, 1)
         self.page_layout.addLayout(self.master_layout)
+
+        # Style message boxes
+        self.setStyleSheet(
+            f"""
+            QMessageBox QLabel {{ 
+                color: {Colors.TEXT_MAIN}; 
+            }} 
+            QMessageBox QPushButton {{
+                color: {Colors.TEXT_MAIN};
+                background-color: #eeeeee;
+                border: 1px solid #aaaaaa;
+                border-radius: 4px;
+                padding: 5px 15px;
+                min-width: 70px;
+            }}
+            """
+        )
 
     # --- Component functions ---
     def createLoading(self):
@@ -242,7 +271,7 @@ class RunPage(BasePage):
     def createDropDown(self):
         self.sport_dropdown = QComboBox()
         self.sport_dropdown.setMinimumHeight(45)
-        sports = ["Select ..."] + list(ACTIVITY_IDS.keys())
+        sports = ["Select ..."] + list(self.activities.keys())
         self.sport_dropdown.addItems(sports)
 
         self.sport_dropdown.setStyleSheet(
@@ -281,19 +310,95 @@ class RunPage(BasePage):
         """
         )
 
+    def _get_form_data(self):
+        """Extracts and formats current selection from UI components.
+
+        Returns:
+            tuple: (date_str, time_str, sport_str)
+        """
+        selected_date = self.calendar.selectedDate().toString("yyyy-MM-dd")
+        selected_time = self.time_picker.time().toString("HH:mm")
+        selected_sport = self.sport_dropdown.currentText()
+
+        return (selected_date, selected_time, selected_sport)
+
     # --- Bot functions ---
     def on_run_click(self):
         """Shows logging text and signals to start bot"""
+        selected_date, selected_time, selected_sport = self._get_form_data()
+        if selected_sport not in self.activities:
+            QMessageBox.warning(self, "Selection Error", "Please select a sport.")
+            return
+
         self.loading_container.show()
         self.movie = QMovie("uoftbookingbot/frontend/assets/loading.gif")
         self.loading_visual.setMovie(self.movie)
         self.movie.start()
-        self.start_run_signal.emit(dict())
+
+        activity_args = {
+            "start_date": selected_date,
+            "start_time": selected_time,
+            "id": self.activities[selected_sport]["id"],
+            "posting_offset": self.activities[selected_sport].get("posting_offset"),
+        }
+        self.start_run_signal.emit(activity_args)
+
         self.run_btn.btn.setEnabled(False)
 
     def on_schedule_click(self):
-        """Handle schedlue log/signaling here"""
-        pass
+        selected_date, selected_time, selected_sport = self._get_form_data()
+        if selected_sport not in self.activities:
+            QMessageBox.warning(self, "Selection Error", "Please select a sport.")
+            return
+
+        activity = Activity(
+            id=self.activities[selected_sport]["id"],
+            start_date=selected_date,
+            start_time=selected_time,
+            posting_offset=self.activities[selected_sport].get("posting_offset"),
+        )
+        scheduler = get_scheduler()
+        try:
+            scheduler.schedule_activity(activity)
+
+            # Calculate booking datetime for user info
+            booking_datetime = None
+            if activity.posting_offset is not None:
+                booking_datetime = datetime.strptime(
+                    f"{selected_date} {selected_time}", "%Y-%m-%d %H:%M"
+                ) - timedelta(days=activity.posting_offset, seconds=300)
+
+            # Show success message
+            success_message = (
+                f"Successfully scheduled the bot to book the following activity:"
+                f"\n\n"
+                f"{selected_sport} at {selected_date} {selected_time}"
+                f"\n\n"
+            )
+            if booking_datetime is None or booking_datetime <= datetime.now():
+                success_message += (
+                    f"The booking period appears to be open, so the bot will attempt to run within"
+                    f" the next minute. Please ensure your computer is on and connected to the internet."
+                )
+            else:
+                success_message += (
+                    f"The bot will attempt to run on {booking_datetime.strftime('%Y-%m-%d')} at"
+                    f" {booking_datetime.strftime('%H:%M')}. Please ensure your computer is on and"
+                    f" connected to the internet at this time."
+                )
+            QMessageBox.information(self, "Success", success_message)
+        except ValueError as e:
+            QMessageBox.critical(
+                self,
+                "Scheduling Failed",
+                str(e),
+            )
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Scheduling Failed",
+                "An unexpected error occurred while scheduling the activity. Please try again.",
+            )
 
     def on_log_update(self, message):
         """Updates loading message when bot logs new info"""
