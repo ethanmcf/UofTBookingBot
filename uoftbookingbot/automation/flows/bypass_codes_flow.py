@@ -2,7 +2,7 @@ import re
 from typing import Optional
 from playwright.sync_api import sync_playwright, expect
 from playwright_stealth import Stealth
-from uoftbookingbot.automation.common import complete_utorid_login
+from uoftbookingbot.automation.flows.common import complete_utorid_login
 from uoftbookingbot.automation.login_manager import LoginManager
 from uoftbookingbot.automation.constants import DEFAULT_TIMEOUT_MILLISECONDS
 from uoftbookingbot.automation.logger import Logger

@@ -4,7 +4,7 @@ from playwright.sync_api import sync_playwright, expect, Page
 from playwright_stealth import Stealth
 from uoftbookingbot.activity import Activity
 from uoftbookingbot.automation.captcha_solver import CaptchaSolver
-from uoftbookingbot.automation.common import complete_utorid_login
+from uoftbookingbot.automation.flows.common import complete_utorid_login
 from uoftbookingbot.automation.login_manager import LoginManager
 from uoftbookingbot.automation.logger import Logger
 from uoftbookingbot.automation.constants import DEFAULT_TIMEOUT_MILLISECONDS
