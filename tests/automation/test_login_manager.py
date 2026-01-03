@@ -5,10 +5,10 @@ from uoftbookingbot.automation.login_manager import LoginManager
 
 
 @pytest.fixture
-def login_manager() -> LoginManager:
+def login_manager(tmp_path) -> LoginManager:
 
     # Create folder and files if they do not exist
-    folder_path = "./tests/resources"
+    folder_path = tmp_path / "resources"
     if not os.path.exists(folder_path):
         # Folder doesn't exist, create it
         os.makedirs(folder_path)
