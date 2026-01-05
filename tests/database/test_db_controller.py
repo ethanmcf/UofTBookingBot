@@ -45,12 +45,12 @@ class TestDatabase:
         # Verify it returns None when empty
         assert db.consume_bypass_code() is None
 
-    def test_delete_security_data(self, db):
-        """Tests that all security-sensitive information is wiped correctly."""
+    def test_delete_user_data(self, db):
+        """Tests that all sensitive information is wiped correctly."""
         db.save_credentials("admin", "1234")
         db.save_bypass_codes(["code1"])
 
-        db.delete_security_data()
+        db.delete_user_data()
 
         utorid, password = db.get_credentials()
         assert utorid is None

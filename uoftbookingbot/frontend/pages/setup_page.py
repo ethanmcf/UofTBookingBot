@@ -1,11 +1,12 @@
-from uoftbookingbot.frontend.theme import Colors
 from uoftbookingbot.frontend.pages.base_page import BasePage
+from uoftbookingbot.frontend.theme import Colors
 from uoftbookingbot.frontend.components.primary_button import PrimaryButton
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QLineEdit
+from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QLineEdit, QPushButton
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QPalette, QPixmap
-from PyQt6.QtCore import QMargins
+from PyQt6.QtGui import QColor, QPalette, QPixmap, QIcon
+from PyQt6.QtCore import QMargins, QSize
 from pyqt_animated_line_edit import AnimatedLineEdit
+import textwrap
 
 
 class SetupPage(BasePage):
@@ -54,37 +55,18 @@ class SetupPage(BasePage):
         password_label.setStyleSheet(label_style)
         self.right_col.addWidget(password_label)
 
-        bypass_label = QLabel("Enter BYPASS CODE")
-        bypass_label.setStyleSheet(label_style)
-        bypass_row = self.createInfoBox(
-            bypass_label,
-            "uoftbookingbot/frontend/assets/info-icon.png",
-            "1) Login to https://bypass.utormfa.utoronto.ca/index.php\n"
-            "2) Click ‘Generate Bypass Codes’ button\n"
-            "3) Copy any one code into text field",
-            stretch=False,
-        )
-        self.right_col.addLayout(bypass_row)
+        # Create bypass info
+        self.bypass_label = QLabel("Enter BYPASS CODE")
+        self.bypass_label.setStyleSheet(label_style)
 
-        self.right_col.addStretch()
+        self.bypass_row = QHBoxLayout()
+        self.bypass_row.setSpacing(10)
 
-        # Add columns to split layout
-        self.split_container.addWidget(self.left_box, 1)
-        self.split_container.addWidget(self.right_box, 1)
-
-        # Add content to page and keep aligned to top
-        self.page_layout.addLayout(self.split_container)
-        self.page_layout.addStretch()
-
-    def createInfoBox(self, component, icon_path, tooltip, stretch=True):
-        self.row_layout = QHBoxLayout()
-        self.row_layout.setSpacing(10)
-
-        self.row_layout.addWidget(component, stretch=1 if stretch else 0)
+        self.bypass_row.addWidget(self.bypass_label, stretch=0)
 
         # Create the Info image
         self.info_icon = QLabel()
-        info_pixmap = QPixmap(icon_path)
+        info_pixmap = QPixmap("uoftbookingbot/frontend/assets/info-icon.png")
         self.info_icon.setPixmap(
             info_pixmap.scaled(
                 30,
@@ -95,6 +77,13 @@ class SetupPage(BasePage):
         )
 
         # Add the ToolTip to the icon
+        tooltip = textwrap.dedent(
+            """
+            1) Login to https://bypass.utormfa.utoronto.ca/index.php
+            2) Click ‘Generate Bypass Codes’ button
+            3) Copy any one code into text field
+        """
+        ).strip()
         self.info_icon.setToolTip(tooltip)
         self.info_icon.setStyleSheet(
             """
@@ -109,9 +98,18 @@ class SetupPage(BasePage):
         )
         self.info_icon.setCursor(Qt.CursorShape.PointingHandCursor)  # Feedback on hover
 
-        self.row_layout.addWidget(self.info_icon)
+        self.bypass_row.addWidget(self.info_icon)
+        self.right_col.addLayout(self.bypass_row)
 
-        return self.row_layout
+        self.right_col.addStretch()
+
+        # Add columns to split layout
+        self.split_container.addWidget(self.left_box, 1)
+        self.split_container.addWidget(self.right_box, 1)
+
+        # Add content to page and keep aligned to top
+        self.page_layout.addLayout(self.split_container)
+        self.page_layout.addStretch()
 
     def createTodoImage(self):
         self.image_label = QLabel(self.right_box)
@@ -136,7 +134,6 @@ class SetupPage(BasePage):
         INNER_FONT_SIZE = 14
         OUTER_FONT_SIZE = 10
 
-        utorid, password = self.db_controller.get_credentials()
         # Utorid input
         self.username = AnimatedLineEdit("Your utorid", self.left_box)
         self.username.setFixedSize(WIDTH, HEIGHT)
@@ -146,7 +143,6 @@ class SetupPage(BasePage):
         self.username.setPlaceholderFontSizeOuter(OUTER_FONT_SIZE)
         self.username.setPadding(QMargins(12, 0, 12, 0))
         self.username.setPlaceholderColorOutside(self.palette().color(QPalette.ColorRole.Highlight))
-        # self.username.setText(utorid if utorid else "")
         self.left_col.addWidget(self.username)
 
         # Password input
@@ -159,7 +155,6 @@ class SetupPage(BasePage):
         self.password.setPadding(QMargins(12, 0, 12, 0))
         self.password.setEchoMode(QLineEdit.EchoMode.Password)
         self.password.setPlaceholderColorOutside(self.palette().color(QPalette.ColorRole.Highlight))
-        # self.password.setText(password if password else "")
         self.left_col.addWidget(self.password)
 
         # Bypass input
@@ -176,15 +171,52 @@ class SetupPage(BasePage):
 
         # Save button
         self.save_btn = PrimaryButton("Save")
-        row = self.createInfoBox(
-            self.save_btn,
-            "uoftbookingbot/frontend/assets/lock-icon.png",
-            "End-to-end local encryption ensures your data stays private.\n"
-            "Because your info is stored only on your machine,\n"
-            "we have zero access to your sensitive credentials",
-        )
         self.save_btn.btn.clicked.connect(self.save_info)
-        self.left_col.addLayout(row, 1)
+
+        # Delete button
+        self.delete_btn = QPushButton()
+        pixmap = QPixmap("uoftbookingbot/frontend/assets/trash-icon.png")
+        self.delete_btn.setIcon(QIcon(pixmap))
+        self.delete_btn.setIconSize(QSize(30, 30))
+
+        tooltip = textwrap.dedent(
+            """
+            Because your info is stored only on your machine,
+            we have zero access to your sensitive credentials.
+            You can permanently remove all stored information 
+            at any time using this button.
+        """
+        ).strip()
+        self.delete_btn.setToolTip(tooltip)
+        self.delete_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.delete_btn.setStyleSheet(
+            """
+            QPushButton {
+                background-color: transparent;
+                border: none;
+            }
+            QPushButton:hover {
+                background-color: rgba(255, 255, 255, 30);
+                border-radius: 15px; 
+            }
+            QToolTip {
+                background-color: white;
+                color: black;
+                padding: 5px;
+                border-radius: 4px;
+                border: 1px solid #ccc;
+            }
+        """
+        )
+
+        self.delete_btn.clicked.connect(self.delete_user_data)
+
+        btn_row = QHBoxLayout()
+        btn_row.setSpacing(10)
+
+        btn_row.addWidget(self.save_btn, stretch=1)
+        btn_row.addWidget(self.delete_btn)
+        self.left_col.addLayout(btn_row, 1)
         self.left_col.addStretch()
 
     def save_info(self):
@@ -195,3 +227,8 @@ class SetupPage(BasePage):
         self.db_controller.save_credentials(utorid, password)
         if bypass != "":
             self.db_controller.save_bypass_codes([bypass])
+
+    def delete_user_data(self):
+        print(self.db_controller.get_credentials())
+        self.db_controller.delete_user_data()
+        print(self.db_controller.get_credentials())

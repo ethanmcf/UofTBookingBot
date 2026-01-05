@@ -65,7 +65,7 @@ class DBController:
             self.conn.rollback()
             raise Exception(f"Error saving credentials: {e}")
 
-    def delete_security_data(self):
+    def delete_user_data(self):
         """Wipes all bypass codes and account credentials from the database tables."""
         try:
             self.cursor.execute("DELETE FROM bypass_codes;")
