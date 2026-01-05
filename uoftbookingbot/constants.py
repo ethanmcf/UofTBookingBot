@@ -3,8 +3,8 @@ from uoftbookingbot.utils import get_resources_path
 
 DB_PATH = str(get_resources_path() / "uoftbookingbot" / "database" / "database.db")
 DB_SCHEMA_PATH = str(get_resources_path() / "uoftbookingbot" / "database" / "schema.sql")
-LOG_DIR_PATH = str(get_resources_path() / "logs")
-SCREENSHOTS_DIR_PATH = str(get_resources_path() / "debug" / "screenshots")
+LOG_DIR_PATH = str(get_resources_path() "uoftbookingbot" / "logs")
+SCREENSHOTS_DIR_PATH = str(get_resources_path() "uoftbookingbot" / "debug" / "screenshots")
 
 ACTIVITIES = {
     "golf": {"id": "5904837f-6aa4-4707-bcfb-2ece4049bae0", "posting_offset": 2},
