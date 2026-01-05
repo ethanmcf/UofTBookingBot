@@ -89,13 +89,17 @@ options:
 
 ## Testing
 
-To run tests:
+To run all tests:
 
 ```bash
 pytest
 ```
 
-Tests can be found in the `tests` folder.
+Tests can be found in the `tests` folder and can run individual files ie:
+
+```bash
+pytest tests/automation/test_logger.py
+```
 
 Although a pytest test exists for the CAPTCHA solver, visual verification can be done via the following command:
 

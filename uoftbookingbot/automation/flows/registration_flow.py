@@ -4,8 +4,8 @@ from playwright.sync_api import sync_playwright, expect, Page
 from playwright_stealth import Stealth
 from uoftbookingbot.activity import Activity
 from uoftbookingbot.automation.captcha_solver import CaptchaSolver
-from uoftbookingbot.automation.common import complete_utorid_login
-from uoftbookingbot.automation.login_manager import LoginManager
+from uoftbookingbot.automation.flows.common import complete_utorid_login
+from uoftbookingbot.database.db_controller import DBController
 from uoftbookingbot.automation.logger import Logger
 from uoftbookingbot.automation.constants import DEFAULT_TIMEOUT_MILLISECONDS
 
@@ -205,7 +205,7 @@ def _clear_cart(page: Page) -> None:
 
 def run_registration_flow(
     activity: Activity,
-    login_manager: LoginManager,
+    db_controller: DBController,
     logger: Logger,
     time_limit: int = 60,
     user_agent: str | None = None,
@@ -216,7 +216,7 @@ def run_registration_flow(
 
     Args:
         activity: The activity to register for.
-        login_manager: An instance of LoginManager to handle login credentials and bypass codes.
+        db_controller: An instance of DBController to handle login credentials and bypass codes.
         logger: Instance of Logger to handle logging
         time_limit: The maximum number of seconds to run the bot past the start time without success.
         user_agent: Optional custom user agent string for the browser.
@@ -245,7 +245,7 @@ def run_registration_flow(
 
             # Sign in with UTORID
             complete_utorid_login(
-                login_manager=login_manager,
+                db_controller=db_controller,
                 page=page,
                 recreation_login=True,
                 logger=logger,

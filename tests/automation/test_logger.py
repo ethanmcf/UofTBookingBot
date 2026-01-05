@@ -18,9 +18,9 @@ def magic_mock_page():
 
 
 @pytest.fixture
-def logger_setup() -> Logger:
-    folder_dir = "./tests/logs"
-    screenshot_dir = "./tests/screenshots"
+def logger_setup(tmp_path) -> Logger:
+    folder_dir = tmp_path / "logs"
+    screenshot_dir = tmp_path / "screenshots"
     return Logger(folder_dir, screenshot_dir, name="TestLogger"), folder_dir, screenshot_dir
 
 
