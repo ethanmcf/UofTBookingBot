@@ -1,6 +1,6 @@
 from uoftbookingbot.activity import Activity
 from uoftbookingbot.automation.constants import USER_AGENTS
-from uoftbookingbot.automation.login_manager import LoginManager
+from uoftbookingbot.database.db_controller import DBController
 from uoftbookingbot.automation.logger import Logger, LogSignaler
 from uoftbookingbot.automation.flows.bypass_codes_flow import run_bypass_codes_retrieval_flow
 from uoftbookingbot.automation.flows.registration_flow import run_registration_flow
@@ -14,8 +14,6 @@ def run_registration_bot(
     codes_threshold: int,
     headless: bool,
     debug: bool,
-    credentials_path: str,
-    bypass_codes_path: str,
     log_path: str,
     screenshots_path: str,
     ui_signaler: Optional[LogSignaler],
@@ -39,12 +37,12 @@ def run_registration_bot(
     logger = Logger(log_path, screenshots_path, ui_signaler)
 
     try:
-        login_manager = LoginManager(credentials_path, bypass_codes_path)
+        db_controller = DBController()
         user_agent = random.choice(USER_AGENTS)
 
-        if login_manager.num_codes_left() < codes_threshold:
+        if db_controller.get_num_codes_left() < codes_threshold:
             run_bypass_codes_retrieval_flow(
-                login_manager=login_manager,
+                db_controller=db_controller,
                 logger=logger,
                 user_agent=user_agent,
                 headless=headless,
@@ -52,7 +50,7 @@ def run_registration_bot(
             )
         run_registration_flow(
             activity=activity,
-            login_manager=login_manager,
+            db_controller=db_controller,
             time_limit=time_limit,
             user_agent=user_agent,
             headless=headless,
@@ -63,4 +61,5 @@ def run_registration_bot(
         logger.log_error(e)
         raise
     finally:
+        db_controller.close()
         logger.shutdown()

@@ -1,8 +1,10 @@
 import sqlite3, os
+from uoftbookingbot.constants import DB_PATH, DB_SCHEMA_PATH
 
 
 class DBController:
-    def __init__(self, db_path="database/database.db", schema_path="database/schema.sql"):
+
+    def __init__(self, db_path=DB_PATH, schema_path=DB_SCHEMA_PATH):
         """Initializes the connection and ensures the database schema is applied."""
         try:
             self.conn = sqlite3.connect(db_path)
@@ -39,16 +41,25 @@ class DBController:
             raise Exception(f"Error retrieving credentials: {e}")
 
     def save_credentials(self, utorid, password):
-        """Inserts a new user record or updates existing credentials if the user already exists."""
+        """
+        Updates credentials. If a field is empty, the existing
+        value in the database is preserved.
+        """
+        utorid_val = utorid if utorid.strip() else None
+        pass_val = password if password.strip() else None
+
+        if utorid_val is None and pass_val is None:
+            return
+
         query = """
             INSERT INTO account (id, utorid, password) 
             VALUES (1, ?, ?)
             ON CONFLICT(id) DO UPDATE SET 
-                utorid = excluded.utorid,
-                password = excluded.password;
-            """
+                utorid = COALESCE(excluded.utorid, account.utorid),
+                password = COALESCE(excluded.password, account.password);
+        """
         try:
-            self.cursor.execute(query, (utorid, password))
+            self.cursor.execute(query, (utorid_val, pass_val))
             self.conn.commit()
         except Exception as e:
             self.conn.rollback()
@@ -74,6 +85,12 @@ class DBController:
             self.conn.rollback()
             raise Exception(f"Error saving bypass codes: {e}")
 
+    def get_next_bypass_code(self):
+        """Retrieves the bypass code with the lowest ID from the system."""
+        self.cursor.execute("SELECT code FROM bypass_codes ORDER BY id ASC LIMIT 1")
+        result = self.cursor.fetchone()
+        return result[0] if result else None
+
     def consume_bypass_code(self):
         """Retrieves and permanently removes the bypass code with the lowest ID from the system."""
         try:
@@ -89,6 +106,15 @@ class DBController:
         except Exception as e:
             self.conn.rollback()
             raise Exception(f"Error consuming bypass code: {e}")
+
+    def get_num_codes_left(self):
+        """Returns the number of bypass codes left in the codes file."""
+        try:
+            self.cursor.execute("SELECT COUNT(*) FROM bypass_codes")
+            num_codes = self.cursor.fetchone()
+            return num_codes[0] if num_codes else 0
+        except Exception as e:
+            raise Exception(f"Error retrieving number of bypass codes: {e}")
 
     def add_scheduled_activity(self, activity_id, time, status="pending"):
         """Creates a new scheduled activity record with a activity_id, timestamp, and status."""

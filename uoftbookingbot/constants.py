@@ -1,8 +1,8 @@
 from uoftbookingbot.utils import get_resources_path
 
 
-CREDENTIALS_PATH = str(get_resources_path() / "secrets" / "login_credentials.txt")
-BYPASS_CODES_PATH = str(get_resources_path() / "secrets" / "bypass_codes.txt")
+DB_PATH = str(get_resources_path() / "uoftbookingbot" / "database" / "database.db")
+DB_SCHEMA_PATH = str(get_resources_path() / "uoftbookingbot" / "database" / "schema.sql")
 LOG_DIR_PATH = str(get_resources_path() / "logs")
 SCREENSHOTS_DIR_PATH = str(get_resources_path() / "debug" / "screenshots")
 

@@ -3,13 +3,13 @@ from typing import Optional
 from playwright.sync_api import sync_playwright, expect
 from playwright_stealth import Stealth
 from uoftbookingbot.automation.flows.common import complete_utorid_login
-from uoftbookingbot.automation.login_manager import LoginManager
+from uoftbookingbot.database.db_controller import DBController
 from uoftbookingbot.automation.constants import DEFAULT_TIMEOUT_MILLISECONDS
 from uoftbookingbot.automation.logger import Logger
 
 
 def run_bypass_codes_retrieval_flow(
-    login_manager: LoginManager,
+    db_controller: DBController,
     logger: Logger,
     user_agent: Optional[str] = None,
     headless: bool = True,
@@ -18,7 +18,7 @@ def run_bypass_codes_retrieval_flow(
     """Runs an automation to retrieve bypass codes using Playwright.
 
     Args:
-        login_manager: An instance of LoginManager to handle login credentials and bypass codes.
+        db_controller: An instance of DBController to handle login credentials and bypass codes.
         logger: Instance of Logger to handle logging.
         user_agent: Optional custom user agent string for the browser.
         headless: Whether to run the browser in headless mode.
@@ -41,7 +41,7 @@ def run_bypass_codes_retrieval_flow(
 
             # Sign in with UTORID
             complete_utorid_login(
-                login_manager=login_manager,
+                db_controller=db_controller,
                 page=page,
                 recreation_login=False,
                 logger=logger,
@@ -58,7 +58,7 @@ def run_bypass_codes_retrieval_flow(
             codes = re.findall(r"\d{9}", content)
             if not codes:
                 raise Exception("No codes found during bypass code extraction.")
-            login_manager.save_codes(codes)
+            db_controller.save_bypass_codes(codes)
 
             logger.log_info("Bypass codes retrieval flow completed successfully.")
 

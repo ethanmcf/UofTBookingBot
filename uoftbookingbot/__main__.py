@@ -4,8 +4,6 @@ from uoftbookingbot.constants import ACTIVITIES
 from uoftbookingbot.automation.runner import run_registration_bot
 from uoftbookingbot.frontend.app import run_app
 from uoftbookingbot.constants import (
-    BYPASS_CODES_PATH,
-    CREDENTIALS_PATH,
     LOG_DIR_PATH,
     SCREENSHOTS_DIR_PATH,
 )
@@ -124,8 +122,6 @@ def main():
         # Run GUI for desktop app
         run_app(
             activities=ACTIVITIES,
-            credentials_path=CREDENTIALS_PATH,
-            bypass_codes_path=BYPASS_CODES_PATH,
             log_path=LOG_DIR_PATH,
             screenshots_path=SCREENSHOTS_DIR_PATH,
         )
@@ -147,8 +143,6 @@ def main():
             codes_threshold=args.codes_threshold,
             headless=not args.visible,
             debug=args.debug,
-            credentials_path=CREDENTIALS_PATH,
-            bypass_codes_path=BYPASS_CODES_PATH,
             log_path=LOG_DIR_PATH,
             screenshots_path=SCREENSHOTS_DIR_PATH,
             ui_signaler=None,

@@ -4,6 +4,7 @@ from uoftbookingbot.frontend.pages.run_page import RunPage
 from uoftbookingbot.automation.bot_worker import BotWorker
 from uoftbookingbot.frontend.components.header import Header
 from uoftbookingbot.automation.logger import LogSignaler
+from uoftbookingbot.database.db_controller import DBController
 from uoftbookingbot.activity import Activity
 from PyQt6.QtWidgets import QMainWindow, QStackedWidget, QWidget, QGridLayout, QApplication
 from PyQt6.QtCore import Qt, QThread
@@ -14,34 +15,29 @@ class BookingApp(QMainWindow):
     """Main window to handle navigation of pages"""
 
     activities: dict[str, dict[str, str]]
-    credentials_path: str
-    bypass_codes_path: str
     log_path: str
     screenshots_path: str
+    db_controller: DBController
 
     def __init__(
         self,
         activities: dict[str, dict[str, str]],
-        credentials_path: str,
-        bypass_codes_path: str,
         log_path: str,
         screenshots_path: str,
+        db_controller: DBController,
     ):
         """Initializes the main booking app window.
 
         Args:
             activities (dict[str, dict[str, str]]): Mapping of activity names to their details.
-            credentials_path (str): Path to the credentials file.
-            bypass_codes_path (str): Path to the bypass codes file.
             log_path (str): Path to the log directory.
             screenshots_path (str): Path to the screenshots directory.
         """
         super().__init__()
         self.activities = activities
-        self.credentials_path = credentials_path
-        self.bypass_codes_path = bypass_codes_path
         self.log_path = log_path
         self.screenshots_path = screenshots_path
+        self.db_controller = db_controller
 
         self.setFixedSize(900, 600)
 
@@ -63,7 +59,7 @@ class BookingApp(QMainWindow):
 
         # Create pages and add to stack
         self.landing_page = LandingPage()
-        self.setup_page = SetupPage()
+        self.setup_page = SetupPage(self.db_controller)
         self.run_page = RunPage(activities=self.activities)
 
         self.page_stack.addWidget(self.landing_page)
@@ -117,8 +113,6 @@ class BookingApp(QMainWindow):
             "codes_threshold": 3,
             "headless": True,
             "debug": False,
-            "credentials_path": self.credentials_path,
-            "bypass_codes_path": self.bypass_codes_path,
             "log_path": self.log_path,
             "screenshots_path": self.screenshots_path,
             "ui_signaler": self.ui_log_signaler,
@@ -157,13 +151,12 @@ class BookingApp(QMainWindow):
         except Exception as e:
             print(f"Shutdown error: {e}")
 
+        self.db_controller.close()
         event.accept()
 
 
 def run_app(
     activities: dict[str, dict[str, str]],
-    credentials_path: str,
-    bypass_codes_path: str,
     log_path: str,
     screenshots_path: str,
 ):
@@ -178,13 +171,15 @@ def run_app(
     # Create app
     qt_app = QApplication(sys.argv)
 
+    # Create db controller
+    db_controller = DBController()
+
     # Create and show the main window
     window = BookingApp(
         activities=activities,
-        credentials_path=credentials_path,
-        bypass_codes_path=bypass_codes_path,
         log_path=log_path,
         screenshots_path=screenshots_path,
+        db_controller=db_controller,
     )
     window.setWindowTitle("UofT Booking Bot")
     window.show()

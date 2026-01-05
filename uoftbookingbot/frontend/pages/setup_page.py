@@ -9,8 +9,9 @@ from pyqt_animated_line_edit import AnimatedLineEdit
 
 
 class SetupPage(BasePage):
-    def __init__(self):
+    def __init__(self, db_controller):
         super().__init__()
+        self.db_controller = db_controller
 
         # Split layout
         self.split_container = QHBoxLayout()
@@ -135,6 +136,7 @@ class SetupPage(BasePage):
         INNER_FONT_SIZE = 14
         OUTER_FONT_SIZE = 10
 
+        utorid, password = self.db_controller.get_credentials()
         # Utorid input
         self.username = AnimatedLineEdit("Your utorid", self.left_box)
         self.username.setFixedSize(WIDTH, HEIGHT)
@@ -144,6 +146,7 @@ class SetupPage(BasePage):
         self.username.setPlaceholderFontSizeOuter(OUTER_FONT_SIZE)
         self.username.setPadding(QMargins(12, 0, 12, 0))
         self.username.setPlaceholderColorOutside(self.palette().color(QPalette.ColorRole.Highlight))
+        # self.username.setText(utorid if utorid else "")
         self.left_col.addWidget(self.username)
 
         # Password input
@@ -156,6 +159,7 @@ class SetupPage(BasePage):
         self.password.setPadding(QMargins(12, 0, 12, 0))
         self.password.setEchoMode(QLineEdit.EchoMode.Password)
         self.password.setPlaceholderColorOutside(self.palette().color(QPalette.ColorRole.Highlight))
+        # self.password.setText(password if password else "")
         self.left_col.addWidget(self.password)
 
         # Bypass input
@@ -179,5 +183,15 @@ class SetupPage(BasePage):
             "Because your info is stored only on your machine,\n"
             "we have zero access to your sensitive credentials",
         )
+        self.save_btn.btn.clicked.connect(self.save_info)
         self.left_col.addLayout(row, 1)
         self.left_col.addStretch()
+
+    def save_info(self):
+        utorid = self.username.text()
+        password = self.password.text()
+        bypass = self.bypass.text()
+
+        self.db_controller.save_credentials(utorid, password)
+        if bypass != "":
+            self.db_controller.save_bypass_codes([bypass])

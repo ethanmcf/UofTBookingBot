@@ -1,10 +1,13 @@
-from uoftbookingbot.automation.login_manager import LoginManager
 from uoftbookingbot.automation.logger import Logger
+from uoftbookingbot.database.db_controller import DBController
 from playwright.sync_api import Page
 
 
 def complete_utorid_login(
-    login_manager: LoginManager, page: Page, recreation_login: bool, logger: Logger
+    db_controller: DBController,
+    page: Page,
+    recreation_login: bool,
+    logger: Logger,
 ) -> None:
     """Completes the UTORID login process, including MFA via bypass code."""
 
@@ -15,7 +18,7 @@ def complete_utorid_login(
         page.get_by_role("button", name="school Log in with UTORID").click()
 
     # Sign in with UTORID
-    utorid, password = login_manager.get_credentials()
+    utorid, password = db_controller.get_credentials()
     page.get_by_role("textbox", name="UTORid / JOINid").click()
     page.get_by_role("textbox", name="UTORid / JOINid").fill(utorid)
     page.locator("#password").click()
@@ -24,7 +27,7 @@ def complete_utorid_login(
 
     # Complete multi-factor authentication (MFA)
     logger.log_info("Completing multi-factor authentication...")
-    bypass_code = login_manager.get_code()
+    bypass_code = db_controller.consume_bypass_code()
     page.get_by_role("link", name="Other options").click()
     page.get_by_role("link", name="Bypass code Enter a code from").click()
     page.get_by_role("textbox", name="Bypass code").click()

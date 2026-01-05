@@ -64,3 +64,17 @@ class TestDatabase:
 
         assert len(activities) == 1
         assert activities[0][1] == "golf"
+
+    def test_get_num_codes_left(self, db):
+        """Tests that the code counter accurately reflects the database state."""
+        assert db.get_num_codes_left() == 0
+
+        test_codes = ["11111111", "22222222", "33333333"]
+        db.save_bypass_codes(test_codes)
+        assert db.get_num_codes_left() == 3
+
+        db.consume_bypass_code()
+        assert db.get_num_codes_left() == 2
+
+        db.delete_security_data()
+        assert db.get_num_codes_left() == 0
