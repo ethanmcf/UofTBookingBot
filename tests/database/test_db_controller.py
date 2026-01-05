@@ -76,5 +76,5 @@ class TestDatabase:
         db.consume_bypass_code()
         assert db.get_num_codes_left() == 2
 
-        db.delete_security_data()
+        db.delete_user_data()
         assert db.get_num_codes_left() == 0
