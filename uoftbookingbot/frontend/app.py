@@ -1,5 +1,5 @@
 from uoftbookingbot.frontend.pages.landing_page import LandingPage
-from uoftbookingbot.frontend.pages.setup_page import SetupPage
+from uoftbookingbot.frontend.pages.setup_page.setup_page import SetupPage
 from uoftbookingbot.frontend.pages.run_page import RunPage
 from uoftbookingbot.automation.bot_worker import BotWorker
 from uoftbookingbot.frontend.components.header import Header

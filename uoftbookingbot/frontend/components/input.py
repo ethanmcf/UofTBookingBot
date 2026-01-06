@@ -4,14 +4,14 @@ from PyQt6.QtCore import Qt, QPropertyAnimation, QRect, QEasingCurve, QPoint
 
 
 class Input(QWidget):
-    def __init__(self, label_text=""):
+    def __init__(self, label_text="", width=490):
         super().__init__()
         self.setMinimumHeight(65)
         self.label_text = label_text
 
         # Input field
         self.input_field = QLineEdit(self)
-        self.input_field.setGeometry(0, 10, 515, 45)
+        self.input_field.setGeometry(0, 10, width, 45)
         self.input_field.setStyleSheet(
             f"""
             QLineEdit {{
