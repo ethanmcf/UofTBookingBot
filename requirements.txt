@@ -7,6 +7,5 @@ pydub==0.25.1
 SpeechRecognition==3.14.4
 tzdata==2025.3
 PyQt6==6.4.2
-pyqt-animated-line-edit==1.0.1
 pyinstaller==5.13.2
 pyinstaller-hooks-contrib==2025.11
