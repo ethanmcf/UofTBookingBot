@@ -3,10 +3,6 @@ from uoftbookingbot.activity import Activity
 from uoftbookingbot.constants import ACTIVITIES
 from uoftbookingbot.automation.runner import run_registration_bot
 from uoftbookingbot.frontend.app import run_app
-from uoftbookingbot.constants import (
-    LOG_DIR_PATH,
-    SCREENSHOTS_DIR_PATH,
-)
 
 
 def _get_cli_args() -> argparse.Namespace:
@@ -120,11 +116,7 @@ def main():
 
     if len(sys.argv) == 1:
         # Run GUI for desktop app
-        run_app(
-            activities=ACTIVITIES,
-            log_path=LOG_DIR_PATH,
-            screenshots_path=SCREENSHOTS_DIR_PATH,
-        )
+        run_app()
         return
 
     # Run CLI script
@@ -143,8 +135,6 @@ def main():
             codes_threshold=args.codes_threshold,
             headless=not args.visible,
             debug=args.debug,
-            log_path=LOG_DIR_PATH,
-            screenshots_path=SCREENSHOTS_DIR_PATH,
             ui_signaler=None,
         )
     except Exception:

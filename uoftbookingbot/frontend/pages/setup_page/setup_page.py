@@ -6,9 +6,9 @@ from PyQt6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
 
 
 class SetupPage(BasePage):
-    def __init__(self, db_controller: DBController):
+    def __init__(self):
         super().__init__()
-        self.db_controller = db_controller
+        self.db_controller = DBController()
 
         # Initial data
         utorid, password = self.db_controller.get_credentials()
@@ -57,3 +57,6 @@ class SetupPage(BasePage):
         # Main Page Assembly
         self.page_layout.addLayout(self.split_container)
         self.page_layout.addStretch()
+
+    def cleanup(self):
+        self.db_controller.close()

@@ -7,8 +7,12 @@ from uoftbookingbot.frontend.pages.run_page.calendar import Calendar
 from uoftbookingbot.frontend.pages.run_page.sport_dropdown import SportDropdown
 from uoftbookingbot.frontend.pages.run_page.time_picker import TimePicker
 from uoftbookingbot.frontend.pages.run_page.status_indicator import StatusIndicator
+from uoftbookingbot.automation.logger import LogSignaler
+from uoftbookingbot.automation.bot_worker import BotWorker
 from uoftbookingbot.schedulers import get_scheduler
 from uoftbookingbot.frontend.theme import Colors
+from uoftbookingbot.constants import ACTIVITIES
+from PyQt6.QtCore import Qt, pyqtSignal, QThread, QCoreApplication
 from PyQt6.QtWidgets import (
     QWidget,
     QHBoxLayout,
@@ -17,21 +21,20 @@ from PyQt6.QtWidgets import (
     QLabel,
     QMessageBox,
 )
-from PyQt6.QtCore import Qt, pyqtSignal
 
 
 class RunPage(BasePage):
     start_run_signal = pyqtSignal(dict)
-    activities: dict[str, dict[str, str]]
 
-    def __init__(self, activities: dict[str, dict[str, str]]):
+    def __init__(self):
         """Page to run and schedule the bot.
 
         Args:
             activities (dict[str, dict[str, str]]): Mapping of activity names to their details.
         """
         super().__init__()
-        self.activities = activities
+        self.ui_log_signaler = LogSignaler()
+        self.ui_log_signaler.log_signal.connect(self.on_log_update)
 
         # Grid layout
         self.master_layout = QGridLayout()
@@ -66,7 +69,7 @@ class RunPage(BasePage):
         sport_label = QLabel("Sport")
         sport_label.setStyleSheet(label_style)
         self.form_layout.addWidget(sport_label)
-        self.sport_dropdown = SportDropdown(items=activities)
+        self.sport_dropdown = SportDropdown(items=ACTIVITIES)
         self.form_layout.addWidget(self.sport_dropdown)
 
         # Action Buttons
@@ -131,7 +134,7 @@ class RunPage(BasePage):
     def on_run_click(self):
         """Shows logging text and signals to start bot"""
         selected_date, selected_time, selected_sport = self._get_form_data()
-        if selected_sport not in self.activities:
+        if selected_sport not in ACTIVITIES:
             QMessageBox.warning(self, "Selection Error", "Please select a sport.")
             return
 
@@ -140,10 +143,11 @@ class RunPage(BasePage):
         activity_args = {
             "start_date": selected_date,
             "start_time": selected_time,
-            "id": self.activities[selected_sport]["id"],
-            "posting_offset": self.activities[selected_sport].get("posting_offset"),
+            "id": ACTIVITIES[selected_sport]["id"],
+            "posting_offset": ACTIVITIES[selected_sport].get("posting_offset"),
         }
-        self.start_run_signal.emit(activity_args)
+
+        self._start_booking_process(activity_args)
 
         self.run_btn.btn.setEnabled(False)
 
@@ -211,3 +215,57 @@ class RunPage(BasePage):
 
         self.status_indicator.set_result(success, message)
         self.run_btn.btn.setEnabled(True)  # Renable run button
+
+    def _start_booking_process(self, activity_args: dict[str, str]):
+        """Runs bot as a background thread so it doesn't block UI
+
+        Args:
+            activity_args (dict[str, str]): Arguments for the activity to book.
+        """
+        # Create Thread and Worker
+        self.bot_thread = QThread()
+
+        activity_to_book = Activity(
+            id=activity_args["id"],
+            start_date=activity_args["start_date"],
+            start_time=activity_args["start_time"],
+            posting_offset=activity_args["posting_offset"],
+        )
+        bot_args = {
+            "activity": activity_to_book,
+            "time_limit": 10,
+            "codes_threshold": 3,
+            "headless": True,
+            "debug": False,
+            "ui_signaler": self.ui_log_signaler,
+        }
+
+        self.worker = BotWorker(bot_args)
+        self.worker.moveToThread(self.bot_thread)
+
+        # Connect thread
+        self.bot_thread.started.connect(self.worker.run)
+
+        # Handle Completion
+        self.worker.finished.connect(self.on_execution_complete)
+        self.worker.finished.connect(self.bot_thread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+
+        # Start bot
+        self.bot_thread.start()
+
+    def cleanup(self):
+        thread = getattr(self, "bot_thread", None)
+        worker = getattr(self, "worker", None)
+
+        if worker:
+            try:
+                worker.log_updated.disconnect()
+                worker.finished.disconnect()
+            except:
+                pass
+
+            worker.stop()
+
+        if thread and thread.isRunning():
+            thread.quit()
