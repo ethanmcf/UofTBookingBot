@@ -1,6 +1,7 @@
 from uoftbookingbot.frontend.pages.base_page import BasePage
 from uoftbookingbot.frontend.theme import Colors
 from uoftbookingbot.frontend.components.primary_button import PrimaryButton
+from uoftbookingbot.frontend.components.todo_item import TodoItem
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QLineEdit, QPushButton
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QPalette, QPixmap, QIcon
@@ -46,60 +47,23 @@ class SetupPage(BasePage):
         instruction_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.right_col.addWidget(instruction_title)
 
-        label_style = f"color: {Colors.TEXT_MAIN}; font-size: 16px;"
-        utorid_label = QLabel("Enter your UTORID", self.right_box)
-        utorid_label.setStyleSheet(label_style)
-        self.right_col.addWidget(utorid_label)
+        self.utorid_item = TodoItem("Enter & save your utorid")
+        self.right_col.addWidget(self.utorid_item)
 
-        password_label = QLabel("Enter your PASSWORD", self.right_box)
-        password_label.setStyleSheet(label_style)
-        self.right_col.addWidget(password_label)
+        self.password_item = TodoItem("Enter & save your password")
+        self.right_col.addWidget(self.password_item)
 
         # Create bypass info
-        self.bypass_label = QLabel("Enter BYPASS CODE")
-        self.bypass_label.setStyleSheet(label_style)
+        self.bypass_item = TodoItem("Enter & save a bypass code")
+        self.right_col.addWidget(self.bypass_item)
 
-        self.bypass_row = QHBoxLayout()
-        self.bypass_row.setSpacing(10)
-
-        self.bypass_row.addWidget(self.bypass_label, stretch=0)
-
-        # Create the Info image
-        self.info_icon = QLabel()
-        info_pixmap = QPixmap("uoftbookingbot/frontend/assets/info-icon.png")
-        self.info_icon.setPixmap(
-            info_pixmap.scaled(
-                30,
-                30,
-                Qt.AspectRatioMode.KeepAspectRatio,
-                Qt.TransformationMode.SmoothTransformation,
-            )
-        )
-
-        # Add the ToolTip to the icon
-        tooltip = textwrap.dedent(
-            """
-            1) Login to https://bypass.utormfa.utoronto.ca/index.php
-            2) Click ‘Generate Bypass Codes’ button
-            3) Copy any one code into text field
-        """
-        ).strip()
-        self.info_icon.setToolTip(tooltip)
-        self.info_icon.setStyleSheet(
-            """
-            QToolTip {
-                background-color: white;
-                color: black;
-                padding: 1px;
-                border-radius: 4px;
-                outline: none; 
-            }
-        """
-        )
-        self.info_icon.setCursor(Qt.CursorShape.PointingHandCursor)  # Feedback on hover
-
-        self.bypass_row.addWidget(self.info_icon)
-        self.right_col.addLayout(self.bypass_row)
+        # tooltip = textwrap.dedent(
+        #     """
+        #     1) Login to https://bypass.utormfa.utoronto.ca/index.php
+        #     2) Click ‘Generate Bypass Codes’ button
+        #     3) Copy any one code into text field
+        # """
+        # ).strip()
 
         self.right_col.addStretch()
 
@@ -224,11 +188,20 @@ class SetupPage(BasePage):
         password = self.password.text()
         bypass = self.bypass.text()
 
+        if utorid != "":
+            self.utorid_item.set_checked(True)
+
+        if password != "":
+            self.password_item.set_checked(True)
+
         self.db_controller.save_credentials(utorid, password)
+
         if bypass != "":
             self.db_controller.save_bypass_codes([bypass])
+            self.bypass_item.set_checked(True)
 
     def delete_user_data(self):
-        print(self.db_controller.get_credentials())
         self.db_controller.delete_user_data()
-        print(self.db_controller.get_credentials())
+        self.utorid_item.set_checked(False)
+        self.password_item.set_checked(False)
+        self.bypass_item.set_checked(False)

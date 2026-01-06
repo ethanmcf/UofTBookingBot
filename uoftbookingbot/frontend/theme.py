@@ -4,3 +4,6 @@ class Colors:
 
     WHITE = "#FFFFFF"
     TEXT_MAIN = "#2E2E2E"
+
+    LIGHT_GREEN = "#A3D19D"
+    LIGHT_GRAY = "#DCDCDC"
