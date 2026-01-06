@@ -12,8 +12,9 @@ def is_running_as_bundle() -> bool:
     return getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS")
 
 
-def get_resources_path() -> str:
-    """Get the base path for persistent files, depending on the execution context."""
+def get_resources_path() -> Path:
+    """Get the base path for persistent files and run-time artifacts, depending on the execution
+    context."""
 
     if is_running_as_bundle():
         # RUNNING AS BUNDLE -> system dependent paths
@@ -23,9 +24,10 @@ def get_resources_path() -> str:
             path = Path(os.environ["APPDATA"]) / _APP_NAME
         else:
             path = Path.home() / ".local" / "share" / _APP_NAME
-
-        path.mkdir(parents=True, exist_ok=True)
-        return path
     else:
         # RUNNING IN DEV -> All files are relative to the project root
-        return Path(__file__).resolve().parent.parent
+        path = Path(__file__).resolve().parent.parent / "resources"
+
+    path.mkdir(parents=True, exist_ok=True)
+
+    return path

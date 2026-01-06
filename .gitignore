@@ -2,13 +2,11 @@
 .DS_Store
 __pycache__/
 tests/resources/
-secrets/
+resources/
 .env
 
 dist/
 build/
-debug/
-logs/
 */logs
 */screenshots
 

@@ -1,10 +1,13 @@
+from pathlib import Path
 import sqlite3, os
-from uoftbookingbot.constants import DB_PATH, DB_SCHEMA_PATH
+from uoftbookingbot.constants import DB_PATH
 
 
 class DBController:
 
-    def __init__(self, db_path=DB_PATH, schema_path=DB_SCHEMA_PATH):
+    _DB_SCHEMA_PATH = str(Path(__file__).parent / "schema.sql")
+
+    def __init__(self, db_path=DB_PATH, schema_path=_DB_SCHEMA_PATH):
         """Initializes the connection and ensures the database schema is applied."""
         try:
             self.conn = sqlite3.connect(db_path)
