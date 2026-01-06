@@ -1,3 +1,5 @@
+from pathlib import Path
+from uoftbookingbot.frontend.constants import ASSETS_DIR_PATH
 from uoftbookingbot.frontend.pages.base_page import BasePage
 from uoftbookingbot.frontend.theme import Colors
 from uoftbookingbot.frontend.components.primary_button import PrimaryButton
@@ -66,7 +68,8 @@ class SetupPage(BasePage):
 
         # Create the Info image
         self.info_icon = QLabel()
-        info_pixmap = QPixmap("uoftbookingbot/frontend/assets/info-icon.png")
+        info_icon_path = str(Path(ASSETS_DIR_PATH) / "info-icon.png")
+        info_pixmap = QPixmap(info_icon_path)
         self.info_icon.setPixmap(
             info_pixmap.scaled(
                 30,
@@ -115,7 +118,8 @@ class SetupPage(BasePage):
         self.image_label = QLabel(self.right_box)
         self.image_label.setStyleSheet("background: transparent;")
         self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        todo_png = QPixmap("uoftbookingbot/frontend/assets/todo.png")
+        todo_img_path = str(Path(ASSETS_DIR_PATH) / "todo.png")
+        todo_png = QPixmap(todo_img_path)
         self.image_label.setPixmap(
             todo_png.scaled(
                 300,
@@ -175,7 +179,8 @@ class SetupPage(BasePage):
 
         # Delete button
         self.delete_btn = QPushButton()
-        pixmap = QPixmap("uoftbookingbot/frontend/assets/trash-icon.png")
+        trash_icon_path = str(Path(ASSETS_DIR_PATH) / "trash-icon.png")
+        pixmap = QPixmap(trash_icon_path)
         self.delete_btn.setIcon(QIcon(pixmap))
         self.delete_btn.setIconSize(QSize(30, 30))
 

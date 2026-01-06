@@ -1,3 +1,5 @@
+from pathlib import Path
+from uoftbookingbot.frontend.constants import ASSETS_DIR_PATH
 from uoftbookingbot.frontend.theme import Colors
 from uoftbookingbot.frontend.pages.base_page import BasePage
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
@@ -117,7 +119,8 @@ class LandingPage(BasePage):
         painter.setBrush(gradient)
         painter.drawPath(path)
 
-        renderer = QSvgRenderer("uoftbookingbot/frontend/assets/robot-full.svg")
+        robot_img_path = str(Path(ASSETS_DIR_PATH) / "robot-full.svg")
+        renderer = QSvgRenderer(robot_img_path)
         if renderer.isValid():
             # Create image buffer
             img_buffer = QImage(int(w), int(h), QImage.Format.Format_ARGB32_Premultiplied)

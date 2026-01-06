@@ -1,3 +1,5 @@
+from pathlib import Path
+from uoftbookingbot.frontend.constants import ASSETS_DIR_PATH
 from uoftbookingbot.frontend.theme import Colors
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton
 from PyQt6.QtCore import Qt
@@ -25,7 +27,8 @@ class Header(QWidget):
         self.logo_layout.setSpacing(4)
 
         self.logo_img = QLabel()
-        logo_img_pixmap = QPixmap("uoftbookingbot/frontend/assets/robot-logo.svg")
+        logo_img_path = str(Path(ASSETS_DIR_PATH) / "robot-logo.svg")
+        logo_img_pixmap = QPixmap(logo_img_path)
         scaled_icon = logo_img_pixmap.scaled(
             24, 24, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
         )

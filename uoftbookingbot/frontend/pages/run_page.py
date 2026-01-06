@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
+from pathlib import Path
 from uoftbookingbot.activity import Activity
+from uoftbookingbot.frontend.constants import ASSETS_DIR_PATH
 from uoftbookingbot.frontend.pages.base_page import BasePage
 from uoftbookingbot.frontend.components.primary_button import PrimaryButton
 from uoftbookingbot.frontend.components.secondary_button import SecondaryButton
@@ -130,7 +132,8 @@ class RunPage(BasePage):
         # Loading animation
         self.loading_visual = QLabel()
         self.loading_visual.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.movie = QMovie("uoftbookingbot/frontend/assets/loading.gif")
+        loading_gif_path = str(Path(ASSETS_DIR_PATH) / "loading.gif")
+        self.movie = QMovie(loading_gif_path)
         self.loading_visual.setMovie(self.movie)
 
         # Log loading label
@@ -255,12 +258,12 @@ class RunPage(BasePage):
 
             /* Use images for arrows */
             QTimeEdit::up-arrow {{
-                image: url(uoftbookingbot/frontend/assets/chevron-up.svg);
+                image: url({str(Path(ASSETS_DIR_PATH) / "chevron-up.svg")});
                 width: 12px;
                 height: 12px;
             }}
             QTimeEdit::down-arrow {{
-                image: url(uoftbookingbot/frontend/assets/chevron-down.svg);
+                image: url({str(Path(ASSETS_DIR_PATH) / "chevron-down.svg")});
                 width: 12px;
                 height: 12px;
                 left: 0px;
@@ -293,7 +296,7 @@ class RunPage(BasePage):
 
             /* Use the border-triangle trick for the down arrow to avoid image issues */
             QComboBox::down-arrow {{
-                image: url(uoftbookingbot/frontend/assets/chevron-down.svg);
+                image: url({str(Path(ASSETS_DIR_PATH) / "chevron-down.svg")});
                 width: 10px;
                 height: 10px;
             }}
@@ -331,7 +334,8 @@ class RunPage(BasePage):
             return
 
         self.loading_container.show()
-        self.movie = QMovie("uoftbookingbot/frontend/assets/loading.gif")
+        loading_gif_path = str(Path(ASSETS_DIR_PATH) / "loading.gif")
+        self.movie = QMovie(loading_gif_path)
         self.loading_visual.setMovie(self.movie)
         self.movie.start()
 
@@ -412,8 +416,8 @@ class RunPage(BasePage):
         self.loading_visual.setMovie(None)
 
         # Paths for success/failure icons
-        self.success_icon_path = "uoftbookingbot/frontend/assets/success-icon.png"
-        self.error_icon_path = "uoftbookingbot/frontend/assets/error-icon.png"
+        self.success_icon_path = str(Path(ASSETS_DIR_PATH) / "success-icon.png")
+        self.error_icon_path = str(Path(ASSETS_DIR_PATH) / "error-icon.png")
 
         icon_path = self.success_icon_path if success else self.error_icon_path
         pix = QPixmap(icon_path)
