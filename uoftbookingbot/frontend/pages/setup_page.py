@@ -2,11 +2,10 @@ from uoftbookingbot.frontend.pages.base_page import BasePage
 from uoftbookingbot.frontend.theme import Colors
 from uoftbookingbot.frontend.components.primary_button import PrimaryButton
 from uoftbookingbot.frontend.components.todo_item import TodoItem
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QLineEdit, QPushButton
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QPalette, QPixmap, QIcon
-from PyQt6.QtCore import QMargins, QSize
-from pyqt_animated_line_edit import AnimatedLineEdit
+from uoftbookingbot.frontend.components.input import Input
+from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QPushButton
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QPixmap, QIcon
 import textwrap
 
 
@@ -24,16 +23,20 @@ class SetupPage(BasePage):
         self.left_box = QWidget()
 
         self.left_col = QVBoxLayout(self.left_box)
-        self.left_col.setContentsMargins(50, 70, 30, 0)
-        self.left_col.setSpacing(17)
+        self.left_col.setContentsMargins(50, 160, 30, 0)
+        self.left_col.setSpacing(10)
 
         # Create form
-        self.createForm()
+        utorid, password = self.db_controller.get_credentials()
+        current_bypass_code = self.db_controller.get_next_bypass_code()
+        form = self.createForm(utorid, password, current_bypass_code)
+        self.left_col.addLayout(form)
+        self.left_col.addStretch()
 
         # Right column (instructions)
         self.right_box = QWidget()
         self.right_col = QVBoxLayout(self.right_box)
-        self.right_col.setContentsMargins(70, 0, 10, 0)
+        self.right_col.setContentsMargins(70, 30, 10, 0)
         self.right_col.setSpacing(22)
 
         # Todo image
@@ -47,23 +50,30 @@ class SetupPage(BasePage):
         instruction_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.right_col.addWidget(instruction_title)
 
-        self.utorid_item = TodoItem("Enter & save your utorid")
+        self.utorid_item = TodoItem("Enter & save your utorid", utorid != None)
         self.right_col.addWidget(self.utorid_item)
 
-        self.password_item = TodoItem("Enter & save your password")
+        self.password_item = TodoItem("Enter & save your password", password != None)
         self.right_col.addWidget(self.password_item)
 
         # Create bypass info
-        self.bypass_item = TodoItem("Enter & save a bypass code")
+        self.bypass_item = TodoItem("Enter & save a bypass code", current_bypass_code != None)
+        self.bypass_instruction_label = QLabel(
+            (
+                "1) Login to https://bypass.utormfa.utoronto.ca/index.php\n\n"
+                "2) Click ‘Generate Bypass Codes’ button\n\n"
+                "3) Copy any one code into text field"
+            )
+        )
+        self.bypass_instruction_label.setStyleSheet(
+            f"color: {Colors.DARK_GRAY}; font-size: 12px; padding-left: 65px"
+        )
+        self.bypass_instruction_label.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+            | Qt.TextInteractionFlag.TextSelectableByKeyboard
+        )
         self.right_col.addWidget(self.bypass_item)
-
-        # tooltip = textwrap.dedent(
-        #     """
-        #     1) Login to https://bypass.utormfa.utoronto.ca/index.php
-        #     2) Click ‘Generate Bypass Codes’ button
-        #     3) Copy any one code into text field
-        # """
-        # ).strip()
+        self.right_col.addWidget(self.bypass_instruction_label)
 
         self.right_col.addStretch()
 
@@ -91,47 +101,23 @@ class SetupPage(BasePage):
         self.right_col.addStretch()
         self.right_col.addWidget(self.image_label)
 
-    def createForm(self):
-        BORDER_RADIUS = 5
-        WIDTH = 400
-        HEIGHT = 50
-        INNER_FONT_SIZE = 14
-        OUTER_FONT_SIZE = 10
+    def createForm(self, utorid, password, current_bypass_code):
+        # Inputs
+        self.form_layout = QVBoxLayout()
+        self.form_layout.setSpacing(10)
 
-        # Utorid input
-        self.username = AnimatedLineEdit("Your utorid", self.left_box)
-        self.username.setFixedSize(WIDTH, HEIGHT)
-        self.username.setPlaceholderColorOutside(QColor(Colors.TEXT_MAIN))
-        self.username.setBorderRadius(BORDER_RADIUS)
-        self.username.setPlaceholderFontSizeInner(INNER_FONT_SIZE)
-        self.username.setPlaceholderFontSizeOuter(OUTER_FONT_SIZE)
-        self.username.setPadding(QMargins(12, 0, 12, 0))
-        self.username.setPlaceholderColorOutside(self.palette().color(QPalette.ColorRole.Highlight))
-        self.left_col.addWidget(self.username)
+        self.utorid_input = Input("Your utorid")
+        self.utorid_input.setText(utorid)
+        self.form_layout.addWidget(self.utorid_input)
 
-        # Password input
-        self.password = AnimatedLineEdit("Your password", self.left_box)
-        self.password.setFixedSize(WIDTH, HEIGHT)
-        self.password.setPlaceholderColorOutside(QColor(Colors.TEXT_MAIN))
-        self.password.setBorderRadius(BORDER_RADIUS)
-        self.password.setPlaceholderFontSizeInner(INNER_FONT_SIZE)
-        self.password.setPlaceholderFontSizeOuter(OUTER_FONT_SIZE)
-        self.password.setPadding(QMargins(12, 0, 12, 0))
-        self.password.setEchoMode(QLineEdit.EchoMode.Password)
-        self.password.setPlaceholderColorOutside(self.palette().color(QPalette.ColorRole.Highlight))
-        self.left_col.addWidget(self.password)
+        self.password_input = Input("Your password")
+        self.password_input.setText(password)
+        self.form_layout.addWidget(self.password_input)
 
-        # Bypass input
-        self.bypass = AnimatedLineEdit("Current bypass code", self.left_box)
-        self.bypass.setFixedSize(WIDTH, HEIGHT)
-        self.bypass.setPlaceholderColorOutside(QColor(Colors.TEXT_MAIN))
-        self.bypass.setBorderRadius(BORDER_RADIUS)
-        self.bypass.setPlaceholderFontSizeInner(INNER_FONT_SIZE)
-        self.bypass.setPlaceholderFontSizeOuter(OUTER_FONT_SIZE)
-        self.bypass.setPadding(QMargins(12, 0, 12, 0))
-        self.bypass.setPlaceholderColorOutside(self.palette().color(QPalette.ColorRole.Highlight))
-        self.left_col.addWidget(self.bypass)
-        self.left_col.addStretch()
+        self.bypass_input = Input("Current bypass code")
+        self.bypass_input.setText(current_bypass_code)
+        self.form_layout.addWidget(self.bypass_input)
+        self.form_layout.addStretch()
 
         # Save button
         self.save_btn = PrimaryButton("Save")
@@ -180,13 +166,13 @@ class SetupPage(BasePage):
 
         btn_row.addWidget(self.save_btn, stretch=1)
         btn_row.addWidget(self.delete_btn)
-        self.left_col.addLayout(btn_row, 1)
-        self.left_col.addStretch()
+        self.form_layout.addLayout(btn_row, 1)
+        return self.form_layout
 
     def save_info(self):
-        utorid = self.username.text()
-        password = self.password.text()
-        bypass = self.bypass.text()
+        utorid = self.utorid_input.text()
+        password = self.password_input.text()
+        bypass = self.bypass_input.text()
 
         if utorid != "":
             self.utorid_item.set_checked(True)
@@ -202,6 +188,11 @@ class SetupPage(BasePage):
 
     def delete_user_data(self):
         self.db_controller.delete_user_data()
+
         self.utorid_item.set_checked(False)
         self.password_item.set_checked(False)
         self.bypass_item.set_checked(False)
+
+        self.utorid_input.setText("")
+        self.password_input.setText("")
+        self.bypass_input.setText("")

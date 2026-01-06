@@ -3,6 +3,7 @@ from uoftbookingbot.activity import Activity
 from uoftbookingbot.frontend.pages.base_page import BasePage
 from uoftbookingbot.frontend.components.primary_button import PrimaryButton
 from uoftbookingbot.frontend.components.secondary_button import SecondaryButton
+from uoftbookingbot.schedulers import get_scheduler
 from uoftbookingbot.frontend.theme import Colors
 from PyQt6.QtWidgets import (
     QWidget,
@@ -18,8 +19,6 @@ from PyQt6.QtWidgets import (
 from PyQt6 import QtGui
 from PyQt6.QtCore import QTime, Qt, pyqtSignal
 from PyQt6.QtGui import QTextCharFormat, QColor, QMovie, QPixmap
-
-from uoftbookingbot.schedulers import get_scheduler
 
 
 class RunPage(BasePage):
@@ -51,7 +50,7 @@ class RunPage(BasePage):
 
         # Right side (variables)
         self.form_container = QWidget()
-        self.form_container.setMinimumWidth(200)
+        self.form_container.setMinimumWidth(300)
         self.form_layout = QVBoxLayout(self.form_container)
         self.form_layout.setSpacing(15)
 
@@ -285,20 +284,17 @@ class RunPage(BasePage):
                 font-size: 14px;
             }}
 
-            /* The 'drop-down' is the container for the arrow */
             QComboBox::drop-down {{
                 border: none;
                 width: 30px;
             }}
 
-            /* Use the border-triangle trick for the down arrow to avoid image issues */
             QComboBox::down-arrow {{
                 image: url(uoftbookingbot/frontend/assets/chevron-down.svg);
                 width: 10px;
                 height: 10px;
             }}
 
-            /* Styling the list that pops up */
             QComboBox QAbstractItemView {{
                 background-color: white;
                 color: {Colors.TEXT_MAIN};

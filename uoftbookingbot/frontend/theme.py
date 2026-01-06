@@ -7,3 +7,4 @@ class Colors:
 
     LIGHT_GREEN = "#A3D19D"
     LIGHT_GRAY = "#DCDCDC"
+    DARK_GRAY = "#787878"

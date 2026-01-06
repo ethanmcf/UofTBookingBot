@@ -39,7 +39,7 @@ class BookingApp(QMainWindow):
         self.screenshots_path = screenshots_path
         self.db_controller = db_controller
 
-        self.setFixedSize(900, 600)
+        self.setFixedSize(1200, 750)
 
         self.main_container = QWidget()
         self.main_container.setStyleSheet("background-color: white;")

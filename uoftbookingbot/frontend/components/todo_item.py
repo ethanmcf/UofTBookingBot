@@ -18,6 +18,7 @@ class StatusIndicator(QWidget):
 
     def paintEvent(self, event):
         painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         rect = self.rect().adjusted(4, 4, -4, -4)
         pen_width = 3
