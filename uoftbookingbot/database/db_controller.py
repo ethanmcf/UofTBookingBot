@@ -51,17 +51,14 @@ class DBController:
         utorid_val = utorid if utorid.strip() else None
         pass_val = password if password.strip() else None
 
-        if utorid_val is None and pass_val is None:
-            return
-
-        query = """
-            INSERT INTO account (id, utorid, password) 
-            VALUES (1, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET 
-                utorid = COALESCE(excluded.utorid, account.utorid),
-                password = COALESCE(excluded.password, account.password);
-        """
         try:
+            query = """
+                INSERT INTO account (id, utorid, password)
+                VALUES (1, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                    utorid = COALESCE(excluded.utorid, account.utorid),
+                    password = COALESCE(excluded.password, account.password);
+            """
             self.cursor.execute(query, (utorid_val, pass_val))
             self.conn.commit()
         except Exception as e:
@@ -80,9 +77,13 @@ class DBController:
 
     def save_bypass_codes(self, bypass_codes):
         """Iterates through a list of bypass codes and inserts them into the database."""
+        current_codes = [
+            code[0] for code in self.cursor.execute("SELECT code FROM bypass_codes").fetchall()
+        ]
         try:
             for code in bypass_codes:
-                self.cursor.execute("INSERT INTO bypass_codes (code) VALUES (?)", (code,))
+                if code not in current_codes:
+                    self.cursor.execute("INSERT INTO bypass_codes (code) VALUES (?)", (code,))
             self.conn.commit()
         except Exception as e:
             self.conn.rollback()
