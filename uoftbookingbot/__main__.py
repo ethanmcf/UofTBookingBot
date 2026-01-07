@@ -3,6 +3,7 @@ from uoftbookingbot.activity import Activity
 from uoftbookingbot.constants import ACTIVITIES
 from uoftbookingbot.automation.runner import run_registration_bot
 from uoftbookingbot.frontend.app import run_app
+from uoftbookingbot.schedulers import get_scheduler
 
 
 def _get_cli_args() -> argparse.Namespace:
@@ -115,6 +116,9 @@ def main():
     arguments opens the GUI, otherwise runs the CLI script."""
 
     if len(sys.argv) == 1:
+        # Clean up any old or expired scheduled bookings
+        get_scheduler().cleanup_expired_schedules()
+
         # Run GUI for desktop app
         run_app()
         return
