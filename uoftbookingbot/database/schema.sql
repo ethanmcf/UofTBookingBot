@@ -3,8 +3,8 @@
 -- User credentials, only one row to ensure one person
 CREATE TABLE account (
     id INTEGER PRIMARY KEY CHECK (id = 1), 
-    utorid TEXT NOT NULL,
-    password TEXT NOT NULL          
+    utorid TEXT,
+    password TEXT          
 );
 
 --  Bypass Codes

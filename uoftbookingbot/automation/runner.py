@@ -4,6 +4,7 @@ from uoftbookingbot.database.db_controller import DBController
 from uoftbookingbot.automation.logger import Logger, LogSignaler
 from uoftbookingbot.automation.flows.bypass_codes_flow import run_bypass_codes_retrieval_flow
 from uoftbookingbot.automation.flows.registration_flow import run_registration_flow
+from uoftbookingbot.constants import LOG_DIR_PATH, SCREENSHOTS_DIR_PATH
 from typing import Optional
 import random
 
@@ -14,8 +15,6 @@ def run_registration_bot(
     codes_threshold: int,
     headless: bool,
     debug: bool,
-    log_path: str,
-    screenshots_path: str,
     ui_signaler: Optional[LogSignaler],
 ) -> None:
     """Main entry point for running the registration bot.
@@ -34,7 +33,7 @@ def run_registration_bot(
         bool: True iff registration completed without unhandled exceptions, False otherwise.
     """
 
-    logger = Logger(log_path, screenshots_path, ui_signaler)
+    logger = Logger(LOG_DIR_PATH, SCREENSHOTS_DIR_PATH, ui_signaler)
 
     try:
         db_controller = DBController()
