@@ -9,7 +9,7 @@ from uoftbookingbot.frontend.pages.run_page.time_picker import TimePicker
 from uoftbookingbot.frontend.pages.run_page.status_indicator import StatusIndicator
 from uoftbookingbot.automation.logger import LogSignaler
 from uoftbookingbot.automation.bot_worker import BotWorker
-from uoftbookingbot.schedulers import get_scheduler
+from uoftbookingbot.scheduling.api import get_scheduler
 from uoftbookingbot.frontend.theme import Colors
 from uoftbookingbot.constants import ACTIVITIES
 from PyQt6.QtCore import Qt, pyqtSignal, QThread, QCoreApplication
@@ -24,14 +24,11 @@ from PyQt6.QtWidgets import (
 
 
 class RunPage(BasePage):
+    """Page to run and schedule the bot."""
+
     start_run_signal = pyqtSignal(dict)
 
     def __init__(self):
-        """Page to run and schedule the bot.
-
-        Args:
-            activities (dict[str, dict[str, str]]): Mapping of activity names to their details.
-        """
         super().__init__()
         self.ui_log_signaler = LogSignaler()
         self.ui_log_signaler.log_signal.connect(self.on_log_update)
@@ -153,15 +150,15 @@ class RunPage(BasePage):
 
     def on_schedule_click(self):
         selected_date, selected_time, selected_sport = self._get_form_data()
-        if selected_sport not in self.activities:
+        if selected_sport not in ACTIVITIES:
             QMessageBox.warning(self, "Selection Error", "Please select a sport.")
             return
 
         activity = Activity(
-            id=self.activities[selected_sport]["id"],
+            id=ACTIVITIES[selected_sport]["id"],
             start_date=selected_date,
             start_time=selected_time,
-            posting_offset=self.activities[selected_sport].get("posting_offset"),
+            posting_offset=ACTIVITIES[selected_sport].get("posting_offset"),
         )
         scheduler = get_scheduler()
         try:

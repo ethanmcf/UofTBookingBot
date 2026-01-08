@@ -9,3 +9,4 @@ tzdata==2025.3
 PyQt6==6.4.2
 pyinstaller==5.13.2
 pyinstaller-hooks-contrib==2025.11
+ppycron==1.1.0
