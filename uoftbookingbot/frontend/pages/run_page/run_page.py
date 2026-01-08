@@ -9,7 +9,7 @@ from uoftbookingbot.frontend.pages.run_page.time_picker import TimePicker
 from uoftbookingbot.frontend.pages.run_page.status_indicator import StatusIndicator
 from uoftbookingbot.automation.logger import LogSignaler
 from uoftbookingbot.automation.bot_worker import BotWorker
-from uoftbookingbot.schedulers import get_scheduler
+from uoftbookingbot.scheduling.api import get_scheduler
 from uoftbookingbot.frontend.theme import Colors
 from uoftbookingbot.constants import ACTIVITIES
 from PyQt6.QtCore import Qt, pyqtSignal, QThread, QCoreApplication

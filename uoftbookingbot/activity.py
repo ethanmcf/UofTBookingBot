@@ -1,4 +1,6 @@
+from datetime import datetime, timedelta
 from typing import Optional
+from zoneinfo import ZoneInfo
 
 
 class Activity:
@@ -36,3 +38,21 @@ class Activity:
         """Returns the booking URL for this activity."""
 
         return f"https://recreation.utoronto.ca/Program/GetProgramDetails?courseId={self.id}"
+
+    def get_session_start_datetime(self) -> datetime:
+        """Return a timezone aware datetime object for this activity session's start date and
+        time."""
+
+        return datetime.strptime(f"{self.start_date} {self.start_time}", "%Y-%m-%d %H:%M").replace(
+            tzinfo=ZoneInfo("America/Toronto")
+        )
+
+    def get_registration_open_datetime(self) -> Optional[datetime]:
+        """Return a timezone aware datetime object for when the activity's registration opens or
+        None if registration open is not known (which we assume means registration is open)."""
+
+        return (
+            self.get_session_start_datetime() - timedelta(days=self.posting_offset)
+            if self.posting_offset is not None
+            else None
+        )

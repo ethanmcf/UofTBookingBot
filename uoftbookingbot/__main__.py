@@ -3,7 +3,7 @@ from uoftbookingbot.activity import Activity
 from uoftbookingbot.constants import ACTIVITIES
 from uoftbookingbot.automation.runner import run_registration_bot
 from uoftbookingbot.frontend.app import run_app
-from uoftbookingbot.schedulers import get_scheduler
+from uoftbookingbot.scheduling.api import get_scheduler
 
 
 def _get_cli_args() -> argparse.Namespace:
