@@ -15,10 +15,8 @@ from uoftbookingbot.activity import Activity
 from uoftbookingbot.utils import is_running_as_bundle
 
 
-_BOT_START_BUFFER_SECONDS = 300  # bot starts 5 minutes before booking time
-_FIRST_VALID_CLEANUP_BUFFER_SECONDS = (
-    600  # first valid cleanup time is 10 minutes after booking time
-)
+_BOT_START_BUFFER_SECONDS = 300  # bot starts 5 mins before booking time
+_FIRST_VALID_CLEANUP_BUFFER_SECONDS = _BOT_START_BUFFER_SECONDS + 120  # 2 min after ideal bot start
 
 
 def _get_activity_start_datetime(activity: Activity) -> datetime:
@@ -47,16 +45,16 @@ def _get_registration_open_datetime(activity: Activity) -> Optional[datetime]:
     )
 
 
-def _get_scheduler_run_datetime(activity: Activity) -> Optional[datetime]:
+def _get_scheduler_run_datetime(activity: Activity) -> datetime:
     """Return a datetime object for when the scheduler should run to start booking in the local
-    timezone or None if the activity cannot be scheduled.
+    timezone. Raises ValueError if the activity is in the past.
 
     If the registration period is open, the scheduler run time is set to the next minute from now.
     Otherwise, it's set to the registration open time minus a buffer.
     """
 
     if not _is_activity_in_future(activity):
-        return None
+        raise ValueError("Cannot schedule an activity in the past.")
 
     registration_open_dt_toronto = _get_registration_open_datetime(activity)
     now_dt_local = datetime.now().astimezone()
@@ -69,8 +67,8 @@ def _get_scheduler_run_datetime(activity: Activity) -> Optional[datetime]:
         ).astimezone()
 
 
-def _create_activity_from_program_args(program_args: list[str]) -> Optional[Activity]:
-    """Return an Activity instance from the list of program arguments or None if the args
+def _create_activity_from_program_args(program_args: list[str]) -> Activity:
+    """Return an Activity instance from the list of program arguments. Raises ValueError if the args
     don't correspond to a valid Activity."""
 
     try:
@@ -86,7 +84,7 @@ def _create_activity_from_program_args(program_args: list[str]) -> Optional[Acti
         activity_time = program_args[t_index + 1]
         posting_offset = int(program_args[o_index + 1]) if o_index is not None else None
     except Exception:
-        return None
+        raise ValueError("Invalid program arguments for creating Activity.")
 
     return Activity(
         id=activity_id,
@@ -135,56 +133,77 @@ def _get_execution_values(activity: Activity) -> tuple[str, list[str], str]:
 
 
 class Scheduler:
-    """Base class for scheduling the booking bot."""
+    """Base class for scheduling the booking bot.
+
+    Scheduling an activity session means scheduling the booking bot to run at a specific time in the
+    future to attempt to book the activity session on behalf of the user. Once scheduled, the
+    booking bot will run automatically at the scheduled time without any further user intervention.
+
+    Invariants:
+    - An activity session can only be scheduled for booking once at any given time.
+    - An activity session can only be scheduled for booking if its start time is in the future.
+    - The scheduler attempts execution of the booking bot for a scheduled activity session exactly
+      once at the scheduled time.
+    - A scheduled activity session is no longer considered scheduled once the booking bot has
+      executed the booking (or attempted to) for that activity session. If the scheduler fails to
+      execute the booking bot at the scheduled time (e.g. the user's computer was off), the
+      scheduled activity session is considered expired/invalid (i.e. is no longer scheduled) and
+      must be rescheduled by the user if they still wish to book it.
+
+    Other Assumptions/Notes:
+    - Activity session start times are in the America/Toronto timezone.
+    - All scheduled booking run times are in the user's local timezone.
+    - The scheduler assumes that the user's system timezone does not change between the time of
+      scheduling and the time of execution.
+    """
 
     __metaclass__ = ABCMeta
 
     @abstractmethod
     def schedule_activity(self, activity: Activity) -> None:
-        """Schedule the booking bot to book the specified activity. If the activity is already
-        scheduled, overwrite the existing schedule. Scheduling an activity in the past raises a
-        ValueError.
-
-        Assumes that the user's system timezone doesn't change between the
-        time of scheduling and the time of execution.
+        """Schedule the booking bot to book the specified activity session. If the activity session
+        is already scheduled for booking, overwrite the existing schedule. Scheduling an activity
+        session for booking whose session start time is in the past raises a ValueError.
 
         Args:
-            activity: The activity to schedule.
+            activity: The activity session to schedule.
         """
         ...
 
     @abstractmethod
     def unschedule_activity(self, activity: Activity) -> None:
-        """Unschedule an activity previously scheduled for booking. Unscheduling a non-scheduled
-        activity is a no-op.
+        """Unschedule an activity session previously scheduled for booking. Unscheduling a
+        non-scheduled activity session is a no-op.
 
         Args:
-            activity: The activity to unschedule.
+            activity: The activity session to unschedule.
         """
         ...
 
     @abstractmethod
     def get_scheduled_activities(self) -> list[Activity]:
-        """Return a list of activities scheduled for booking that are pending execution.
+        """Return a list of activity sessions scheduled for booking.
 
         Returns:
-            A list of Activity instances representing the scheduled activities.
+            list[Activity]: A list of scheduled activity sessions.
         """
         ...
 
     @abstractmethod
     def is_activity_scheduled(self, activity: Activity) -> bool:
-        """Return True iff the activity is already scheduled for booking and is pending
-        execution."""
+        """Return True iff the activity session is scheduled for booking.
+
+        Args:
+            activity: The activity session to check.
+
+        Returns:
+            bool: True iff the activity session is scheduled for booking.
+        """
         ...
 
     @abstractmethod
     def cleanup_expired_schedules(self) -> None:
-        """Clean up any artifacts related to previously scheduled activities satisfying any of the following conditions:
-        - The activity session has already started (or completed)
-        - The scheduled activity session has passed its scheduled booking run time
-
-        Invalid or corrupted scheduled activities should also be cleaned up."""
+        """Cleanup any expired/invalid scheduled activity sessions from the scheduler."""
         ...
 
 
@@ -199,16 +218,14 @@ class _LaunchdScheduler(Scheduler):
             self.unschedule_activity(activity)
 
         booking_dt_local = _get_scheduler_run_datetime(activity)
-        if booking_dt_local is None:
-            raise ValueError("Cannot schedule an activity in the past.")
-
         label = self._get_unique_launchd_label(activity)
         plist_path = self._get_plist_path_from_label(label)
-        exec_path, activity_args, project_root = _get_execution_values(activity)
+        bot_exec_path, activity_args, project_root = _get_execution_values(activity)
+        run_bot_args = [bot_exec_path] + activity_args
 
         plist_content = {
             "Label": label,
-            "ProgramArguments": [exec_path] + activity_args,
+            "ProgramArguments": run_bot_args,
             "WorkingDirectory": project_root,
             "EnvironmentVariables": {
                 "PATH": "/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/homebrew/bin"
@@ -239,17 +256,20 @@ class _LaunchdScheduler(Scheduler):
     def get_scheduled_activities(self) -> list[Activity]:
         activities = []
         plist_paths = self._get_all_activity_plists()
+        now = datetime.now().astimezone()
         for plist_path in plist_paths:
             with open(plist_path, "rb") as f:
                 plist_content = plistlib.load(f)
 
+                # Recreate and validate the activity from program args
                 program_args = plist_content.get("ProgramArguments", [])
-                candidate_activity = _create_activity_from_program_args(program_args)
-                if (
-                    candidate_activity is None
-                    or not _is_activity_in_future(candidate_activity)
-                    or self._is_activity_schedule_expired(candidate_activity, plist_content)
-                ):
+                try:
+                    candidate_activity = _create_activity_from_program_args(program_args)
+                except ValueError:
+                    continue
+
+                # Ensure scheduled activity is valid and set to be booked in the future
+                if self._is_schedule_expired(candidate_activity, plist_content, now, strict=True):
                     continue
 
                 activities.append(candidate_activity)
@@ -262,59 +282,25 @@ class _LaunchdScheduler(Scheduler):
 
     def cleanup_expired_schedules(self) -> None:
         plist_paths = self._get_all_activity_plists()
+        now = datetime.now().astimezone()
         for plist_path in plist_paths:
             with open(plist_path, "rb") as f:
                 plist_content = plistlib.load(f)
 
+                # Recreate and validate the activity from program args
                 program_args = plist_content.get("ProgramArguments", [])
-                candidate_activity = _create_activity_from_program_args(program_args)
-                if (
-                    candidate_activity is None
-                    or not _is_activity_in_future(candidate_activity)
-                    or self._is_activity_schedule_expired(candidate_activity, plist_content)
-                ):
+                try:
+                    candidate_activity = _create_activity_from_program_args(program_args)
+                except ValueError:
                     label = plist_content.get("Label")
                     self._remove_job_from_launchctl(plist_path, label)
                     continue
 
-    def _is_activity_schedule_expired(
-        self, activity: Activity, plist_content: dict[str, Any]
-    ) -> bool:
-        """Return True iff the schedule for the given activity is expired (or invalid) based on its
-        plist content.
-
-        Assumes the activity is valid and in the future."""
-
-        start_interval = plist_content.get("StartCalendarInterval", {})
-        scheduled_month = start_interval.get("Month")
-        scheduled_day = start_interval.get("Day")
-        scheduled_hour = start_interval.get("Hour")
-        scheduled_minute = start_interval.get("Minute")
-        if (
-            scheduled_month is None
-            or scheduled_day is None
-            or scheduled_hour is None
-            or scheduled_minute is None
-        ):
-            return True
-
-        latest_possible_scheduler_run_datetime = _get_scheduler_run_datetime(activity)
-        if latest_possible_scheduler_run_datetime is None:
-            return True
-
-        scheduled_dt_local = datetime(
-            year=latest_possible_scheduler_run_datetime.year,
-            month=scheduled_month,
-            day=scheduled_day,
-            hour=scheduled_hour,
-            minute=scheduled_minute,
-        ).astimezone()
-        first_valid_cleanup_dt_local = scheduled_dt_local + timedelta(
-            seconds=_FIRST_VALID_CLEANUP_BUFFER_SECONDS
-        )
-        now_dt_local = datetime.now().astimezone()
-
-        return first_valid_cleanup_dt_local < now_dt_local
+                # Ensure scheduled activity is valid and set to be booked in the future
+                if self._is_schedule_expired(candidate_activity, plist_content, now, strict=False):
+                    label = plist_content.get("Label")
+                    self._remove_job_from_launchctl(plist_path, label)
+                    continue
 
     def _get_unique_launchd_label(self, activity: Activity) -> str:
         """Return a unique label/job id for launchd to use when scheduling the activity."""
@@ -328,8 +314,7 @@ class _LaunchdScheduler(Scheduler):
         return os.path.join(self._AGENT_DIR, f"{label}.plist")
 
     def _get_all_activity_plists(self) -> list[str]:
-        """Return a list of all plists for scheduled activities, including those which are expired
-        or invalid."""
+        """Return a list of all plists related to this application in the LaunchAgents directory."""
 
         plist_paths = []
         if not os.path.exists(self._AGENT_DIR):
@@ -349,6 +334,36 @@ class _LaunchdScheduler(Scheduler):
             subprocess.run(["launchctl", "bootout", f"gui/{os.getuid()}/{job_id}"], check=False)
         if os.path.exists(plist_path):
             os.remove(plist_path)
+
+    def _is_schedule_expired(
+        self, activity: Activity, plist_content: dict[str, Any], now: datetime, strict: bool
+    ) -> bool:
+        """Return True iff the schedule for the given activity is expired (or invalid) based on its
+        plist content."""
+
+        start_calendar_interval = plist_content.get("StartCalendarInterval", {})
+        month = start_calendar_interval.get("Month")
+        day = start_calendar_interval.get("Day")
+        hour = start_calendar_interval.get("Hour")
+        minute = start_calendar_interval.get("Minute")
+
+        if month is None or day is None or hour is None or minute is None:
+            return True
+
+        activity_start_dt_local = _get_activity_start_datetime(activity).astimezone()
+        scheduled_dt_local = datetime(
+            year=activity_start_dt_local.year,
+            month=month,
+            day=day,
+            hour=hour,
+            minute=minute,
+        ).astimezone()
+        if scheduled_dt_local > activity_start_dt_local:
+            scheduled_dt_local = scheduled_dt_local.replace(year=activity_start_dt_local.year - 1)
+
+        if strict:
+            return scheduled_dt_local < now
+        return scheduled_dt_local + timedelta(seconds=_FIRST_VALID_CLEANUP_BUFFER_SECONDS) < now
 
 
 class _PPyCronScheduler(Scheduler):
@@ -379,18 +394,20 @@ class _PPyCronScheduler(Scheduler):
     def get_scheduled_activities(self) -> list[Activity]:
         activities = []
         all_crons = self.interface.get_all()
+        now = datetime.now().astimezone()
         for cron in all_crons:
             if not re.match(self.ACTIVITY_COMMAND_REGEX, cron.command):
                 continue
 
             # Recreate and validate the activity from program args
             program_args = cron.command.split(" && ", 1)[-1].split()[1:]
-            candidate_activity = _create_activity_from_program_args(program_args)
-            if (
-                candidate_activity is None
-                or not _is_activity_in_future(candidate_activity)
-                or self._is_future_activity_schedule_expired(candidate_activity, cron)
-            ):
+            try:
+                candidate_activity = _create_activity_from_program_args(program_args)
+            except ValueError:
+                continue
+
+            # Ensure scheduled activity is valid and set to be booked in the future
+            if self._is_schedule_expired(candidate_activity, cron, now, strict=True):
                 continue
 
             activities.append(candidate_activity)
@@ -403,17 +420,21 @@ class _PPyCronScheduler(Scheduler):
 
     def cleanup_expired_schedules(self) -> None:
         all_crons = self.interface.get_all()
+        now = datetime.now().astimezone()
         for cron in all_crons:
             if not re.match(self.ACTIVITY_COMMAND_REGEX, cron.command):
                 continue
 
+            # Recreate and validate the activity from program args
             program_args = cron.command.split(" && ", 1)[-1].split()[1:]
-            candidate_activity = _create_activity_from_program_args(program_args)
-            if (
-                candidate_activity is None
-                or not _is_activity_in_future(candidate_activity)
-                or self._is_future_activity_schedule_expired(candidate_activity, cron)
-            ):
+            try:
+                candidate_activity = _create_activity_from_program_args(program_args)
+            except ValueError:
+                self.interface.delete(cron.id)
+                continue
+
+            # Ensure scheduled activity is valid and set to be booked in the future
+            if self._is_schedule_expired(candidate_activity, cron, now, strict=False):
                 self.interface.delete(cron.id)
                 continue
 
@@ -448,11 +469,11 @@ class _PPyCronScheduler(Scheduler):
             if cron.command.startswith(command_str_with_no_offset_args)
         ]
 
-    def _is_future_activity_schedule_expired(self, activity: Activity, cron: Cron) -> bool:
+    def _is_schedule_expired(
+        self, activity: Activity, cron: Cron, now: datetime, strict: bool
+    ) -> bool:
         """Return True iff the schedule for the given activity is expired (or invalid) based on its
-        cron content.
-
-        Assumes the activity is valid and in the future."""
+        cron content."""
 
         if not self.interface.is_valid_cron_format(cron.interval):
             return True
@@ -462,30 +483,27 @@ class _PPyCronScheduler(Scheduler):
             return True
 
         try:
-            scheduled_month = int(month)
-            scheduled_day = int(day)
-            scheduled_hour = int(hour)
-            scheduled_minute = int(minute)
+            month = int(month)
+            day = int(day)
+            hour = int(hour)
+            minute = int(minute)
         except Exception:
             return True
 
-        latest_possible_scheduler_run_datetime = _get_scheduler_run_datetime(activity)
-        if latest_possible_scheduler_run_datetime is None:
-            return True
-
+        activity_start_dt_local = _get_activity_start_datetime(activity).astimezone()
         scheduled_dt_local = datetime(
-            year=latest_possible_scheduler_run_datetime.year,
-            month=scheduled_month,
-            day=scheduled_day,
-            hour=scheduled_hour,
-            minute=scheduled_minute,
+            year=activity_start_dt_local.year,
+            month=month,
+            day=day,
+            hour=hour,
+            minute=minute,
         ).astimezone()
-        first_valid_cleanup_dt_local = scheduled_dt_local + timedelta(
-            seconds=_FIRST_VALID_CLEANUP_BUFFER_SECONDS
-        )
-        now_dt_local = datetime.now().astimezone()
+        if scheduled_dt_local > activity_start_dt_local:
+            scheduled_dt_local = scheduled_dt_local.replace(year=activity_start_dt_local.year - 1)
 
-        return first_valid_cleanup_dt_local < now_dt_local
+        if strict:
+            return scheduled_dt_local < now
+        return scheduled_dt_local + timedelta(seconds=_FIRST_VALID_CLEANUP_BUFFER_SECONDS) < now
 
 
 def get_scheduler() -> Scheduler:
