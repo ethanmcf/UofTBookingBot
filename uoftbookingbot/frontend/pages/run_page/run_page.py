@@ -19,6 +19,8 @@ from PyQt6.QtWidgets import (
     QGridLayout,
     QLabel,
     QMessageBox,
+    QScrollArea,
+    QFrame,
 )
 
 
@@ -46,7 +48,7 @@ class RunPage(BasePage):
         self.calendar.setFixedWidth(400)
         self.content_layout.addWidget(self.calendar)
 
-        # Right side (variables)
+        # Center (variables)
         self.form_container = QWidget()
         self.form_container.setMinimumWidth(300)
         self.form_layout = QVBoxLayout(self.form_container)
@@ -81,6 +83,27 @@ class RunPage(BasePage):
 
         # Add to center of grid
         self.content_layout.addWidget(self.form_container)
+
+        # Right side (Scheduled Activities Sidebar)
+        self.sidebar_container = QWidget()
+        self.sidebar_container.setFixedWidth(300)
+        self.sidebar_layout = QVBoxLayout(self.sidebar_container)
+        sidebar_title = QLabel("Scheduled Bookings")
+        sidebar_title.setStyleSheet(
+            f"color: {Colors.TEXT_MAIN}; font-size: 16px; font-weight: bold;"
+        )
+        self.sidebar_layout.addWidget(sidebar_title)
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setFrameShape(QFrame.Shape.NoFrame)
+        self.scroll_area.setStyleSheet("background: transparent;")
+        self.scheduled_list_widget = QWidget()
+        self.scheduled_list_layout = QVBoxLayout(self.scheduled_list_widget)
+        self.scheduled_list_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.scroll_area.setWidget(self.scheduled_list_widget)
+        self.sidebar_layout.addWidget(self.scroll_area)
+        self.content_layout.addWidget(self.sidebar_container)
+
         self.master_layout.addWidget(self.content_widget, 1, 1)
 
         # Loading content
@@ -91,8 +114,6 @@ class RunPage(BasePage):
 
         # Center and add spacing
         self.master_layout.setRowStretch(0, 1)
-        self.master_layout.setRowStretch(1, 0)
-        self.master_layout.setRowStretch(2, 0)
         self.master_layout.setRowStretch(3, 1)
         self.master_layout.setColumnStretch(0, 1)
         self.master_layout.setColumnStretch(2, 1)
@@ -114,6 +135,64 @@ class RunPage(BasePage):
             }}
             """
         )
+
+        self._update_scheduled_list()
+
+    def _update_scheduled_list(self):
+        """Refreshes the sidebar with current scheduled activities."""
+
+        # Clear existing items
+        while self.scheduled_list_layout.count():
+            item = self.scheduled_list_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+
+        scheduler = get_scheduler()
+        scheduled_items = scheduler.get_scheduled_activities()
+
+        if not scheduled_items:
+            no_items_label = QLabel("No activities scheduled.")
+            no_items_label.setStyleSheet(f"color: {Colors.TEXT_MAIN}; font-style: italic;")
+            self.scheduled_list_layout.addWidget(no_items_label)
+            return
+
+        # Sort by run time
+        scheduled_items.sort(key=lambda x: x.run_at)
+
+        for item in scheduled_items:
+            card = QFrame()
+            card.setFrameShape(QFrame.Shape.StyledPanel)
+            card.setStyleSheet(
+                f"""
+                QFrame {{
+                    background-color: #f8f9fa;
+                    border: 1px solid #dee2e6;
+                    border-radius: 8px;
+                    padding: 10px;
+                }}
+            """
+            )
+            card_layout = QVBoxLayout(card)
+
+            # Find sport name from ID
+            sport_name = next(
+                (name for name, d in ACTIVITIES.items() if d.get("id", "") == item.activity.id),
+                "Unknown Sport",
+            )
+
+            session_dt = item.activity.get_session_start_datetime()
+
+            title = QLabel(f"<b>{sport_name}</b>")
+            title.setStyleSheet(f"color: {Colors.PRIMARY_BLUE};")
+
+            session_info = QLabel(f"Session: {session_dt.strftime('%b %d, %I:%M %p')}")
+            run_info = QLabel(f"Bot Run: {item.run_at.strftime('%b %d, %I:%M %p')}")
+
+            for lbl in [title, session_info, run_info]:
+                lbl.setStyleSheet(lbl.styleSheet() + f"color: {Colors.TEXT_MAIN}; font-size: 11px;")
+                card_layout.addWidget(lbl)
+
+            self.scheduled_list_layout.addWidget(card)
 
     def _get_form_data(self):
         """Extracts and formats current selection from UI components.
@@ -188,6 +267,8 @@ class RunPage(BasePage):
                 "Scheduling Failed",
                 "An unexpected error occurred while scheduling the activity. Please try again.",
             )
+
+        self._update_scheduled_list()
 
     def on_log_update(self, message):
         """Updates loading message when bot logs new info"""
