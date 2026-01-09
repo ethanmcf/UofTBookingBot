@@ -85,6 +85,7 @@ class RunPage(BasePage):
 
         # Right side (Scheduled Activities Sidebar)
         self.sidebar = ScheduledSidebar(on_unschedule_handler=self.on_unschedule_click)
+        self.sidebar.setFixedHeight(400)
         self.content_layout.addWidget(self.sidebar)
 
         self.master_layout.addWidget(self.content_widget, 1, 1)
