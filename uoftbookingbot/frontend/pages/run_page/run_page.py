@@ -23,6 +23,7 @@ from PyQt6.QtWidgets import (
     QMessageBox,
     QScrollArea,
     QFrame,
+    QPushButton,
 )
 from PyQt6.QtGui import QIcon
 
@@ -95,7 +96,7 @@ class RunPage(BasePage):
         header_widget = QWidget()
         header_layout = QHBoxLayout(header_widget)
         header_layout.setContentsMargins(0, 0, 0, 0)
-        sidebar_title = QLabel("Scheduled Bookings")
+        sidebar_title = QLabel("Activities to Book")
         sidebar_title.setStyleSheet(
             f"color: {Colors.TEXT_MAIN}; font-size: 16px; font-weight: bold;"
         )
@@ -156,7 +157,7 @@ class RunPage(BasePage):
         self._update_scheduled_list()
 
     def _update_scheduled_list(self):
-        """Refreshes the sidebar with current scheduled activities."""
+        """Refreshes the sidebar with current scheduled activities and delete buttons."""
 
         # Clear existing items
         while self.scheduled_list_layout.count():
@@ -168,7 +169,7 @@ class RunPage(BasePage):
         scheduled_items = scheduler.get_scheduled_activities()
 
         if not scheduled_items:
-            no_items_label = QLabel("No activities scheduled.")
+            no_items_label = QLabel("No activities scheduled for booking.")
             no_items_label.setStyleSheet(f"color: {Colors.TEXT_MAIN}; font-style: italic;")
             self.scheduled_list_layout.addWidget(no_items_label)
             return
@@ -185,11 +186,19 @@ class RunPage(BasePage):
                     background-color: #f8f9fa;
                     border: 1px solid #dee2e6;
                     border-radius: 8px;
-                    padding: 10px;
+                    padding: 5px;
                 }}
             """
             )
-            card_layout = QVBoxLayout(card)
+
+            # Use QHBoxLayout to put info on left and delete button on right
+            card_h_layout = QHBoxLayout(card)
+
+            # Container for text labels
+            text_container = QWidget()
+            text_layout = QVBoxLayout(text_container)
+            text_layout.setContentsMargins(0, 0, 0, 0)
+            text_layout.setSpacing(2)
 
             # Find sport name from ID
             sport_name = next(
@@ -200,14 +209,27 @@ class RunPage(BasePage):
             session_dt = item.activity.get_session_start_datetime()
 
             title = QLabel(f"<b>{sport_name}</b>")
-            title.setStyleSheet(f"color: {Colors.PRIMARY_BLUE};")
-
             session_info = QLabel(f"Session: {session_dt.strftime('%b %d, %I:%M %p')}")
             run_info = QLabel(f"Bot Run: {item.run_at.strftime('%b %d, %I:%M %p')}")
 
+            label_style = f"color: {Colors.TEXT_MAIN}; font-size: 11px;"
             for lbl in [title, session_info, run_info]:
-                lbl.setStyleSheet(lbl.styleSheet() + f"color: {Colors.TEXT_MAIN}; font-size: 11px;")
-                card_layout.addWidget(lbl)
+                lbl.setStyleSheet(label_style)
+                text_layout.addWidget(lbl)
+
+            card_h_layout.addWidget(text_container)
+            card_h_layout.addStretch()
+
+            # Delete Button
+            delete_btn = QPushButton()
+            delete_btn.setIcon(QIcon(os.path.join(ASSETS_DIR_PATH, "trash-icon.png")))
+            delete_btn.setIconSize(QSize(28, 28))
+            delete_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+
+            # Connect delete action
+            delete_btn.clicked.connect(lambda checked, a=item.activity: self.on_unschedule_click(a))
+
+            card_h_layout.addWidget(delete_btn, alignment=Qt.AlignmentFlag.AlignVCenter)
 
             self.scheduled_list_layout.addWidget(card)
 
@@ -283,6 +305,20 @@ class RunPage(BasePage):
                 self,
                 "Scheduling Failed",
                 "An unexpected error occurred while scheduling the activity. Please try again.",
+            )
+
+        self._update_scheduled_list()
+
+    def on_unschedule_click(self, activity: Activity):
+        """Removes the activity from the scheduler and refreshes UI."""
+        try:
+            scheduler = get_scheduler()
+            scheduler.unschedule_activity(activity)
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Unscheduling Failed",
+                "An unexpected error occurred while unscheduling the activity. Please try again.",
             )
 
         self._update_scheduled_list()
