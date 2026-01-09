@@ -24,6 +24,7 @@ from PyQt6.QtWidgets import (
     QScrollArea,
     QFrame,
     QPushButton,
+    QSizePolicy,
 )
 from PyQt6.QtGui import QIcon
 
@@ -113,10 +114,12 @@ class RunPage(BasePage):
         self.sidebar_layout.addWidget(header_widget)
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.scroll_area.setFrameShape(QFrame.Shape.NoFrame)
         self.scroll_area.setStyleSheet("background: transparent;")
         self.scheduled_list_widget = QWidget()
         self.scheduled_list_layout = QVBoxLayout(self.scheduled_list_widget)
+        self.scheduled_list_layout.setContentsMargins(0, 0, 10, 0)
         self.scheduled_list_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.scroll_area.setWidget(self.scheduled_list_widget)
         self.sidebar_layout.addWidget(self.scroll_area)
@@ -193,9 +196,11 @@ class RunPage(BasePage):
 
             # Use QHBoxLayout to put info on left and delete button on right
             card_h_layout = QHBoxLayout(card)
+            card_h_layout.setContentsMargins(5, 5, 5, 5)
 
             # Container for text labels
             text_container = QWidget()
+            text_container.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
             text_layout = QVBoxLayout(text_container)
             text_layout.setContentsMargins(0, 0, 0, 0)
             text_layout.setSpacing(2)
