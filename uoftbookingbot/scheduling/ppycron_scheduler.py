@@ -1,5 +1,5 @@
 from uoftbookingbot.activity import Activity
-from uoftbookingbot.scheduling.scheduler import Scheduler
+from uoftbookingbot.scheduling.scheduler import ScheduledActivity, Scheduler
 from uoftbookingbot.scheduling.constants import FIRST_VALID_CLEANUP_BUFFER_SECONDS
 from uoftbookingbot.scheduling.utils import (
     create_activity_from_program_args,
@@ -22,23 +22,22 @@ class PPyCronScheduler(Scheduler):
     def __init__(self) -> None:
         self.interface = WindowsInterface() if platform.system() == "Windows" else UnixInterface()
 
-    def schedule_activity(self, activity: Activity) -> None:
-        if self.is_activity_scheduled(activity):
-            self.unschedule_activity(activity)
+    def schedule_activity(self, activity: Activity) -> ScheduledActivity:
+        self.unschedule_activity(activity)
 
         command_str = self._get_cron_command_for_activity(activity)
-        interval_str = self._get_cron_interval_for_activity(activity)
+        booking_dt_local = get_scheduler_run_datetime(activity)
+        interval_str = f"{booking_dt_local.minute} {booking_dt_local.hour} {booking_dt_local.day} {booking_dt_local.month} *"
         self.interface.add(command=command_str, interval=interval_str)
 
-    def unschedule_activity(self, activity: Activity) -> None:
-        if not self.is_activity_scheduled(activity):
-            return
+        return ScheduledActivity(activity=activity, run_at=booking_dt_local)
 
+    def unschedule_activity(self, activity: Activity) -> None:
         activity_crons = self._get_all_crons_for_activity(activity)
         for cron in activity_crons:
             self.interface.delete(cron.id)
 
-    def get_scheduled_activities(self) -> list[Activity]:
+    def get_scheduled_activities(self) -> list[ScheduledActivity]:
         activities = []
         all_crons = self.interface.get_all()
         now = datetime.now().astimezone()
@@ -57,7 +56,11 @@ class PPyCronScheduler(Scheduler):
             if self._is_schedule_expired(candidate_activity, cron, now, strict=True):
                 continue
 
-            activities.append(candidate_activity)
+            scheduled_activity = ScheduledActivity(
+                activity=candidate_activity,
+                run_at=self._get_cron_scheduled_time(cron, candidate_activity),
+            )
+            activities.append(scheduled_activity)
 
         return activities
 
@@ -96,15 +99,6 @@ class PPyCronScheduler(Scheduler):
 
         return re.sub(r" -o \d+| --no-wait", "", command)
 
-    def _get_cron_interval_for_activity(self, activity: Activity) -> str:
-        """Return the cron interval string for the given activity. Raise ValueError if the activity
-        is in the past."""
-
-        booking_dt_local = get_scheduler_run_datetime(activity)
-        if booking_dt_local is None:
-            raise ValueError("Cannot schedule an activity in the past.")
-        return f"{booking_dt_local.minute} {booking_dt_local.hour} {booking_dt_local.day} {booking_dt_local.month} *"
-
     def _get_all_crons_for_activity(self, activity: Activity) -> list[Cron]:
         """Return all ppycron Cron objects corresponding to the given activity."""
 
@@ -116,18 +110,15 @@ class PPyCronScheduler(Scheduler):
             if cron.command.startswith(command_str_with_no_offset_args)
         ]
 
-    def _is_schedule_expired(
-        self, activity: Activity, cron: Cron, now: datetime, strict: bool
-    ) -> bool:
-        """Return True iff the schedule for the given activity is expired (or invalid) based on its
-        cron content."""
+    def _get_cron_scheduled_time(self, cron: Cron, activity: Activity) -> datetime:
+        """Return the scheduled datetime for the given cron and activity in the user's local timezone."""
 
         if not self.interface.is_valid_cron_format(cron.interval):
-            return True
+            raise ValueError("Invalid cron format")
 
         minute, hour, day, month, weekday = cron.interval.split()
         if minute == "*" or hour == "*" or day == "*" or month == "*" or weekday != "*":
-            return True
+            raise ValueError("Unexpected cron format")
 
         try:
             month = int(month)
@@ -135,7 +126,7 @@ class PPyCronScheduler(Scheduler):
             hour = int(hour)
             minute = int(minute)
         except Exception:
-            return True
+            raise ValueError("Cannot parse cron schedule values")
 
         activity_start_dt_local = activity.get_session_start_datetime().astimezone()
         scheduled_dt_local = datetime(
@@ -147,6 +138,19 @@ class PPyCronScheduler(Scheduler):
         ).astimezone()
         if scheduled_dt_local > activity_start_dt_local:
             scheduled_dt_local = scheduled_dt_local.replace(year=activity_start_dt_local.year - 1)
+
+        return scheduled_dt_local
+
+    def _is_schedule_expired(
+        self, activity: Activity, cron: Cron, now: datetime, strict: bool
+    ) -> bool:
+        """Return True iff the schedule for the given activity is expired (or invalid) based on its
+        cron content."""
+
+        try:
+            scheduled_dt_local = self._get_cron_scheduled_time(cron, activity)
+        except ValueError:
+            return True
 
         if strict:
             return scheduled_dt_local < now

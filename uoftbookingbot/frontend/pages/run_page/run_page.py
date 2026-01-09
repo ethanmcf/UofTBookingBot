@@ -1,4 +1,3 @@
-from datetime import datetime, timedelta
 from uoftbookingbot.activity import Activity
 from uoftbookingbot.frontend.pages.base_page import BasePage
 from uoftbookingbot.frontend.components.primary_button import PrimaryButton
@@ -12,7 +11,7 @@ from uoftbookingbot.automation.bot_worker import BotWorker
 from uoftbookingbot.scheduling.api import get_scheduler
 from uoftbookingbot.frontend.theme import Colors
 from uoftbookingbot.constants import ACTIVITIES
-from PyQt6.QtCore import Qt, pyqtSignal, QThread, QCoreApplication
+from PyQt6.QtCore import Qt, pyqtSignal, QThread
 from PyQt6.QtWidgets import (
     QWidget,
     QHBoxLayout,
@@ -162,33 +161,20 @@ class RunPage(BasePage):
         )
         scheduler = get_scheduler()
         try:
-            scheduler.schedule_activity(activity)
-
-            # Calculate booking datetime for user info
-            booking_datetime = None
-            if activity.posting_offset is not None:
-                booking_datetime = datetime.strptime(
-                    f"{selected_date} {selected_time}", "%Y-%m-%d %H:%M"
-                ) - timedelta(days=activity.posting_offset, seconds=300)
+            scheduled_activity = scheduler.schedule_activity(activity)
 
             # Show success message
+            session_start = activity.get_session_start_datetime()
             success_message = (
                 f"Successfully scheduled the bot to book the following activity:"
                 f"\n\n"
-                f"{selected_sport} at {selected_date} {selected_time}"
+                f"{selected_sport} on {session_start.strftime('%A, %B %-d')} at"
+                f"  {session_start.strftime('%I:%M %p %Z')}"
                 f"\n\n"
+                f"The bot will attempt to run on {scheduled_activity.run_at.strftime('%A, %B %-d')}"
+                f" at {scheduled_activity.run_at.strftime('%I:%M %p %Z')}. Please ensure your"
+                f" computer is on and connected to the internet at this time."
             )
-            if booking_datetime is None or booking_datetime <= datetime.now():
-                success_message += (
-                    f"The booking period appears to be open, so the bot will attempt to run within"
-                    f" the next minute. Please ensure your computer is on and connected to the internet."
-                )
-            else:
-                success_message += (
-                    f"The bot will attempt to run on {booking_datetime.strftime('%Y-%m-%d')} at"
-                    f" {booking_datetime.strftime('%H:%M')}. Please ensure your computer is on and"
-                    f" connected to the internet at this time."
-                )
             QMessageBox.information(self, "Success", success_message)
         except ValueError as e:
             QMessageBox.critical(

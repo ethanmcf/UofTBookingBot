@@ -1,5 +1,5 @@
 from uoftbookingbot.activity import Activity
-from uoftbookingbot.scheduling.scheduler import Scheduler
+from uoftbookingbot.scheduling.scheduler import ScheduledActivity, Scheduler
 from uoftbookingbot.scheduling.constants import FIRST_VALID_CLEANUP_BUFFER_SECONDS
 from uoftbookingbot.scheduling.utils import (
     create_activity_from_program_args,
@@ -20,9 +20,8 @@ class LaunchdScheduler(Scheduler):
     _JOB_PREFIX = "com.uoftbookingbot"
     _AGENT_DIR: str = os.path.expanduser("~/Library/LaunchAgents")
 
-    def schedule_activity(self, activity: Activity) -> None:
-        if self.is_activity_scheduled(activity):
-            self.unschedule_activity(activity)
+    def schedule_activity(self, activity: Activity) -> ScheduledActivity:
+        self.unschedule_activity(activity)
 
         booking_dt_local = get_scheduler_run_datetime(activity)
         label = self._get_unique_launchd_label(activity)
@@ -49,18 +48,17 @@ class LaunchdScheduler(Scheduler):
         with open(plist_path, "wb") as f:
             plistlib.dump(plist_content, f)
 
-        subprocess.run(["launchctl", "bootstrap", f"gui/{os.getuid()}", plist_path], check=False)
-        subprocess.run(["launchctl", "enable", f"gui/{os.getuid()}/{label}"], check=False)
+        subprocess.run(["launchctl", "bootstrap", f"gui/{os.getuid()}", plist_path], check=True)
+        subprocess.run(["launchctl", "enable", f"gui/{os.getuid()}/{label}"], check=True)
+
+        return ScheduledActivity(activity=activity, run_at=booking_dt_local)
 
     def unschedule_activity(self, activity: Activity) -> None:
-        if not self.is_activity_scheduled(activity):
-            return
-
         label = self._get_unique_launchd_label(activity)
         plist_path = self._get_plist_path_from_label(label)
-        self._remove_job_from_launchctl(plist_path, label)
+        self._remove_job_from_launchctl(plist_path, label, raise_errors=False)
 
-    def get_scheduled_activities(self) -> list[Activity]:
+    def get_scheduled_activities(self) -> list[ScheduledActivity]:
         activities = []
         plist_paths = self._get_all_activity_plists()
         now = datetime.now().astimezone()
@@ -79,7 +77,11 @@ class LaunchdScheduler(Scheduler):
                 if self._is_schedule_expired(candidate_activity, plist_content, now, strict=True):
                     continue
 
-                activities.append(candidate_activity)
+                scheduled_activity = ScheduledActivity(
+                    activity=candidate_activity,
+                    run_at=self._get_plist_scheduled_time(plist_content, candidate_activity),
+                )
+                activities.append(scheduled_activity)
 
         return activities
 
@@ -100,13 +102,13 @@ class LaunchdScheduler(Scheduler):
                     candidate_activity = create_activity_from_program_args(program_args)
                 except ValueError:
                     label = plist_content.get("Label")
-                    self._remove_job_from_launchctl(plist_path, label)
+                    self._remove_job_from_launchctl(plist_path, label, raise_errors=False)
                     continue
 
                 # Ensure scheduled activity is valid and set to be booked in the future
                 if self._is_schedule_expired(candidate_activity, plist_content, now, strict=False):
                     label = plist_content.get("Label")
-                    self._remove_job_from_launchctl(plist_path, label)
+                    self._remove_job_from_launchctl(plist_path, label, raise_errors=False)
                     continue
 
     def _get_unique_launchd_label(self, activity: Activity) -> str:
@@ -134,19 +136,23 @@ class LaunchdScheduler(Scheduler):
 
         return plist_paths
 
-    def _remove_job_from_launchctl(self, plist_path: str, job_id: Optional[str]) -> None:
+    def _remove_job_from_launchctl(
+        self, plist_path: str, job_id: Optional[str], raise_errors: bool = False
+    ) -> None:
         """Remove a job from launchctl and delete its plist file."""
 
         if job_id:
-            subprocess.run(["launchctl", "bootout", f"gui/{os.getuid()}/{job_id}"], check=False)
+            subprocess.run(
+                ["launchctl", "bootout", f"gui/{os.getuid()}/{job_id}"], check=raise_errors
+            )
         if os.path.exists(plist_path):
             os.remove(plist_path)
 
-    def _is_schedule_expired(
-        self, activity: Activity, plist_content: dict[str, Any], now: datetime, strict: bool
-    ) -> bool:
-        """Return True iff the schedule for the given activity is expired (or invalid) based on its
-        plist content."""
+    def _get_plist_scheduled_time(
+        self, plist_content: dict[str, Any], activity: Activity
+    ) -> datetime:
+        """Return the scheduled run time for the given activity based on its plist content.
+        Raises ValueError if the plist content is invalid."""
 
         start_calendar_interval = plist_content.get("StartCalendarInterval", {})
         month = start_calendar_interval.get("Month")
@@ -155,7 +161,7 @@ class LaunchdScheduler(Scheduler):
         minute = start_calendar_interval.get("Minute")
 
         if month is None or day is None or hour is None or minute is None:
-            return True
+            raise ValueError("Invalid plist content")
 
         activity_start_dt_local = activity.get_session_start_datetime().astimezone()
         scheduled_dt_local = datetime(
@@ -167,6 +173,19 @@ class LaunchdScheduler(Scheduler):
         ).astimezone()
         if scheduled_dt_local > activity_start_dt_local:
             scheduled_dt_local = scheduled_dt_local.replace(year=activity_start_dt_local.year - 1)
+
+        return scheduled_dt_local
+
+    def _is_schedule_expired(
+        self, activity: Activity, plist_content: dict[str, Any], now: datetime, strict: bool
+    ) -> bool:
+        """Return True iff the schedule for the given activity is expired (or invalid) based on its
+        plist content."""
+
+        try:
+            scheduled_dt_local = self._get_plist_scheduled_time(plist_content, activity)
+        except ValueError:
+            return True
 
         if strict:
             return scheduled_dt_local < now
