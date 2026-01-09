@@ -1,9 +1,8 @@
-import os
 from uoftbookingbot.activity import Activity
-from uoftbookingbot.frontend.constants import ASSETS_DIR_PATH
 from uoftbookingbot.frontend.pages.base_page import BasePage
 from uoftbookingbot.frontend.components.primary_button import PrimaryButton
 from uoftbookingbot.frontend.components.secondary_button import SecondaryButton
+from uoftbookingbot.frontend.pages.run_page.scheduled_sidebar import ScheduledSidebar
 from uoftbookingbot.frontend.pages.run_page.calendar import Calendar
 from uoftbookingbot.frontend.pages.run_page.sport_dropdown import SportDropdown
 from uoftbookingbot.frontend.pages.run_page.time_picker import TimePicker
@@ -13,7 +12,7 @@ from uoftbookingbot.automation.bot_worker import BotWorker
 from uoftbookingbot.scheduling.api import get_scheduler
 from uoftbookingbot.frontend.theme import Colors
 from uoftbookingbot.constants import ACTIVITIES
-from PyQt6.QtCore import Qt, pyqtSignal, QThread, QSize
+from PyQt6.QtCore import Qt, pyqtSignal, QThread
 from PyQt6.QtWidgets import (
     QWidget,
     QHBoxLayout,
@@ -21,12 +20,7 @@ from PyQt6.QtWidgets import (
     QGridLayout,
     QLabel,
     QMessageBox,
-    QScrollArea,
-    QFrame,
-    QPushButton,
-    QSizePolicy,
 )
-from PyQt6.QtGui import QIcon
 
 
 class RunPage(BasePage):
@@ -90,40 +84,8 @@ class RunPage(BasePage):
         self.content_layout.addWidget(self.form_container)
 
         # Right side (Scheduled Activities Sidebar)
-        self.sidebar_container = QWidget()
-        self.sidebar_container.setFixedWidth(300)
-        self.sidebar_layout = QVBoxLayout(self.sidebar_container)
-        # Header layout for Title and Refresh Button
-        header_widget = QWidget()
-        header_layout = QHBoxLayout(header_widget)
-        header_layout.setContentsMargins(0, 0, 0, 0)
-        sidebar_title = QLabel("Activities to Book")
-        sidebar_title.setStyleSheet(
-            f"color: {Colors.TEXT_MAIN}; font-size: 16px; font-weight: bold;"
-        )
-        self.refresh_btn = SecondaryButton("")
-        self.refresh_btn.btn.setIcon(
-            QIcon(os.path.join(ASSETS_DIR_PATH, "arrow-rotate-right-solid-full.svg"))
-        )
-        self.refresh_btn.btn.setIconSize(QSize(16, 16))
-        self.refresh_btn.btn.setFixedSize(32, 32)
-        self.refresh_btn.btn.clicked.connect(self._update_scheduled_list)
-        header_layout.addWidget(sidebar_title)
-        header_layout.addStretch()
-        header_layout.addWidget(self.refresh_btn)
-        self.sidebar_layout.addWidget(header_widget)
-        self.scroll_area = QScrollArea()
-        self.scroll_area.setWidgetResizable(True)
-        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.scroll_area.setFrameShape(QFrame.Shape.NoFrame)
-        self.scroll_area.setStyleSheet("background: transparent;")
-        self.scheduled_list_widget = QWidget()
-        self.scheduled_list_layout = QVBoxLayout(self.scheduled_list_widget)
-        self.scheduled_list_layout.setContentsMargins(0, 0, 10, 0)
-        self.scheduled_list_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.scroll_area.setWidget(self.scheduled_list_widget)
-        self.sidebar_layout.addWidget(self.scroll_area)
-        self.content_layout.addWidget(self.sidebar_container)
+        self.sidebar = ScheduledSidebar(on_unschedule_handler=self.on_unschedule_click)
+        self.content_layout.addWidget(self.sidebar)
 
         self.master_layout.addWidget(self.content_widget, 1, 1)
 
@@ -157,86 +119,7 @@ class RunPage(BasePage):
             """
         )
 
-        self._update_scheduled_list()
-
-    def _update_scheduled_list(self):
-        """Refreshes the sidebar with current scheduled activities and delete buttons."""
-
-        # Clear existing items
-        while self.scheduled_list_layout.count():
-            item = self.scheduled_list_layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
-
-        scheduler = get_scheduler()
-        scheduled_items = scheduler.get_scheduled_activities()
-
-        if not scheduled_items:
-            no_items_label = QLabel("No activities scheduled for booking.")
-            no_items_label.setStyleSheet(f"color: {Colors.TEXT_MAIN}; font-style: italic;")
-            self.scheduled_list_layout.addWidget(no_items_label)
-            return
-
-        # Sort by run time
-        scheduled_items.sort(key=lambda x: x.run_at)
-
-        for item in scheduled_items:
-            card = QFrame()
-            card.setFrameShape(QFrame.Shape.StyledPanel)
-            card.setStyleSheet(
-                f"""
-                QFrame {{
-                    background-color: #f8f9fa;
-                    border: 1px solid #dee2e6;
-                    border-radius: 8px;
-                    padding: 5px;
-                }}
-            """
-            )
-
-            # Use QHBoxLayout to put info on left and delete button on right
-            card_h_layout = QHBoxLayout(card)
-            card_h_layout.setContentsMargins(5, 5, 5, 5)
-
-            # Container for text labels
-            text_container = QWidget()
-            text_container.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-            text_layout = QVBoxLayout(text_container)
-            text_layout.setContentsMargins(0, 0, 0, 0)
-            text_layout.setSpacing(2)
-
-            # Find sport name from ID
-            sport_name = next(
-                (name for name, d in ACTIVITIES.items() if d.get("id", "") == item.activity.id),
-                "Unknown Sport",
-            )
-
-            session_dt = item.activity.get_session_start_datetime()
-
-            title = QLabel(f"<b>{sport_name}</b>")
-            session_info = QLabel(f"Session: {session_dt.strftime('%b %d, %I:%M %p')}")
-            run_info = QLabel(f"Bot Run: {item.run_at.strftime('%b %d, %I:%M %p')}")
-
-            label_style = f"color: {Colors.TEXT_MAIN}; font-size: 11px;"
-            for lbl in [title, session_info, run_info]:
-                lbl.setStyleSheet(label_style)
-                text_layout.addWidget(lbl)
-
-            card_h_layout.addWidget(text_container)
-            card_h_layout.addStretch()
-
-            # Delete Button
-            delete_btn = QPushButton()
-            delete_btn.setIcon(QIcon(os.path.join(ASSETS_DIR_PATH, "trash-icon.png")))
-            delete_btn.setIconSize(QSize(28, 28))
-            delete_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-
-            # Connect delete action
-            delete_btn.clicked.connect(lambda checked, a=item.activity: self.on_unschedule_click(a))
-
-            card_h_layout.addWidget(delete_btn, alignment=Qt.AlignmentFlag.AlignVCenter)
-
-            self.scheduled_list_layout.addWidget(card)
+        self.sidebar.refresh_list()
 
     def _get_form_data(self):
         """Extracts and formats current selection from UI components.
@@ -312,7 +195,7 @@ class RunPage(BasePage):
                 "An unexpected error occurred while scheduling the activity. Please try again.",
             )
 
-        self._update_scheduled_list()
+        self.sidebar.refresh_list()
 
     def on_unschedule_click(self, activity: Activity):
         """Removes the activity from the scheduler and refreshes UI."""
@@ -326,7 +209,7 @@ class RunPage(BasePage):
                 "An unexpected error occurred while unscheduling the activity. Please try again.",
             )
 
-        self._update_scheduled_list()
+        self.sidebar.refresh_list()
 
     def on_log_update(self, message):
         """Updates loading message when bot logs new info"""
