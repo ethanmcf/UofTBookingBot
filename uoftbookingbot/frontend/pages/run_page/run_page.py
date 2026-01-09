@@ -52,6 +52,7 @@ class RunPage(BasePage):
         self.form_container.setMinimumWidth(300)
         self.form_layout = QVBoxLayout(self.form_container)
         self.form_layout.setSpacing(15)
+        self.form_layout.addStretch()
 
         label_style = f"color: {Colors.TEXT_MAIN}"
 
@@ -70,7 +71,6 @@ class RunPage(BasePage):
         self.form_layout.addWidget(self.sport_dropdown)
 
         # Action Buttons
-        self.form_layout.addStretch()
         self.run_btn = PrimaryButton("Run")
         self.run_btn.btn.clicked.connect(self.on_run_click)
 
@@ -79,6 +79,7 @@ class RunPage(BasePage):
 
         self.form_layout.addWidget(self.schedule_btn)
         self.form_layout.addWidget(self.run_btn)
+        self.form_layout.addStretch()
 
         # Add to center of grid
         self.content_layout.addWidget(self.form_container)
