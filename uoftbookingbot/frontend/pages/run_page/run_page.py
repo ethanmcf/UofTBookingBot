@@ -1,4 +1,6 @@
+import os
 from uoftbookingbot.activity import Activity
+from uoftbookingbot.frontend.constants import ASSETS_DIR_PATH
 from uoftbookingbot.frontend.pages.base_page import BasePage
 from uoftbookingbot.frontend.components.primary_button import PrimaryButton
 from uoftbookingbot.frontend.components.secondary_button import SecondaryButton
@@ -11,7 +13,7 @@ from uoftbookingbot.automation.bot_worker import BotWorker
 from uoftbookingbot.scheduling.api import get_scheduler
 from uoftbookingbot.frontend.theme import Colors
 from uoftbookingbot.constants import ACTIVITIES
-from PyQt6.QtCore import Qt, pyqtSignal, QThread
+from PyQt6.QtCore import Qt, pyqtSignal, QThread, QSize
 from PyQt6.QtWidgets import (
     QWidget,
     QHBoxLayout,
@@ -22,6 +24,7 @@ from PyQt6.QtWidgets import (
     QScrollArea,
     QFrame,
 )
+from PyQt6.QtGui import QIcon
 
 
 class RunPage(BasePage):
@@ -88,11 +91,25 @@ class RunPage(BasePage):
         self.sidebar_container = QWidget()
         self.sidebar_container.setFixedWidth(300)
         self.sidebar_layout = QVBoxLayout(self.sidebar_container)
+        # Header layout for Title and Refresh Button
+        header_widget = QWidget()
+        header_layout = QHBoxLayout(header_widget)
+        header_layout.setContentsMargins(0, 0, 0, 0)
         sidebar_title = QLabel("Scheduled Bookings")
         sidebar_title.setStyleSheet(
             f"color: {Colors.TEXT_MAIN}; font-size: 16px; font-weight: bold;"
         )
-        self.sidebar_layout.addWidget(sidebar_title)
+        self.refresh_btn = SecondaryButton("")
+        self.refresh_btn.btn.setIcon(
+            QIcon(os.path.join(ASSETS_DIR_PATH, "arrow-rotate-right-solid-full.svg"))
+        )
+        self.refresh_btn.btn.setIconSize(QSize(16, 16))
+        self.refresh_btn.btn.setFixedSize(32, 32)
+        self.refresh_btn.btn.clicked.connect(self._update_scheduled_list)
+        header_layout.addWidget(sidebar_title)
+        header_layout.addStretch()
+        header_layout.addWidget(self.refresh_btn)
+        self.sidebar_layout.addWidget(header_widget)
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setFrameShape(QFrame.Shape.NoFrame)
