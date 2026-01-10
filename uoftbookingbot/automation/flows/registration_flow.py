@@ -291,14 +291,12 @@ def run_registration_flow(
             # - Payment page (no captcha appeared; user has no family members)
             captcha_locator = page.locator("#modal-captcha-confirm")
             family_member_section_locator = page.locator("#family-member-section")
-            payment_page_locator = page.locator(
-                "#groupRegistrationStepData", has_text="How would you like to pay?"
-            )
+            registration_steps_locator = page.locator("#registrationStepList")
             expect(
                 captcha_locator.filter(visible=True)
                 .or_(family_member_section_locator)
                 .filter(visible=True)
-                .or_(payment_page_locator)
+                .or_(registration_steps_locator)
                 .filter(visible=True)
             ).to_be_visible()
 
@@ -313,7 +311,7 @@ def run_registration_flow(
                 logger.log_info("CAPTCHA solved.")
 
             # CAPTCHA handled (if needed); proceed with registration flow depending on whether user has family members
-            expect(family_member_section_locator.or_(payment_page_locator)).to_be_visible()
+            expect(family_member_section_locator.or_(registration_steps_locator)).to_be_visible()
 
             # Complete family member selection modal (if applicable)
             if family_member_section_locator.is_visible():
@@ -322,33 +320,44 @@ def run_registration_flow(
                 ).first.click()
                 page.locator("#btnNext").click()
 
-            # Complete payment options page (assumes no payment required)
-            # Note: Getting here means registration was successful
-            expect(payment_page_locator).to_be_visible()
-            logger.log_info("Successfully registered for the activity. Completing checkout...")
+            # Check that we are in the registration steps/checkout flow
+            # Note: Getting here means that the session slot has been reserved successfully
+            # (but not yet registered)
+            expect(registration_steps_locator).to_be_visible()
+            logger.log_info("Successfully reserved a slot for the activity. Completing checkout...")
 
-            # Click Next or Proceed to Checkout button (depends on whether waivers are needed)
-            next_button_locator = page.get_by_role("button", name="Next")
-            checkout_button_locator = page.get_by_role("button", name="shopping_cart Proceed to")
-            has_waivers = False
-            expect(next_button_locator.or_(checkout_button_locator)).to_be_visible()
-            if next_button_locator.is_visible():
-                next_button_locator.click()
-                has_waivers = True
-            else:
-                checkout_button_locator.click()
-
-            # Complete waivers page (if applicable)
-            if has_waivers:
-                expect(page.locator("#groupRegistrationStepData")).to_contain_text(
-                    "Please review and accept"
+            # Complete registration steps until checkout
+            on_checkout_page = False
+            while not on_checkout_page:
+                # Get the active checkout/registration step
+                active_step_locator = registration_steps_locator.locator(
+                    ".registrationStep.active .stepText"
                 )
-                page.get_by_role("button", name="expand_more").click()
-                page.get_by_role("button", name="Accept").click()
-                page.get_by_role("button", name="shopping_cart Proceed to").click()
+                active_step = active_step_locator.inner_text().strip().lower()
 
-            # Complete checkout page
-            expect(page.locator("h1")).to_contain_text("Shopping Cart")
+                # Complete waivers page (if applicable)
+                if active_step == "waivers":
+                    waivers_page_identifier = page.get_by_role(
+                        "heading", name="Please review and accept"
+                    )
+                    expect(waivers_page_identifier).to_be_visible()
+                    page.get_by_role("button", name="expand_more").click()
+                    page.get_by_role("button", name="Accept").click()
+
+                # Click Next or Proceed to Checkout button until we reach checkout
+                next_button_locator = page.get_by_role("button", name="Next")
+                checkout_button_locator = page.get_by_role("button", name="Proceed to Checkout")
+                expect(next_button_locator.or_(checkout_button_locator)).to_be_visible()
+                if next_button_locator.is_visible():
+                    next_button_locator.click()
+                    continue
+                else:
+                    checkout_button_locator.click()
+                    on_checkout_page = True
+
+            # Complete checkout/shopping cart page
+            cart_page_identifier = page.locator("h1", has_text="Shopping Cart")
+            expect(cart_page_identifier).to_be_visible()
             page.get_by_role("button", name="Checkout").click()
             page.locator("#btnCheckoutCart").click()
 
