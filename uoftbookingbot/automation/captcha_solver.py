@@ -1,5 +1,10 @@
 import os, ssl, certifi, random, time
 import urllib.request
+import static_ffmpeg
+import tempfile
+
+static_ffmpeg.add_paths()
+
 import pydub
 import speech_recognition
 from playwright.sync_api import Page, Locator, expect
@@ -17,7 +22,6 @@ class CaptchaSolver:
     """A class to solve reCAPTCHA challenges using audio recognition."""
 
     # Constants
-    TEMP_DIR = "/tmp"
     TIMEOUT_IS_DETECTED = 500
     TIMEOUT_IS_SOLVED = 100
 
@@ -61,7 +65,7 @@ class CaptchaSolver:
         if self.is_solved():
             return
 
-        print("Challenge requires more than checkbox click, proceeding to audio challenge...")
+        self.logger.log_info("Challenge requires more than checkbox click, proceeding to audio challenge...")
 
         # Open audio challenge
         challenge_frame = self.page.frame_locator('iframe[src*="bframe"]').first
@@ -73,7 +77,7 @@ class CaptchaSolver:
             raise CaptchaSolverFailedError("Bot detected after clicking audio challenge button.")
 
         # Download audio and transcribe
-        print("Analyzing captcha audio")
+        self.logger.log_info("Analyzing captcha audio")
         audio_src = challenge_frame.locator("#audio-source").get_attribute("src")
 
         if not audio_src:
@@ -81,7 +85,7 @@ class CaptchaSolver:
 
         text_response = self._process_audio_challenge(audio_src)
 
-        print(f"Entering captcha audio transcript: {text_response}")
+        self.logger.log_info(f"Entering captcha audio transcript: {text_response}")
 
         response_field = challenge_frame.locator("#audio-response")
         response_field.press_sequentially(text_response.lower(), delay=40)
@@ -103,8 +107,8 @@ class CaptchaSolver:
         Returns:
             str: Recognized text from the audio file
         """
-        mp3_path = os.path.join(self.TEMP_DIR, f"{random.randrange(1,1000)}.mp3")
-        wav_path = os.path.join(self.TEMP_DIR, f"{random.randrange(1,1000)}.wav")
+        mp3_path = os.path.join(tempfile.gettempdir(), f"{random.randrange(1,1000)}.mp3")
+        wav_path = os.path.join(tempfile.gettempdir(), f"{random.randrange(1,1000)}.wav")
 
         try:
             ctx = ssl.create_default_context(cafile=certifi.where())

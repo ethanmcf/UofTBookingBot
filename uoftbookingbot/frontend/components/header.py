@@ -35,7 +35,7 @@ class Header(QWidget):
         self.logo_img.setPixmap(scaled_icon)
         self.logo_label = QLabel("Blue & Booked")
         self.logo_label.setStyleSheet(
-            "background: none; font-weight: bold; font-size: 20px; border: none;"
+            "background: none; font-weight: bold; font-size: 20px; border: none; color: white"
         )
         self.logo_layout.addWidget(self.logo_img)
         self.logo_layout.addWidget(self.logo_label)
