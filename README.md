@@ -27,12 +27,10 @@ source .venv/bin/activate # activate virtual environment
 pip install -r requirements.txt # install dependencies
 playwright install chromium # install playwright browser dependencies
 
-# WINDOWS 
+# WINDOWS
 python -m venv .venv # create virtual environment
 .venv\Scripts\activate
 pip install -r requirements.txt # install dependencies
-$ffmpegPath = (Get-ChildItem -Path "$env:LOCALAPPDATA\Microsoft\WinGet\Packages" -Filter "ffmpeg.exe" -Recurse -ErrorAction SilentlyContinue).DirectoryName
-[Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";$ffmpegPath", "User")
 playwright install chromium # install playwright browser dependencies
 
 ```
