@@ -173,15 +173,17 @@ class RunPage(BasePage):
 
             # Show success message
             session_start = activity.get_session_start_datetime()
+            day_start = session_start.strftime("%d").lstrip("0")
+            day_run = scheduled_activity.run_at.strftime("%d").lstrip("0")
             success_message = (
                 f"Successfully scheduled the bot to book the following activity:"
                 f"\n\n"
-                f"{selected_sport} on {session_start.strftime('%A, %B %-d')} at"
+                f"{selected_sport} on {session_start.strftime('%A, %B')} {day_start} at"
                 f"  {session_start.strftime('%I:%M %p %Z')}"
                 f"\n\n"
-                f"The bot will attempt to run on {scheduled_activity.run_at.strftime('%A, %B %-d')}"
-                f" at {scheduled_activity.run_at.strftime('%I:%M %p %Z')}. Please ensure your"
-                f" computer is on and connected to the internet at this time."
+                f"The bot will attempt to run on {scheduled_activity.run_at.strftime('%A, %B')}"
+                f" {day_run} at {scheduled_activity.run_at.strftime('%I:%M %p %Z')}. Please ensure"
+                f" your computer is on and connected to the internet at this time."
             )
             QMessageBox.information(self, "Success", success_message)
         except ValueError as e:
