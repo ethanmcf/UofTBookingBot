@@ -28,11 +28,20 @@ pip install -r requirements.txt # install dependencies
 playwright install chromium # install playwright browser dependencies
 
 # WINDOWS
-python -m venv .venv # create virtual environment
+# Environment Setup
+python -m venv .venv
 .venv\Scripts\activate
-pip install -r requirements.txt # install dependencies
-playwright install chromium # install playwright browser dependencies
+pip install --upgrade pip
 
+# Dependency Installation
+pip install -r requirements.txt
+playwright install chromium
+
+# PyQt6 DLL Fix (Run this if you get "DLL Load Failed")
+# This specific version is more stable for Windows 10/11 path conflicts
+pip uninstall PyQt6 PyQt6-Qt6 PyQt6-sip -y
+pip cache purge
+pip install PyQt6==6.4.2 PyQt6-Qt6==6.4.2 PyQt6-sip
 ```
 
 Make sure to select the correct interpreter befor running.
