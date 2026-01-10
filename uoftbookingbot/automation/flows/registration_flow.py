@@ -91,15 +91,13 @@ def _wait_until_time_slot_opens(
 ) -> bool:
     """Waits until just before the booking slot opens to start the registration process."""
 
-    activity_datetime = datetime.strptime(
-        f"{activity.start_date} {activity.start_time}:00", "%Y-%m-%d %H:%M:%S"
-    )
+    activity_datetime = activity.get_session_start_datetime()
     wakeup_datetime = (
         activity_datetime
         - timedelta(days=activity.posting_offset)
         - timedelta(seconds=registration_start_buffer_seconds)
     )
-    diff_time = wakeup_datetime - datetime.now()
+    diff_time = wakeup_datetime - datetime.now().astimezone()
     sleep_seconds = max(0, diff_time.total_seconds())
     if sleep_seconds > 0:
         logger.log_info("Registration not open yet, waiting until it opens...")
@@ -125,7 +123,9 @@ def _wait_until_time_slot_opens(
             logger.log_info(f"Waiting {wait_str} until registration opens... ")
 
             time.sleep(1)
-            sleep_seconds -= 1
+
+            diff_time = wakeup_datetime - datetime.now().astimezone()
+            sleep_seconds = max(0, diff_time.total_seconds())
 
         logger.log_info("Wakeup time reached...")
 
