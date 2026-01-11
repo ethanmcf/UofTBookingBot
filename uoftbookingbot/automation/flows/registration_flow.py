@@ -341,6 +341,7 @@ def run_registration_flow(
                         "heading", name="Please review and accept"
                     )
                     expect(waivers_page_identifier).to_be_visible()
+                    page.wait_for_load_state("networkidle")  # Ensure waivers are properly loaded
                     page.get_by_role("button", name="expand_more").click()
                     page.get_by_role("button", name="Accept").click()
 
