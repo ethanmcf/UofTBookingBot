@@ -25,10 +25,8 @@ def run_registration_bot(
         codes_threshold: The minimum number of bypass codes before fetching new ones.
         headless: Whether to run the browser in headless mode.
         debug: Whether to run in debug mode.
-        credentials_path: Path to the login credentials file.
         bypass_codes_path: Path to the bypass codes file.
-        log_path: Path to log directory
-        screenshots_path: Path to screenshots directory
+        ui_signaler: Optional LogSignaler for UI logging.
     Returns:
         bool: True iff registration completed without unhandled exceptions, False otherwise.
     """

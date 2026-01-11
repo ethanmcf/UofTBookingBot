@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from math import ceil
 import time
 from playwright.sync_api import sync_playwright, expect, Page
 from playwright_stealth import Stealth
@@ -291,14 +292,12 @@ def run_registration_flow(
             # - Payment page (no captcha appeared; user has no family members)
             captcha_locator = page.locator("#modal-captcha-confirm")
             family_member_section_locator = page.locator("#family-member-section")
-            payment_page_locator = page.locator(
-                "#groupRegistrationStepData", has_text="How would you like to pay?"
-            )
+            registration_steps_locator = page.locator("#registrationStepList")
             expect(
                 captcha_locator.filter(visible=True)
                 .or_(family_member_section_locator)
                 .filter(visible=True)
-                .or_(payment_page_locator)
+                .or_(registration_steps_locator)
                 .filter(visible=True)
             ).to_be_visible()
 
@@ -313,7 +312,7 @@ def run_registration_flow(
                 logger.log_info("CAPTCHA solved.")
 
             # CAPTCHA handled (if needed); proceed with registration flow depending on whether user has family members
-            expect(family_member_section_locator.or_(payment_page_locator)).to_be_visible()
+            expect(family_member_section_locator.or_(registration_steps_locator)).to_be_visible()
 
             # Complete family member selection modal (if applicable)
             if family_member_section_locator.is_visible():
@@ -322,33 +321,64 @@ def run_registration_flow(
                 ).first.click()
                 page.locator("#btnNext").click()
 
-            # Complete payment options page (assumes no payment required)
-            # Note: Getting here means registration was successful
-            expect(payment_page_locator).to_be_visible()
-            logger.log_info("Successfully registered for the activity. Completing checkout...")
+            # Check that we are in the registration steps/checkout flow
+            # Note: Getting here means that the session slot has been reserved successfully
+            # (but not yet registered)
+            expect(registration_steps_locator).to_be_visible()
+            logger.log_info("Successfully reserved a slot for the activity. Completing checkout...")
 
-            # Click Next or Proceed to Checkout button (depends on whether waivers are needed)
-            next_button_locator = page.get_by_role("button", name="Next")
-            checkout_button_locator = page.get_by_role("button", name="shopping_cart Proceed to")
-            has_waivers = False
-            expect(next_button_locator.or_(checkout_button_locator)).to_be_visible()
-            if next_button_locator.is_visible():
-                next_button_locator.click()
-                has_waivers = True
-            else:
-                checkout_button_locator.click()
+            # Get number of registration steps
+            registration_steps_count = ceil(
+                registration_steps_locator.locator(".registrationStep").count()
+            )
 
-            # Complete waivers page (if applicable)
-            if has_waivers:
-                expect(page.locator("#groupRegistrationStepData")).to_contain_text(
-                    "Please review and accept"
+            # Complete registration steps until checkout
+            cart_page_identifier = page.locator("h1", has_text="Shopping Cart")
+            for step_num in range(registration_steps_count):
+                logger.log_info(
+                    f"Completing checkout step {step_num + 1} of {registration_steps_count}..."
                 )
-                page.get_by_role("button", name="expand_more").click()
-                page.get_by_role("button", name="Accept").click()
-                page.get_by_role("button", name="shopping_cart Proceed to").click()
 
-            # Complete checkout page
-            expect(page.locator("h1")).to_contain_text("Shopping Cart")
+                # Wait for page to load fully to avoid issues with dynamic loading
+                page.wait_for_load_state("networkidle", timeout=60000)
+
+                # Get the active checkout/registration step
+                active_step = (
+                    registration_steps_locator.locator(
+                        f".registrationStep:nth-child({(step_num * 2) + 1}) .stepText"
+                    )
+                    .inner_text()
+                    .strip()
+                    .lower()
+                )
+                logger.log_info(
+                    f"Step in progress: {active_step.capitalize()} (step {step_num + 1} of"
+                    f" {registration_steps_count})"
+                )
+
+                # Complete waivers page (if applicable)
+                if active_step == "waivers":
+                    waivers_page_identifier = page.get_by_role(
+                        "heading", name="Please review and accept"
+                    )
+                    expect(waivers_page_identifier).to_be_visible()
+                    expect(page.get_by_text("Not Accepted")).to_be_visible()
+                    page.get_by_role("button", name="expand_more").click()
+                    page.get_by_role("button", name="Accept").click()
+
+                # Click the appropriate button to proceed to the next step or checkout
+                next_button_locator = page.get_by_role("button", name="Next")
+                checkout_button_locator = page.get_by_role("button", name="Proceed to Checkout")
+                finish_step_button_locator = (
+                    checkout_button_locator
+                    if step_num == registration_steps_count - 1
+                    else next_button_locator
+                )
+                expect(finish_step_button_locator).to_be_visible()
+                finish_step_button_locator.click()
+
+            # Complete checkout/shopping cart page
+            expect(cart_page_identifier).to_be_visible()
             page.get_by_role("button", name="Checkout").click()
             page.locator("#btnCheckoutCart").click()
 
