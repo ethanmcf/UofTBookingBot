@@ -43,6 +43,13 @@ class Instructions(QWidget):
             "2) Click ‘Generate Bypass Codes’\n\n"
             "3) Copy any one code into text field"
         )
+        # self.bypass_desc.setTextFormat(Qt.TextFormat.RichText)
+        self.bypass_desc.setOpenExternalLinks(True)
+        self.bypass_desc.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+            | Qt.TextInteractionFlag.LinksAccessibleByMouse
+        )
+        self.bypass_desc.setWordWrap(True)
         self.bypass_desc.setStyleSheet(
             f"color: {Colors.DARK_GRAY}; font-size: 12px; padding-left: 65px"
         )
