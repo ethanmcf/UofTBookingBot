@@ -75,15 +75,13 @@ class DBController:
             self.conn.rollback()
             raise Exception(f"Error wiping security data: {e}")
 
-    def save_bypass_codes(self, bypass_codes):
-        """Iterates through a list of bypass codes and inserts them into the database."""
-        current_codes = [
-            code[0] for code in self.cursor.execute("SELECT code FROM bypass_codes").fetchall()
-        ]
+    def save_bypass_codes(self, bypass_codes: list[str]):
+        """Removes all existing bypass codes and saves the new list of bypass codes to the
+        database."""
         try:
+            self.cursor.execute("DELETE FROM bypass_codes;")
             for code in bypass_codes:
-                if code not in current_codes:
-                    self.cursor.execute("INSERT INTO bypass_codes (code) VALUES (?)", (code,))
+                self.cursor.execute("INSERT INTO bypass_codes (code) VALUES (?)", (code,))
             self.conn.commit()
         except Exception as e:
             self.conn.rollback()
