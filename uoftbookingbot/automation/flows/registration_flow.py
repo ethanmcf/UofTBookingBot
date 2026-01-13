@@ -5,7 +5,6 @@ from playwright.sync_api import sync_playwright, expect, Page
 from playwright_stealth import Stealth
 from uoftbookingbot.activity import Activity
 from uoftbookingbot.automation.captcha_solver import CaptchaSolver
-from uoftbookingbot.automation.flows.common import complete_utorid_login
 from uoftbookingbot.database.db_controller import DBController
 from uoftbookingbot.automation.logger import Logger
 from uoftbookingbot.automation.constants import DEFAULT_TIMEOUT_MILLISECONDS
@@ -245,12 +244,43 @@ def run_registration_flow(
             )
 
             # Sign in with UTORID
-            complete_utorid_login(
-                db_controller=db_controller,
-                page=page,
-                recreation_login=True,
-                logger=logger,
+            logger.log_info("Signing in...")
+
+            # Navigate to sign-in page
+            page.get_by_role("button", name="Sign In").click()
+            page.get_by_role("button", name="school Log in with UTORID").click()
+
+            # Enter UTORID credentials
+            utorid, password = db_controller.get_credentials()
+            page.get_by_role("textbox", name="UTORid / JOINid").click()
+            page.get_by_role("textbox", name="UTORid / JOINid").fill(utorid)
+            page.locator("#password").click()
+            page.locator("#password").fill(password)
+            page.get_by_role("button", name="log in").click()
+
+            # Complete multi-factor authentication (MFA) if needed
+            duo_page_identifier = page.get_by_role("link", name="Other options")
+            recreation_page_identifier = page.get_by_role(
+                "button", name="Shopping Cart Notfications Area"
             )
+            expect(duo_page_identifier.or_(recreation_page_identifier)).to_be_visible()
+            if duo_page_identifier.is_visible():
+                logger.log_info("Completing multi-factor authentication...")
+
+                # Enter bypass code instead of push notification
+                bypass_code = db_controller.consume_bypass_code()
+                page.get_by_role("link", name="Other options").click()
+                page.get_by_role("link", name="Bypass code Enter a code from").click()
+                page.get_by_role("textbox", name="Bypass code").click()
+                page.get_by_role("textbox", name="Bypass code").fill(bypass_code)
+                page.get_by_test_id("verify-button").click()
+
+                # Handle "Is this your device" prompt if it appears
+                my_device_identifier = page.get_by_role("button", name="Yes, this is my device")
+                expect(recreation_page_identifier.or_(my_device_identifier)).to_be_visible()
+                if my_device_identifier.is_visible():
+                    page.get_by_role("button", name="Yes, this is my device").click()
+                    page.wait_for_url("https://recreation.utoronto.ca/")
 
             # Clear cart (if necessary) before starting registration
             _clear_cart(page)
