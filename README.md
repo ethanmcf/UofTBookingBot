@@ -182,3 +182,5 @@ This generates a standalone folder in `dist` named `UofTBookingBot` that can be 
 cd web
 npm run dev
 ```
+
+Prod link: https://uoftbookingbot.vercel.app/
