@@ -157,7 +157,9 @@ python -m uoftbookingbot
 To generate a deployable executable (system dependent):
 
 ```bash
-pyinstaller UofTBookingBot.spec
+PLAYWRIGHT_BROWSERS_PATH=0 python -m playwright install --with-deps --only-shell chromium
+rm -rf /dist /build
+pyinstaller ./UofTBookingBot.spec
 ```
 
 This generates a standalone folder in `dist` named `UofTBookingBot` that can be zipped and shared. You can navigate to this folder in the terminal and run the executable file `UofTBookingBot`. On MacOS, a `UofTBookingBot.app` folder is also created.
