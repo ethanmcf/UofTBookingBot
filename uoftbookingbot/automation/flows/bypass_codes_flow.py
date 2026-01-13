@@ -2,7 +2,6 @@ import re
 from typing import Optional
 from playwright.sync_api import sync_playwright, expect
 from playwright_stealth import Stealth
-from uoftbookingbot.automation.flows.common import complete_utorid_login
 from uoftbookingbot.database.db_controller import DBController
 from uoftbookingbot.automation.constants import DEFAULT_TIMEOUT_MILLISECONDS
 from uoftbookingbot.automation.logger import Logger
@@ -39,13 +38,24 @@ def run_bypass_codes_retrieval_flow(
             # Navigate to the UTORMFA bypass codes page
             page.goto("https://bypass.utormfa.utoronto.ca/index.php")
 
-            # Sign in with UTORID
-            complete_utorid_login(
-                db_controller=db_controller,
-                page=page,
-                recreation_login=False,
-                logger=logger,
-            )
+            logger.log_info("Signing in...")
+
+            # Enter UTORID credentials
+            utorid, password = db_controller.get_credentials()
+            page.get_by_role("textbox", name="UTORid / JOINid").click()
+            page.get_by_role("textbox", name="UTORid / JOINid").fill(utorid)
+            page.locator("#password").click()
+            page.locator("#password").fill(password)
+            page.get_by_role("button", name="log in").click()
+
+            # Complete multi-factor authentication (MFA
+            logger.log_info("Completing multi-factor authentication...")
+            bypass_code = db_controller.consume_bypass_code()
+            page.get_by_role("link", name="Other options").click()
+            page.get_by_role("link", name="Bypass code Enter a code from").click()
+            page.get_by_role("textbox", name="Bypass code").click()
+            page.get_by_role("textbox", name="Bypass code").fill(bypass_code)
+            page.get_by_test_id("verify-button").click()
 
             # Generate new bypass codes
             logger.log_info("Generating bypass codes...")

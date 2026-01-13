@@ -1,5 +1,15 @@
+from dataclasses import dataclass
+from datetime import datetime
 from uoftbookingbot.activity import Activity
 from abc import ABCMeta, abstractmethod
+
+
+@dataclass(frozen=True)
+class ScheduledActivity:
+    """Class representing a scheduled activity session for booking."""
+
+    activity: Activity
+    run_at: datetime
 
 
 class Scheduler:
@@ -31,13 +41,17 @@ class Scheduler:
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def schedule_activity(self, activity: Activity) -> None:
-        """Schedule the booking bot to book the specified activity session. If the activity session
-        is already scheduled for booking, overwrite the existing schedule. Scheduling an activity
-        session for booking whose session has already started raises a ValueError.
+    def schedule_activity(self, activity: Activity) -> ScheduledActivity:
+        """Schedule the booking bot to book the specified activity session and return the scheduled
+        activity. If the activity session is already scheduled for booking, overwrite the existing
+        schedule. Scheduling an activity session for booking whose session has already started
+        raises a ValueError.
 
         Args:
             activity: The activity session to schedule.
+
+        Returns:
+            ScheduledActivity: The scheduled activity session.
         """
         ...
 
@@ -52,11 +66,11 @@ class Scheduler:
         ...
 
     @abstractmethod
-    def get_scheduled_activities(self) -> list[Activity]:
+    def get_scheduled_activities(self) -> list[ScheduledActivity]:
         """Return a list of activity sessions scheduled for booking.
 
         Returns:
-            list[Activity]: A list of scheduled activity sessions.
+            list[ScheduledActivity]: A list of scheduled activity sessions.
         """
         ...
 

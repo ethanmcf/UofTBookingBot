@@ -10,7 +10,9 @@ def get_scheduler() -> Scheduler:
     os_name = platform.system()
     if os_name == "Darwin":
         return LaunchdScheduler()
-    elif os_name == "Windows" or os_name == "Linux":
+    elif os_name == "Linux":
         return PPyCronScheduler()
     else:
-        raise Exception(f"Your operating system ({os_name}) is not supported for scheduling.")
+        raise Exception(
+            f"Your operating system ({os_name}) is not supported for scheduling for this app at the moment."
+        )

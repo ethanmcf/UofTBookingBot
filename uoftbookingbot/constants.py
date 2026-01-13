@@ -4,7 +4,7 @@ from uoftbookingbot.utils import get_resources_path
 
 ACTIVITIES = {
     "golf": {"id": "5904837f-6aa4-4707-bcfb-2ece4049bae0", "posting_offset": 2},
-    "test": {"id": "92c30d9c-3a40-4f05-96f0-21b2c18f292c", "posting_offset": None},
+    "test": {"id": "ca92214b-0334-4e97-a60e-2144af28e435", "posting_offset": None},
 }
 
 # Global Paths

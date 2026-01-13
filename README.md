@@ -21,20 +21,34 @@ Run the following commands to create a virtual env, install dependencies, and cr
 are in gitignore so they will not be commited.
 
 ```bash
+# MAC & LINUX
 python3 -m venv .venv # create virtual environment
 source .venv/bin/activate # activate virtual environment
-pip install requirements.txt # install dependencies
+pip install -r requirements.txt # install dependencies
 playwright install chromium # install playwright browser dependencies
-mkdir secrets # creates secrets folder
-touch secrets/bypass_codes.txt # creates bypass codes file
-echo -e "YOUR_UTORID\nYOUR_PASSWORD" > secrets/login_credentials.txt # Creates credentials file
+
+# WINDOWS
+# Environment Setup
+python -m venv .venv
+.venv\Scripts\activate
+pip install --upgrade pip
+
+# Dependency Installation
+pip install -r requirements.txt
+playwright install chromium
+
+# PyQt6 DLL Fix (Run this if you get "DLL Load Failed")
+# This specific version is more stable for Windows 10/11 path conflicts
+pip uninstall PyQt6 PyQt6-Qt6 PyQt6-sip -y
+pip cache purge
+pip install PyQt6==6.4.2 PyQt6-Qt6==6.4.2 PyQt6-sip
 ```
 
 Make sure to select the correct interpreter befor running.
 
 ### Generate bypass codes
 
-You must also manually generate a list of DUO Mobile (MFA) bypass codes and place them in `secrets/bypass_codes.txt` This only has to do be done once as the bot will automatically regenerate them after the first the run when needed. Each code should be on its own line, e.g.:
+You must also manually generate a list of DUO Mobile (MFA) bypass codes. This only has to do be done once as the bot will automatically regenerate them after the first the run when needed. Each code should be on its own line, e.g.:
 
 ```txt
 111111111

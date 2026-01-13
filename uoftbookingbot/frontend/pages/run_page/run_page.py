@@ -1,8 +1,8 @@
-from datetime import datetime, timedelta
 from uoftbookingbot.activity import Activity
 from uoftbookingbot.frontend.pages.base_page import BasePage
 from uoftbookingbot.frontend.components.primary_button import PrimaryButton
 from uoftbookingbot.frontend.components.secondary_button import SecondaryButton
+from uoftbookingbot.frontend.pages.run_page.scheduled_sidebar import ScheduledSidebar
 from uoftbookingbot.frontend.pages.run_page.calendar import Calendar
 from uoftbookingbot.frontend.pages.run_page.sport_dropdown import SportDropdown
 from uoftbookingbot.frontend.pages.run_page.time_picker import TimePicker
@@ -12,7 +12,7 @@ from uoftbookingbot.automation.bot_worker import BotWorker
 from uoftbookingbot.scheduling.api import get_scheduler
 from uoftbookingbot.frontend.theme import Colors
 from uoftbookingbot.constants import ACTIVITIES
-from PyQt6.QtCore import Qt, pyqtSignal, QThread, QCoreApplication
+from PyQt6.QtCore import Qt, pyqtSignal, QThread
 from PyQt6.QtWidgets import (
     QWidget,
     QHBoxLayout,
@@ -47,11 +47,12 @@ class RunPage(BasePage):
         self.calendar.setFixedWidth(400)
         self.content_layout.addWidget(self.calendar)
 
-        # Right side (variables)
+        # Center (variables)
         self.form_container = QWidget()
         self.form_container.setMinimumWidth(300)
         self.form_layout = QVBoxLayout(self.form_container)
         self.form_layout.setSpacing(15)
+        self.form_layout.addStretch()
 
         label_style = f"color: {Colors.TEXT_MAIN}"
 
@@ -70,7 +71,6 @@ class RunPage(BasePage):
         self.form_layout.addWidget(self.sport_dropdown)
 
         # Action Buttons
-        self.form_layout.addStretch()
         self.run_btn = PrimaryButton("Run")
         self.run_btn.btn.clicked.connect(self.on_run_click)
 
@@ -79,9 +79,16 @@ class RunPage(BasePage):
 
         self.form_layout.addWidget(self.schedule_btn)
         self.form_layout.addWidget(self.run_btn)
+        self.form_layout.addStretch()
 
         # Add to center of grid
         self.content_layout.addWidget(self.form_container)
+
+        # Right side (Scheduled Activities Sidebar)
+        self.sidebar = ScheduledSidebar(on_unschedule_handler=self.on_unschedule_click)
+        self.sidebar.setFixedHeight(400)
+        self.content_layout.addWidget(self.sidebar)
+
         self.master_layout.addWidget(self.content_widget, 1, 1)
 
         # Loading content
@@ -92,8 +99,6 @@ class RunPage(BasePage):
 
         # Center and add spacing
         self.master_layout.setRowStretch(0, 1)
-        self.master_layout.setRowStretch(1, 0)
-        self.master_layout.setRowStretch(2, 0)
         self.master_layout.setRowStretch(3, 1)
         self.master_layout.setColumnStretch(0, 1)
         self.master_layout.setColumnStretch(2, 1)
@@ -115,6 +120,8 @@ class RunPage(BasePage):
             }}
             """
         )
+
+        self.sidebar.refresh_list()
 
     def _get_form_data(self):
         """Extracts and formats current selection from UI components.
@@ -162,33 +169,22 @@ class RunPage(BasePage):
         )
         scheduler = get_scheduler()
         try:
-            scheduler.schedule_activity(activity)
-
-            # Calculate booking datetime for user info
-            booking_datetime = None
-            if activity.posting_offset is not None:
-                booking_datetime = datetime.strptime(
-                    f"{selected_date} {selected_time}", "%Y-%m-%d %H:%M"
-                ) - timedelta(days=activity.posting_offset, seconds=300)
+            scheduled_activity = scheduler.schedule_activity(activity)
 
             # Show success message
+            session_start = activity.get_session_start_datetime()
+            day_start = session_start.strftime("%d").lstrip("0")
+            day_run = scheduled_activity.run_at.strftime("%d").lstrip("0")
             success_message = (
                 f"Successfully scheduled the bot to book the following activity:"
                 f"\n\n"
-                f"{selected_sport} at {selected_date} {selected_time}"
+                f"{selected_sport} on {session_start.strftime('%A, %B')} {day_start} at"
+                f"  {session_start.strftime('%I:%M %p %Z')}"
                 f"\n\n"
+                f"The bot will attempt to run on {scheduled_activity.run_at.strftime('%A, %B')}"
+                f" {day_run} at {scheduled_activity.run_at.strftime('%I:%M %p %Z')}. Please ensure"
+                f" your computer is on and connected to the internet at this time."
             )
-            if booking_datetime is None or booking_datetime <= datetime.now():
-                success_message += (
-                    f"The booking period appears to be open, so the bot will attempt to run within"
-                    f" the next minute. Please ensure your computer is on and connected to the internet."
-                )
-            else:
-                success_message += (
-                    f"The bot will attempt to run on {booking_datetime.strftime('%Y-%m-%d')} at"
-                    f" {booking_datetime.strftime('%H:%M')}. Please ensure your computer is on and"
-                    f" connected to the internet at this time."
-                )
             QMessageBox.information(self, "Success", success_message)
         except ValueError as e:
             QMessageBox.critical(
@@ -202,6 +198,22 @@ class RunPage(BasePage):
                 "Scheduling Failed",
                 "An unexpected error occurred while scheduling the activity. Please try again.",
             )
+
+        self.sidebar.refresh_list()
+
+    def on_unschedule_click(self, activity: Activity):
+        """Removes the activity from the scheduler and refreshes UI."""
+        try:
+            scheduler = get_scheduler()
+            scheduler.unschedule_activity(activity)
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Unscheduling Failed",
+                "An unexpected error occurred while unscheduling the activity. Please try again.",
+            )
+
+        self.sidebar.refresh_list()
 
     def on_log_update(self, message):
         """Updates loading message when bot logs new info"""
@@ -233,7 +245,7 @@ class RunPage(BasePage):
             "time_limit": 10,
             "codes_threshold": 3,
             "headless": True,
-            "debug": False,
+            "debug": True,
             "ui_signaler": self.ui_log_signaler,
         }
 
