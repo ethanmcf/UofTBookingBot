@@ -245,7 +245,7 @@ class RunPage(BasePage):
             "time_limit": 10,
             "codes_threshold": 3,
             "headless": True,
-            "debug": False,
+            "debug": True,
             "ui_signaler": self.ui_log_signaler,
         }
 
