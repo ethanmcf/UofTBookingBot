@@ -1,5 +1,7 @@
-from PyQt6.QtWidgets import QComboBox, QAbstractItemView
+from pathlib import Path
+from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtCore import Qt
+from uoftbookingbot.frontend.constants import ASSETS_DIR_PATH
 from uoftbookingbot.frontend.theme import Colors
 
 
@@ -37,7 +39,7 @@ class SportDropdown(QComboBox):
             }}
 
             QComboBox::down-arrow {{
-                image: url(uoftbookingbot/frontend/assets/chevron-down.svg);
+                image: url({str(Path(ASSETS_DIR_PATH) / "chevron-down.svg")});
                 width: 10px;
                 height: 10px;
             }}

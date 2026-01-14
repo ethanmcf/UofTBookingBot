@@ -1,36 +1,43 @@
-from pathlib import Path
-import sqlite3, os
+import sqlite3
 from uoftbookingbot.constants import DB_PATH
+
+
+_DB_SCHEMA = """
+-- User credentials, only one row to ensure one person
+CREATE TABLE IF NOT EXISTS account (
+    id INTEGER PRIMARY KEY CHECK (id = 1), 
+    utorid TEXT,
+    password TEXT          
+);
+
+--  Bypass Codes
+CREATE TABLE IF NOT EXISTS bypass_codes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    code TEXT UNIQUE NOT NULL
+);
+"""
 
 
 class DBController:
 
-    _DB_SCHEMA_PATH = str(Path(__file__).parent / "schema.sql")
-
-    def __init__(self, db_path=DB_PATH, schema_path=_DB_SCHEMA_PATH):
+    def __init__(self, db_path=DB_PATH):
         """Initializes the connection and ensures the database schema is applied."""
         try:
             self.conn = sqlite3.connect(db_path)
             self.cursor = self.conn.cursor()
-            self._initialize_db(schema_path)  # Setup db if first time using
+            self._initialize_db()  # Setup db if first time using
         except Exception as e:
             raise Exception(f"Failed to initialize database: {e}")
 
-    def _initialize_db(self, schema_path):
+    def _initialize_db(self):
         """Reads the schema.sql file and creates the necessary table structure."""
         try:
             # Only run the schema if the tables don't exist yet
             self.cursor.execute(
                 "SELECT name FROM sqlite_master WHERE type='table' AND name='account'"
             )
-            if not self.cursor.fetchone():
-                if os.path.exists(schema_path):
-                    with open(schema_path, "r") as f:
-                        schema_sql = f.read()
-                    self.cursor.executescript(schema_sql)
-                    self.conn.commit()
-                else:
-                    raise Exception(f"Schema file not found at {schema_path}")
+            self.cursor.executescript(_DB_SCHEMA)
+            self.conn.commit()
         except Exception as e:
             raise Exception(f"Error applying schema: {e}")
 

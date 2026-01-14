@@ -1,6 +1,9 @@
+from pathlib import Path
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel
 from PyQt6.QtGui import QMovie, QPixmap
 from PyQt6.QtCore import Qt
+
+from uoftbookingbot.frontend.constants import ASSETS_DIR_PATH
 
 
 class StatusIndicator(QWidget):
@@ -38,7 +41,7 @@ class StatusIndicator(QWidget):
     def start(self):
         """Displays the indicator and starts the animation."""
         self.show()
-        self.movie = QMovie("uoftbookingbot/frontend/assets/loading.gif")
+        self.movie = QMovie(str(Path(ASSETS_DIR_PATH) / "loading.gif"))
         self.loading_visual.setMovie(self.movie)
         self.movie.start()
 
@@ -51,9 +54,9 @@ class StatusIndicator(QWidget):
         self.movie.stop()
         self.loading_visual.setMovie(None)
 
-        success_icon_path = "uoftbookingbot/frontend/assets/success-icon.png"
+        success_icon_path = str(Path(ASSETS_DIR_PATH) / "success-icon.png")
 
-        error_icon_path = "uoftbookingbot/frontend/assets/error-icon.png"
+        error_icon_path = str(Path(ASSETS_DIR_PATH) / "error-icon.png")
         icon_path = success_icon_path if success else error_icon_path
         pix = QPixmap(icon_path)
         pix = pix.scaled(
