@@ -169,8 +169,13 @@ This generates a standalone folder in `dist` named `UofTBookingBot` that can be 
 > ```bash
 > PLAYWRIGHT_BROWSERS_PATH=0 python -m playwright install --with-deps --only-shell chromium
 >
-> pyinstaller --noconfirm --onedir --windowed \
+> pyinstaller \
+>  --noconfirm \
+>  --onedir \
+>  --windowed \
 >  --name "UofTBookingBot" \
+>  --icon icon.icns \
+>  --icon icon.ico \
 >  --collect-all playwright \
 >  --collect-data playwright_stealth \
 >  --add-data="./uoftbookingbot/frontend/assets:assets" \
