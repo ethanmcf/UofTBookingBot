@@ -1,3 +1,5 @@
+from pathlib import Path
+from uoftbookingbot.frontend.constants import ASSETS_DIR_PATH
 from uoftbookingbot.frontend.theme import Colors
 from uoftbookingbot.frontend.components.todo_item import TodoItem
 from PyQt6.QtWidgets import QWidget, QLabel, QVBoxLayout
@@ -17,7 +19,7 @@ class Instructions(QWidget):
         self.image_label.setStyleSheet("background: transparent;")
         self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.image_label.setPixmap(
-            QPixmap("uoftbookingbot/frontend/assets/todo.png").scaled(
+            QPixmap(str(Path(ASSETS_DIR_PATH) / "todo.png")).scaled(
                 300,
                 300,
                 Qt.AspectRatioMode.KeepAspectRatio,

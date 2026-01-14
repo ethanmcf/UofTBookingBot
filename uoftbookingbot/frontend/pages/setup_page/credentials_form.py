@@ -1,3 +1,5 @@
+from pathlib import Path
+from uoftbookingbot.frontend.constants import ASSETS_DIR_PATH
 from uoftbookingbot.frontend.components.primary_button import PrimaryButton
 from uoftbookingbot.frontend.components.input import Input
 from uoftbookingbot.database.db_controller import DBController
@@ -36,7 +38,7 @@ class CredentialsForm(QWidget):
 
         # Delete button
         self.delete_btn = QPushButton()
-        self.delete_btn.setIcon(QIcon(QPixmap("uoftbookingbot/frontend/assets/trash-icon.png")))
+        self.delete_btn.setIcon(QIcon(QPixmap(str(Path(ASSETS_DIR_PATH) / "trash-icon.png"))))
         self.delete_btn.setIconSize(QSize(30, 30))
         self.delete_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.delete_btn.clicked.connect(self.delete_user_data)

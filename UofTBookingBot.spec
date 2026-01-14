@@ -2,7 +2,7 @@
 from PyInstaller.utils.hooks import collect_data_files
 from PyInstaller.utils.hooks import collect_all
 
-datas = []
+datas = [('./uoftbookingbot/frontend/assets', 'assets')]
 binaries = []
 hiddenimports = []
 datas += collect_data_files('playwright_stealth')

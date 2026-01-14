@@ -171,6 +171,7 @@ This generates a standalone folder in `dist` named `UofTBookingBot` that can be 
 >  --name "UofTBookingBot" \
 >  --collect-all playwright \
 >  --collect-data playwright_stealth \
+>  --add-data="./uoftbookingbot/frontend/assets:assets" \
 >  entry.py
 > ```
 
