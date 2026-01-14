@@ -398,7 +398,9 @@ def run_registration_flow(
 
                 # Click the appropriate button to proceed to the next step or checkout
                 next_button_locator = page.get_by_role("button", name="Next")
-                checkout_button_locator = page.get_by_role("button", name="Proceed to Checkout")
+                checkout_button_locator = page.get_by_role(
+                    "button", name="shopping_cart Proceed to"
+                )
                 finish_step_button_locator = (
                     checkout_button_locator
                     if step_num == registration_steps_count - 1
