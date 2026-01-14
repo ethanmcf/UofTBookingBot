@@ -79,6 +79,7 @@ def get_execution_values(activity: Activity) -> tuple[str, list[str], str]:
         activity.start_date,
         "-t",
         activity.start_time,
+        "--debug",
     ] + offset_args
     if not is_running_as_bundle():
         # in dev, run as: python -m uoftbookingbot
