@@ -26,7 +26,7 @@ class CredentialsForm(QWidget):
         self.utorid_input = Input("Your utorid")
         self.utorid_input.setText(utorid)
 
-        self.password_input = Input("Your password")
+        self.password_input = Input("Your password", is_password=True)
         self.password_input.setText(password)
 
         self.bypass_input = Input("Current bypass code")

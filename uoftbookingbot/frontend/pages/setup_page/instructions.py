@@ -41,9 +41,11 @@ class Instructions(QWidget):
 
         # Bypass Sub-Instructions
         self.bypass_desc = QLabel(
-            "1) Login to https://bypass.utormfa.utoronto.ca/\n\n"
-            "2) Click ‘Generate Bypass Codes’\n\n"
+            "<html>"
+            "1) Login to <a href='https://bypass.utormfa.utoronto.ca'>https://bypass.utormfa.utoronto.ca/</a><br><br>"
+            "2) Click 'Generate Bypass Codes'<br><br>"
             "3) Copy any one code into text field"
+            "</html>"
         )
         # self.bypass_desc.setTextFormat(Qt.TextFormat.RichText)
         self.bypass_desc.setOpenExternalLinks(True)
