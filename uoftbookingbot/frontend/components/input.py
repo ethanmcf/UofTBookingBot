@@ -4,10 +4,12 @@ from PyQt6.QtCore import Qt, QPropertyAnimation, QRect, QEasingCurve, QPoint
 
 
 class Input(QWidget):
-    def __init__(self, label_text="", width=490):
+
+    def __init__(self, label_text="", is_password=False, width=490):
         super().__init__()
         self.setMinimumHeight(65)
         self.label_text = label_text
+        self.is_password = is_password
 
         # Input field
         self.input_field = QLineEdit(self)
@@ -47,6 +49,8 @@ class Input(QWidget):
         self.input_field.focusInEvent = self._on_focus_in
         self.input_field.focusOutEvent = self._on_focus_out
         self.input_field.textChanged.connect(self._check_text)
+        if self.is_password:
+            self.input_field.setEchoMode(QLineEdit.EchoMode.Password)
 
     def _on_focus_in(self, event):
         self._float_label(True)

@@ -7,7 +7,7 @@ export default function DownloadCard({ platform }) {
       title: "macOS",
       version: "v1.0.0 (Universal)",
       specs: ["macOS Monterey or later", "Apple Silicon & Intel support"],
-      link: "https://github.com/ethanmcf/UofTBookingBot/releases/latest/download/macos.dmg",
+      link: "https://github.com/ethanmcf/UofTBookingBot/releases/latest/download/UofTBookingBot.app",
       color: "bg-black",
     },
     windows: {
