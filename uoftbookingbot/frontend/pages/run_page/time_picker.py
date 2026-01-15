@@ -1,5 +1,8 @@
+from pathlib import Path
 from PyQt6.QtWidgets import QTimeEdit
-from PyQt6.QtCore import QTime, Qt
+from PyQt6.QtCore import QTime
+
+from uoftbookingbot.frontend.constants import ASSETS_DIR_PATH
 
 
 class TimePicker(QTimeEdit):
@@ -46,13 +49,13 @@ class TimePicker(QTimeEdit):
 
             /* Custom Arrow Assets */
             QTimeEdit::up-arrow {{
-                image: url(uoftbookingbot/frontend/assets/chevron-up.svg);
+                image: url({str(Path(ASSETS_DIR_PATH) / 'chevron-up.svg')});
                 width: 12px;
                 height: 12px;
             }}
             
             QTimeEdit::down-arrow {{
-                image: url(uoftbookingbot/frontend/assets/chevron-down.svg);
+                image: url({str(Path(ASSETS_DIR_PATH) / 'chevron-down.svg')});
                 width: 12px;
                 height: 12px;
             }}

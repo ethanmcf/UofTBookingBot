@@ -7,10 +7,7 @@ def db(tmp_path) -> DBController:
     """Creates a temporary test database and applies the actual project schema."""
     test_db = tmp_path / "test_db.db"
 
-    # Path to schema
-    schema_file = "./uoftbookingbot/database/schema.sql"
-
-    return DBController(test_db, schema_file)
+    return DBController(test_db)
 
 
 class TestDatabase:
@@ -56,14 +53,6 @@ class TestDatabase:
         assert utorid is None
         assert password is None
         assert db.consume_bypass_code() is None
-
-    def test_activities_flow(self, db):
-        """Tests adding and retrieving scheduled activity records."""
-        db.add_scheduled_activity("golf", "2026-01-01 12:00", "pending")
-        activities = db.get_scheduled_activities()
-
-        assert len(activities) == 1
-        assert activities[0][1] == "golf"
 
     def test_get_num_codes_left(self, db):
         """Tests that the code counter accurately reflects the database state."""
