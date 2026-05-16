@@ -2,6 +2,10 @@
 
 A bot that automates the sign-up process for UofT drop-in activities.
 
+<video src="https://github.com/user-attachments/assets/6ee6f9fe-63af-4fec-a78f-623b776f3966" width="100%" max-width="800px" controls>
+  Your browser does not support the video tag.
+</video>
+
 ## Prerequisites
 
 Before you begin, ensure you have Python 3.11.1+ and pip installed. If you don't have them, follow the instructions on the [official Python website](https://www.python.org/downloads/).
