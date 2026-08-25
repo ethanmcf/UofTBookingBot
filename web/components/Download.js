@@ -7,7 +7,6 @@ export default function DownloadCard({ platform }) {
       title: "macOS",
       version: "v1.0.0 (Universal)",
       specs: ["macOS Monterey or later", "Apple Silicon & Intel support"],
-      link: "https://github.com/ethanmcf/UofTBookingBot/releases/latest/download/UofTBookingBot.app",
       color: "bg-black",
     },
     windows: {
@@ -15,7 +14,6 @@ export default function DownloadCard({ platform }) {
       title: "Windows",
       version: "v1.0.0 (x64)",
       specs: ["Windows 10/11", "Standalone .exe"],
-      link: "https://github.com/ethanmcf/UofTBookingBot/releases/latest/download/windows.exe",
       color: "bg-blue-600",
     },
     linux: {
@@ -23,7 +21,6 @@ export default function DownloadCard({ platform }) {
       title: "Linux",
       version: "v1.0.0 (AppImage)",
       specs: ["Ubuntu, Fedora, Debian", "No installation required"],
-      link: "https://github.com/ethanmcf/UofTBookingBot/releases/latest/download/linux.appImage",
       color: "bg-orange-600",
     },
   };
@@ -52,17 +49,23 @@ export default function DownloadCard({ platform }) {
         ))}
       </ul>
 
-      {/* Dynamic CTA Button */}
-      <a
-        href="#"
+      {/* Dynamic CTA Button (disabled) */}
+      <span
         aria-disabled="true"
-        tabIndex={-1}
-        className={`flex items-center justify-center gap-2 w-full ${data.color} text-white py-3 px-6 rounded-xl font-semibold transition-all shadow-md opacity-50 cursor-not-allowed pointer-events-none`}
+        className={`flex items-center justify-center gap-2 w-full ${data.color} text-white py-3 px-6 rounded-xl font-semibold shadow-md opacity-40 cursor-not-allowed select-none`}
       >
         <Download size={18} />
         Get for {data.title}
+      </span>
+      <p className="text-xs text-gray-500 mt-3">Updates pending</p>
+      <a
+        href="https://github.com/ethanmcf/UofTBookingBot"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-sm font-semibold text-blue-600 underline hover:text-blue-800 mt-1"
+      >
+        Install manually from GitHub &rarr;
       </a>
-      <p className="text-xs text-gray-400 mt-2">Updates pending</p>
     </div>
   );
 }
