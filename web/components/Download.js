@@ -54,12 +54,15 @@ export default function DownloadCard({ platform }) {
 
       {/* Dynamic CTA Button */}
       <a
-        href={data.link}
-        className={`flex items-center justify-center gap-2 w-full ${data.color} text-white py-3 px-6 rounded-xl font-semibold hover:opacity-90 transition-all shadow-md active:scale-95`}
+        href="#"
+        aria-disabled="true"
+        tabIndex={-1}
+        className={`flex items-center justify-center gap-2 w-full ${data.color} text-white py-3 px-6 rounded-xl font-semibold transition-all shadow-md opacity-50 cursor-not-allowed pointer-events-none`}
       >
         <Download size={18} />
         Get for {data.title}
       </a>
+      <p className="text-xs text-gray-400 mt-2">Updates pending</p>
     </div>
   );
 }
